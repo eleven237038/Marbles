@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(javac -encoding UTF-8 -d out src/org/example/*.java)",
+      "Bash(rm -rf out)",
+      "Bash(mkdir out:*)",
+      "Bash(javac -encoding UTF-8 -d out -cp out src/org/example/MarbleGrid.java src/org/example/Shooter.java)",
+      "Bash(javac -encoding UTF-8 -d out -cp out src/org/example/GameEngine.java src/org/example/Main.java)",
+      "Bash(java -cp out org.example.Main)",
+      "Bash(rm -rf src out)",
+      "Bash(mkdir -p src/org/example)",
+      "Bash(cp \"F:/0-SchoolWork/3-2-Games Programming/Ass-1/code/src/main/java/org/example/GameConfig.java\" src/org/example/)",
+      "Bash(cp \"F:/0-SchoolWork/3-2-Games Programming/Ass-1/code/src/main/java/org/example/Main.java\" src/org/example/)",
+      "Bash(mkdir:*)"
+    ]
+  }
+}
