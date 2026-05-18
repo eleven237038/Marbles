@@ -42,12 +42,15 @@ public class GameEngine extends Canvas implements KeyListener, MouseMotionListen
     private BufferedImage buffer;
     private double mouseX, mouseY;
 
-    // 像素级平滑下降参数
+    // 下降机制参数 - 每发射1个球下降1/5行
     private int shootCount = 0;
     private static final int SHOOTS_PER_ROW = 5;  // 每5次发射下降一行
-    private double pixelScrollOffset = 0;  // 当前像素级滚动偏移
-    private double targetPixelOffset = 0;  // 目标像素偏移（每次发射后增加）
-    private long lastScrollTime = 0;
+    private double targetScrollOffset = 0;      // 目标滚动偏移
+    private double currentScrollOffset = 0;     // 当前滚动偏移（动画用）
+    private static final double SCROLL_ANIM_DURATION = 300;  // 滚动动画持续时间(ms)
+    private long scrollAnimStartTime = 0;       // 滚动动画开始时间
+    private boolean isScrollAnimating = false;  // 是否正在播放滚动动画
+    private double rowHeight;                   // 单行高度像素
 
     // 构造函数
     public GameEngine() {
@@ -84,6 +87,10 @@ public class GameEngine extends Canvas implements KeyListener, MouseMotionListen
         flyingMarble = null;
         score = 0;
         shootCount = 0;
+        rowHeight = GameConfig.HEX_SIZE * 1.5;
+        targetScrollOffset = 0;
+        currentScrollOffset = 0;
+        isScrollAnimating = false;
         state = GameState.PLAYING;
         gameRunning = true;
 
@@ -120,17 +127,23 @@ public class GameEngine extends Canvas implements KeyListener, MouseMotionListen
         // 更新瞄准角度（基于鼠标位置）
         shooter.aim(mouseX, mouseY);
 
-        // 平滑更新像素级滚动偏移（插值到目标值）
-        long currentTime = System.currentTimeMillis();
-        if (lastScrollTime > 0) {
-            double deltaTime = (currentTime - lastScrollTime) / 16.67; // 标准化到60fps
-            double lerpSpeed = 0.15; // 插值速度
-            pixelScrollOffset += (targetPixelOffset - pixelScrollOffset) * lerpSpeed * deltaTime;
+        // 处理滚动动画
+        if (isScrollAnimating) {
+            long elapsed = System.currentTimeMillis() - scrollAnimStartTime;
+            if (elapsed >= SCROLL_ANIM_DURATION) {
+                // 动画完成
+                currentScrollOffset = targetScrollOffset;
+                isScrollAnimating = false;
+            } else {
+                // 使用easeOutQuad缓动
+                double t = elapsed / SCROLL_ANIM_DURATION;
+                double ease = 1 - (1 - t) * (1 - t);
+                currentScrollOffset += (targetScrollOffset - currentScrollOffset) * ease * 0.15;
+            }
         }
-        lastScrollTime = currentTime;
 
         // 更新网格的像素滚动偏移
-        grid.setScrollOffsetY(pixelScrollOffset);
+        grid.setScrollOffsetY(currentScrollOffset);
 
         // 更新飞行弹珠
         if (flyingMarble != null) {
@@ -189,7 +202,7 @@ public class GameEngine extends Canvas implements KeyListener, MouseMotionListen
             for (int col = 0; col < GameConfig.GRID_COLS; col++) {
                 Marble marble = grid.getMarble(row, col);
                 if (marble != null) {
-                    double[] pos = grid.getHexCenter(row, col);
+                    double[] pos = grid.getHexCenterWithScroll(row, col);
                     double dx = flyingMarble.getX() - pos[0];
                     double dy = flyingMarble.getY() - pos[1];
                     double distance = Math.sqrt(dx * dx + dy * dy);
@@ -205,14 +218,14 @@ public class GameEngine extends Canvas implements KeyListener, MouseMotionListen
     private void attachMarble() {
         if (flyingMarble == null) return;
 
-        // 找到最近的空位
+        // 找到最近的空位（使用滚动后的位置）
         int bestRow = 0, bestCol = 0;
         double minDist = Double.MAX_VALUE;
 
         for (int row = 0; row < GameConfig.GRID_ROWS; row++) {
             for (int col = 0; col < GameConfig.GRID_COLS; col++) {
                 if (grid.getMarble(row, col) == null) {
-                    double[] pos = grid.getHexCenter(row, col);
+                    double[] pos = grid.getHexCenterWithScroll(row, col);
                     double dx = flyingMarble.getX() - pos[0];
                     double dy = flyingMarble.getY() - pos[1];
                     double dist = Math.sqrt(dx * dx + dy * dy);
@@ -245,18 +258,59 @@ public class GameEngine extends Canvas implements KeyListener, MouseMotionListen
         flyingMarble = null;
         shooter.clearFlyingMarble();
 
-        // 发射计数增加
+        // 每发射1个球下降1/5行（五分之一行）
         shootCount++;
+        double descentPerShot = rowHeight / SHOOTS_PER_ROW;
+        targetScrollOffset += descentPerShot;
 
-        // 每5次发射后，增加一行的像素偏移
+        // 启动滚动动画
+        if (!isScrollAnimating) {
+            isScrollAnimating = true;
+            scrollAnimStartTime = System.currentTimeMillis();
+        }
+
+        // 检查是否需要生成新行
+        checkAndGenerateNewRow();
+
+        // 满5次发射后重置计数
         if (shootCount >= SHOOTS_PER_ROW) {
-            targetPixelOffset += GameConfig.HEX_SIZE * 1.5;
             shootCount = 0;
-            // 在顶部生成新的一行随机颜色弹珠
+        }
+    }
+
+    /**
+     * 检查是否需要生成新行（当弹珠滚动到顶部时）
+     */
+    private void checkAndGenerateNewRow() {
+        // 如果滚动偏移超过一行高度，生成新行并重置偏移
+        if (targetScrollOffset >= rowHeight) {
+            targetScrollOffset -= rowHeight;
+            currentScrollOffset = targetScrollOffset;
+            // 将所有弹珠向下移动一行（在网格内）
+            shiftMarblesDown();
+        }
+    }
+
+    /**
+     * 将所有弹珠向下移动一行（保持弹珠引用不变）
+     */
+    private void shiftMarblesDown() {
+        // 从底部第二行开始，将弹珠向下移动一行
+        for (int row = GameConfig.GRID_ROWS - 2; row >= 0; row--) {
             for (int col = 0; col < GameConfig.GRID_COLS; col++) {
-                MarbleColor randomColor = MarbleColor.values()[(int)(Math.random() * 4)];
-                grid.addMarble(0, col, randomColor);
+                Marble marble = grid.getMarble(row, col);
+                if (marble != null) {
+                    // 移除原位置的弹珠
+                    grid.removeMarble(row, col);
+                    // 在新位置放置同一个弹珠对象
+                    grid.placeMarble(row + 1, col, marble);
+                }
             }
+        }
+        // 在顶部生成新行
+        for (int col = 0; col < GameConfig.GRID_COLS; col++) {
+            MarbleColor randomColor = MarbleColor.values()[(int)(Math.random() * 4)];
+            grid.addMarble(0, col, randomColor);
         }
     }
 
@@ -264,7 +318,7 @@ public class GameEngine extends Canvas implements KeyListener, MouseMotionListen
      * 获取当前像素级滚动偏移
      */
     public double getPixelScrollOffset() {
-        return pixelScrollOffset;
+        return currentScrollOffset;
     }
 
     /**
@@ -498,6 +552,11 @@ public class GameEngine extends Canvas implements KeyListener, MouseMotionListen
             startGame();
         } else if (state == GameState.GAME_OVER) {
             restartGame();
+        } else if (state == GameState.PLAYING) {
+            // 左键单击发射弹珠
+            if (e.getButton() == MouseEvent.BUTTON1 && flyingMarble == null && !shooter.hasFlyingMarble()) {
+                flyingMarble = shooter.shoot();
+            }
         }
     }
 

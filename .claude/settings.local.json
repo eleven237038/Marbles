@@ -12,7 +12,10 @@
       "Bash(mkdir -p src/org/example)",
       "Bash(cp \"F:/0-SchoolWork/3-2-Games Programming/Ass-1/code/src/main/java/org/example/GameConfig.java\" src/org/example/)",
       "Bash(cp \"F:/0-SchoolWork/3-2-Games Programming/Ass-1/code/src/main/java/org/example/Main.java\" src/org/example/)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(javac -d out -sourcepath src src/org/example/*.java)",
+      "Bash(gh api:*)",
+      "Bash(curl -s -X PATCH -H \"Accept: application/vnd.github+json\" https://api.github.com/repos/eleven237038/1 -d '{\"default_branch\":\"master\"}')"
     ]
   }
 }
