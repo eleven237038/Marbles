@@ -40,7 +40,7 @@ public class MarbleRowGenerator extends Marble {
                 hexLayer[index].init(centerX + col * hSpacing, y);
                 index++;
             }
-            centerX = centerX + (row % 2 == 0 ? -side * Math.sqrt(3) / 2 : side * Math.sqrt(3) / 2);
+            centerX = centerX + (row % 2 == 0 ? side * Math.sqrt(3) / 2 : -side * Math.sqrt(3) / 2);
         }
     }
 
