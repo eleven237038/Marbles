@@ -14,12 +14,16 @@ public class HexGrid extends Marble {
         this.vSpacing = 0;
     }
 
-    public void initGrid(int perRow, double hSpace, int layer1Start, int layer2Start) {
+    public void initGrid(int screenWidth) {
         double side = getSide();
+        int perRow = (int)(screenWidth / (side * Math.sqrt(3)));
         this.hexagonsPerRow = perRow;
-        this.hSpacing = hSpace;
-        this.vSpacing = getSide() * 1.5;
+        this.hSpacing = side * Math.sqrt(3);
+        this.vSpacing = side * 1.5;
         this.hexLayer = new Marble[perRow * 2];
+
+        double layer1Start = side * Math.sqrt(3) / 2;
+        double layer2Start = side * Math.sqrt(3);
 
         for (int col = 0; col < perRow; col++) {
             double x = layer1Start + col * hSpacing;

@@ -30,7 +30,7 @@ public class Main extends GameEngine {
 
     private void initHexGrid() {
         hexGrid = new HexGrid();
-        hexGrid.initGrid(11, 42, 21, 42);
+        hexGrid.initGrid(mWidth);
     }
 
     @Override
