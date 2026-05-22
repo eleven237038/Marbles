@@ -2,7 +2,7 @@ import java.awt.*;
 import javax.swing.*;
 
 public class Main extends GameEngine {
-    private HexGrid hexGrid;
+    private MarbleRowGenerator hexGrid;
 
     public static void main(String[] args) {
         Main game = new Main();
@@ -16,7 +16,7 @@ public class Main extends GameEngine {
             mPanel.setPreferredSize(new Dimension(mWidth, mHeight));
             mFrame.add(mPanel, BorderLayout.CENTER);
             mFrame.revalidate();
-            initHexGrid();
+            initMarbleRowGenerator();
         });
     }
 
@@ -28,9 +28,9 @@ public class Main extends GameEngine {
         mFrame.setResizable(false);
     }
 
-    private void initHexGrid() {
-        hexGrid = new HexGrid();
-        hexGrid.initGrid(mWidth);
+    private void initMarbleRowGenerator() {
+        hexGrid = new MarbleRowGenerator();
+        hexGrid.initGrid(mWidth, mHeight);
     }
 
     @Override
