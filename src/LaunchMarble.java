@@ -23,6 +23,13 @@ public class LaunchMarble extends Marble {
         }
     }
 
+    public void reset(double x, double y) {
+        this.vx = 0;
+        this.vy = 0;
+        this.launched = false;
+        setCenter(x, y);
+    }
+
     public void update(double dt) {
         if (launched) {
             setCenter(getCenterX() + vx * dt, getCenterY() + vy * dt);

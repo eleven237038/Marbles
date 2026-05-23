@@ -36,8 +36,9 @@ public class Main extends GameEngine {
 
     private void initMarbleGrid() {
         hexGrid = new Marbles();
-        hexGrid.initRow(mWidth, mHeight);
         launchPad = new LaunchPad(hexGrid.getSide(), 18);
+        hexGrid.setMaxRowCount(18);
+        hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);
         launchMarble = new LaunchMarble();
         launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
@@ -84,7 +85,8 @@ public class Main extends GameEngine {
 
     @Override
     public void mousePressed(MouseEvent event) {
-        if (launchMarble != null && !launchMarble.isLaunched()) {
+        if (launchMarble != null) {
+            launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(mouseX, mouseY);
         }
     }
@@ -92,7 +94,8 @@ public class Main extends GameEngine {
     @Override
     public void keyPressed(KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.VK_SPACE) {
-            if (launchMarble != null && !launchMarble.isLaunched()) {
+            if (launchMarble != null) {
+                launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
                 launchMarble.launch(mouseX, mouseY);
             }
         }

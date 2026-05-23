@@ -9,6 +9,7 @@ public class Marbles extends Marble {
     private double baseX;
     private double accumulatedY;
     private int screenWidth;
+    private int maxRowCount;
 
     public Marbles() {
         super();
@@ -19,15 +20,29 @@ public class Marbles extends Marble {
         this.accumulatedY = 0;
     }
 
+    public void setMaxRowCount(int maxRowCount) {
+        this.maxRowCount = maxRowCount;
+    }
+
     public void StartMarbles(int screenWidth, int screenHeight, int initialRowCount) {
         double side = getSide();
         this.screenWidth = screenWidth;
         this.ySpacing = side * 1.5;
 
-        for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
-            AddMarbleRow(generatedRows, screenWidth, initialRowCount);
+        int totalRows = maxRowCount + initialRowCount;
+        this.rowCount = initialRowCount;
+        this.marbles = new Marble[totalRows][];
 
-            for (int r = 0; r < generatedRows; r++) {
+        for (int r = 0; r < maxRowCount; r++) {
+            this.marbles[r] = null;
+        }
+
+        for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
+            int actualRow = maxRowCount + generatedRows;
+            AddMarbleRow(actualRow, screenWidth, initialRowCount);
+
+            for (int r = maxRowCount; r < actualRow; r++) {
+                if (marbles[r] == null) continue;
                 for (int c = 0, len = marbles[r].length; c < len; c++) {
                     double cy = marbles[r][c].getCenterY();
                     marbles[r][c].setCenter(marbles[r][c].getCenterX(), cy + ySpacing);
@@ -41,11 +56,11 @@ public class Marbles extends Marble {
         double baseY = -2 * side;
         double xSpacing = side * Math.sqrt(3);
 
-        if (row == 0) {
+        if (marbles == null || row == maxRowCount) {
             double[] initialBaseX = { side * Math.sqrt(3), side * Math.sqrt(3) / 2 };
             this.baseX = initialBaseX[random.nextInt(2)];
             this.rowCount = initialRowCount;
-            this.marbles = new Marble[initialRowCount][];
+            this.marbles = new Marble[maxRowCount + initialRowCount][];
         } else if (row >= marbles.length) {
             Marble[][] newMarbles = new Marble[marbles.length + 1][];
             System.arraycopy(marbles, 0, newMarbles, 0, marbles.length);
@@ -98,23 +113,25 @@ public class Marbles extends Marble {
             double side = getSide();
             double yMove = side * 0.4 * dt;
             double cx, cy;
-            for (Marble[] row : marbles) {
-                for (Marble hex : row) {
+            for (int r = maxRowCount; r < marbles.length; r++) {
+                if (marbles[r] == null) continue;
+                for (Marble hex : marbles[r]) {
                     cx = hex.getCenterX();
                     cy = hex.getCenterY();
                     hex.setCenter(cx, cy + yMove);
                 }
             }
-            for (Marble[] row : marbles) {
-                for (Marble hex : row) {
+            for (int r = maxRowCount; r < marbles.length; r++) {
+                if (marbles[r] == null) continue;
+                for (Marble hex : marbles[r]) {
                     hex.recalculateVerticesIfDirty();
                 }
             }
 
             accumulatedY += yMove;
             if (accumulatedY >= ySpacing) {
-                int newRow = rowCount;
-                this.rowCount = newRow + 1;
+                int newRow = maxRowCount + rowCount;
+                this.rowCount = rowCount + 1;
                 AddMarbleRow(newRow, screenWidth, this.rowCount);
                 accumulatedY -= ySpacing;
             }
@@ -138,8 +155,9 @@ public class Marbles extends Marble {
 
     public void draw(Graphics2D g) {
         if (marbles != null) {
-            for (Marble[] row : marbles) {
-                for (Marble hex : row) {
+            for (int r = maxRowCount; r < marbles.length; r++) {
+                if (marbles[r] == null) continue;
+                for (Marble hex : marbles[r]) {
                     hex.draw(g);
                 }
             }
