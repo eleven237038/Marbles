@@ -4,10 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更新弹珠行生成规则">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更正六边形生成规则,为下降规则做准备">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/readme.txt" beforeDir="false" afterPath="$PROJECT_DIR$/readme.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/GameEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MarbleRowGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarbleRowGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarbleRowGenerator.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,17 +27,24 @@
     &quot;assignee&quot;: &quot;eleven237038&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/eleven237038/Marbles.git",
-    "accountId": "4521151b-dff9-427e-9ba5-e192808e912c"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/eleven237038/Marbles.git&quot;,
+    &quot;accountId&quot;: &quot;4521151b-dff9-427e-9ba5-e192808e912c&quot;
   }
-}]]></component>
+}</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/GameEngine.java" root0="SKIP_INSPECTION" />
+  </component>
   <component name="JsbtTreeLayoutManager">
     <layout place="tools.popupGrunt">
       <scroll-view-position x="0" y="0" />
     </layout>
   </component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -42,27 +53,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "demo",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "F:/0-SchoolWork/3-2-Games Programming/Ass-2/Marble",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true",
-    "应用程序.HexGrid.executor": "Run",
-    "应用程序.Main.executor": "Run",
-    "应用程序.Marble.executor": "Run",
-    "应用程序.MarbleGame.executor": "Run"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;demo&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;F:/0-SchoolWork/3-2-Games Programming/Ass-2/Marble&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;,
+    &quot;应用程序.HexGrid.executor&quot;: &quot;Run&quot;,
+    &quot;应用程序.Main.executor&quot;: &quot;Run&quot;,
+    &quot;应用程序.Marble.executor&quot;: &quot;Run&quot;,
+    &quot;应用程序.MarbleGame.executor&quot;: &quot;Run&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="F:\0-SchoolWork\3-2-Games Programming\Ass-2\Marble\src" />
@@ -86,6 +97,9 @@
       <workItem from="1779123249257" duration="9123000" />
       <workItem from="1779361505639" duration="18564000" />
       <workItem from="1779418512612" duration="5199000" />
+      <workItem from="1779441257723" duration="12576000" />
+      <workItem from="1779504261191" duration="7571000" />
+      <workItem from="1779514667342" duration="6873000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -119,15 +133,86 @@
       <option name="project" value="LOCAL" />
       <updated>1779437629918</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="更新弹珠行生成规则">
+      <option name="closed" value="true" />
+      <created>1779441705292</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1779441705292</updated>
+    </task>
+    <task id="LOCAL-00006" summary="更新弹珠行生成规则">
+      <option name="closed" value="true" />
+      <created>1779442340920</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1779442340920</updated>
+    </task>
+    <task id="LOCAL-00007" summary="更新弹珠行生成规则">
+      <option name="closed" value="true" />
+      <created>1779457652972</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1779457652972</updated>
+    </task>
+    <task id="LOCAL-00008" summary="更新弹珠附着点规则">
+      <option name="closed" value="true" />
+      <created>1779463281013</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1779463281013</updated>
+    </task>
+    <task id="LOCAL-00009" summary="更新发射台初始窗口">
+      <option name="closed" value="true" />
+      <created>1779466104688</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1779466104688</updated>
+    </task>
+    <task id="LOCAL-00010" summary="更正六边形生成规则,增加初始朝向随机性">
+      <option name="closed" value="true" />
+      <created>1779468084036</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1779468084036</updated>
+    </task>
+    <task id="LOCAL-00011" summary="更正六边形生成规则,为下降规则做准备">
+      <option name="closed" value="true" />
+      <created>1779505191360</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1779505191361</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="将六边形边长,屏幕长宽设置为仅控制绘制的变量" />
     <MESSAGE value="更新弹珠行生成规则" />
-    <option name="LAST_COMMIT_MESSAGE" value="更新弹珠行生成规则" />
+    <MESSAGE value="更新弹珠附着点规则" />
+    <MESSAGE value="更新发射台初始窗口" />
+    <MESSAGE value="更正六边形生成规则,增加初始朝向随机性" />
+    <MESSAGE value="更正六边形生成规则,为下降规则做准备" />
+    <option name="LAST_COMMIT_MESSAGE" value="更正六边形生成规则,为下降规则做准备" />
   </component>
 </project>

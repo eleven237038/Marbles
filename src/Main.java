@@ -2,7 +2,8 @@ import java.awt.*;
 import javax.swing.*;
 
 public class Main extends GameEngine {
-    private MarbleRowGenerator hexGrid;
+    private Marbles hexGrid;
+    private LaunchPad launchPad;
 
     public static void main(String[] args) {
         Main game = new Main();
@@ -29,8 +30,9 @@ public class Main extends GameEngine {
     }
 
     private void initMarbleRowGenerator() {
-        hexGrid = new MarbleRowGenerator();
-        hexGrid.initGrid(mWidth, mHeight);
+        hexGrid = new Marbles();
+        hexGrid.initRow(mWidth, mHeight);
+        launchPad = new LaunchPad(hexGrid.getSide(), 18);
     }
 
     @Override
@@ -51,6 +53,9 @@ public class Main extends GameEngine {
             RenderingHints.VALUE_ANTIALIAS_ON
         );
 
+        if (launchPad != null) {
+            launchPad.draw(mGraphics, mWidth, mHeight);
+        }
         if (hexGrid != null) {
             hexGrid.draw(mGraphics);
         }
