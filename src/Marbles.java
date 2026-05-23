@@ -4,7 +4,7 @@ import java.util.Random;
 public class Marbles extends Marble {
     private int rowCount;
     private Marble[][] marbles;
-    protected double ySpacing;
+    private double ySpacing;
     private Random random = new Random();
     private double baseX;
     private double accumulatedY;
@@ -67,17 +67,15 @@ public class Marbles extends Marble {
             this.marbles = newMarbles;
         }
 
-        int PerRow = (int)(screenWidth / (side * Math.sqrt(3)));
+        int perRow = (int)(screenWidth / xSpacing);
+        this.marbles[row] = new Marble[perRow];
 
-        this.marbles[row] = new Marble[PerRow];
-
-
-        for (int col = 0; col < PerRow; col++) {
+        for (int col = 0; col < perRow; col++) {
             this.marbles[row][col] = new Marble();
             this.marbles[row][col].init(baseX + col * xSpacing, baseY, row, col);
             initEdgeAttachment(marbles[row][col], row, col);
         }
-        this.baseX = baseX + (baseX % (side * Math.sqrt(3)) == 0 ? -side * Math.sqrt(3) / 2 : side * Math.sqrt(3) / 2);
+        this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
     }
 
     private void initEdgeAttachment(Marble hex, int row, int col) {
@@ -86,21 +84,19 @@ public class Marbles extends Marble {
         double refX = getSide() * Math.sqrt(3);
 
         if (centerX == refX) {
-            // centerX == side * Math.sqrt(3): 右上,正右,右下,左下,正左,左上
-            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col + 1; // 右上
-            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1; // 正右
-            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col + 1; // 右下
-            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col;     // 左下
-            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1; // 正左
-            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1; // 左上
+            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col + 1;
+            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1;
+            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col + 1;
+            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col;
+            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1;
+            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1;
         } else {
-            // centerX != side * Math.sqrt(3)
-            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col;     // 右上
-            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1; // 正右
-            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col;     // 右下
-            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col - 1; // 左下
-            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1; // 正左
-            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1; // 左上
+            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col;
+            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1;
+            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col;
+            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col - 1;
+            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1;
+            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1;
         }
     }
 
@@ -109,32 +105,33 @@ public class Marbles extends Marble {
     }
 
     public void update(double dt) {
-        if (marbles != null) {
-            double side = getSide();
-            double yMove = side * 0.4 * dt;
-            double cx, cy;
-            for (int r = maxRowCount; r < marbles.length; r++) {
-                if (marbles[r] == null) continue;
-                for (Marble hex : marbles[r]) {
-                    cx = hex.getCenterX();
-                    cy = hex.getCenterY();
-                    hex.setCenter(cx, cy + yMove);
-                }
-            }
-            for (int r = maxRowCount; r < marbles.length; r++) {
-                if (marbles[r] == null) continue;
-                for (Marble hex : marbles[r]) {
-                    hex.recalculateVerticesIfDirty();
-                }
-            }
+        if (marbles == null) return;
 
-            accumulatedY += yMove;
-            if (accumulatedY >= ySpacing) {
-                int newRow = maxRowCount + rowCount;
-                this.rowCount = rowCount + 1;
-                AddMarbleRow(newRow, screenWidth, this.rowCount);
-                accumulatedY -= ySpacing;
+        double side = getSide();
+        double yMove = side * 0.4 * dt;
+        double cx, cy;
+
+        for (int r = maxRowCount; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (Marble hex : marbles[r]) {
+                cx = hex.getCenterX();
+                cy = hex.getCenterY();
+                hex.setCenter(cx, cy + yMove);
             }
+        }
+        for (int r = maxRowCount; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (Marble hex : marbles[r]) {
+                hex.recalculateVerticesIfDirty();
+            }
+        }
+
+        accumulatedY += yMove;
+        if (accumulatedY >= ySpacing) {
+            int newRow = maxRowCount + rowCount;
+            this.rowCount = rowCount + 1;
+            AddMarbleRow(newRow, screenWidth, this.rowCount);
+            accumulatedY -= ySpacing;
         }
     }
 
@@ -154,12 +151,11 @@ public class Marbles extends Marble {
     }
 
     public void draw(Graphics2D g) {
-        if (marbles != null) {
-            for (int r = maxRowCount; r < marbles.length; r++) {
-                if (marbles[r] == null) continue;
-                for (Marble hex : marbles[r]) {
-                    hex.draw(g);
-                }
+        if (marbles == null) return;
+        for (int r = maxRowCount; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (Marble hex : marbles[r]) {
+                hex.draw(g);
             }
         }
     }

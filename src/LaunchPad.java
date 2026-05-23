@@ -4,7 +4,7 @@ import java.awt.geom.Point2D;
 public class LaunchPad {
     private double side;
     private int maxRowCount;
-    public Point2D.Double cannon;  // 炮台中心点
+    public Point2D.Double cannon;
 
     public LaunchPad(double side, int maxRowCount) {
         this.side = side;
@@ -12,28 +12,24 @@ public class LaunchPad {
         this.cannon = new Point2D.Double(0, 0);
     }
 
-    public void setCannonPosition(int mWidth, int mHeight) {
-        double topY;
+    private double calculateTopY() {
         if (maxRowCount % 2 == 1) {
-            topY = (3 * ((maxRowCount - 1) / 2.0 + Math.sqrt(3) / 2)) * side;
+            return 3 * ((maxRowCount - 1) / 2.0 + Math.sqrt(3) / 2) * side;
         } else {
-            topY = (3 * ((maxRowCount - 2) / 2.0 + Math.sqrt(3) / 2 + 0.5)) * side;
+            return 3 * (maxRowCount / 2.0 + 0.5 + Math.sqrt(3) / 2) * side;
         }
+    }
 
+    public void setCannonPosition(int mWidth, int mHeight) {
+        double topY = calculateTopY();
         cannon.x = mWidth / 2.0;
-        cannon.y = (mHeight - topY / 2.0);
+        cannon.y = mHeight - topY / 2.0;
     }
 
     public void drawLaunchPad(Graphics2D g, int mWidth, int mHeight) {
-        double topY;
-        if (maxRowCount % 2 == 1) {
-            topY = (3 * ((maxRowCount - 1) / 2.0 + Math.sqrt(3) / 2)) * side;
-        } else {
-            topY = (3 * ((maxRowCount - 2) / 2.0 + Math.sqrt(3) / 2 + 0.5)) * side;
-        }
-
+        double topY = calculateTopY();
         cannon.x = mWidth / 2.0;
-        cannon.y = (mHeight -  topY / 2.0);
+        cannon.y = mHeight - topY / 2.0;
 
         g.setColor(Color.GRAY);
         g.fillRect(0, (int) topY, mWidth, mHeight - (int) topY);

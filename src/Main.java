@@ -23,6 +23,16 @@ public class Main extends GameEngine {
             mFrame.add(mPanel, BorderLayout.CENTER);
             mFrame.revalidate();
             initMarbleGrid();
+
+            mPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mousePressed(java.awt.event.MouseEvent e) {
+                    if (launchMarble != null) {
+                        launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
+                        launchMarble.launch(e.getX(), e.getY());
+                    }
+                }
+            });
         });
     }
 
@@ -41,40 +51,30 @@ public class Main extends GameEngine {
         hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);
         launchMarble = new LaunchMarble();
+        launchMarble.setScreenSize(mWidth, mHeight);
         launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
     }
 
     @Override
     public void update(double dt) {
-        if (hexGrid != null) {
-            hexGrid.update(dt);
-        }
-        if (launchMarble != null) {
-            launchMarble.update(dt);
-        }
+        if (hexGrid != null) hexGrid.update(dt);
+        if (launchMarble != null) launchMarble.update(dt);
     }
 
     @Override
     public void paintComponent() {
         changeBackgroundColor(255, 255, 255);
         clearBackground(mWidth, mHeight);
-        changeColor(0, 0, 0);
 
-        ((Graphics2D) mGraphics).setRenderingHint(
-            RenderingHints.KEY_ANTIALIASING,
-            RenderingHints.VALUE_ANTIALIAS_ON
-        );
+        Graphics2D g2 = (Graphics2D) mGraphics;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        if (hexGrid != null) {
-            hexGrid.draw(mGraphics);  // Priority 2 (bottom)
-        }
+        if (hexGrid != null) hexGrid.draw(g2);
         if (launchPad != null) {
-            launchPad.drawLaunchPad(mGraphics, mWidth, mHeight);  // Priority 1
-            launchPad.drawCannon(mGraphics, mouseX, mouseY);  // Priority 0 (top)
+            launchPad.drawLaunchPad(g2, mWidth, mHeight);
+            launchPad.drawCannon(g2, mouseX, mouseY);
         }
-        if (launchMarble != null) {
-            launchMarble.draw(mGraphics);
-        }
+        if (launchMarble != null) launchMarble.draw(g2);
     }
 
     @Override
@@ -87,17 +87,16 @@ public class Main extends GameEngine {
     public void mousePressed(MouseEvent event) {
         if (launchMarble != null) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
-            launchMarble.launch(mouseX, mouseY);
+            launchMarble.launch(event.getX(), event.getY());
         }
     }
 
     @Override
     public void keyPressed(KeyEvent event) {
-        if (event.getKeyCode() == KeyEvent.VK_SPACE) {
-            if (launchMarble != null) {
-                launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
-                launchMarble.launch(mouseX, mouseY);
-            }
+        if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null) {
+            launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
+            launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x + 100,
+                               mouseY > 0 ? mouseY : launchPad.cannon.y);
         }
     }
 }
