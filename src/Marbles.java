@@ -27,7 +27,7 @@ public class Marbles extends Marble {
         for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
             AddMarbleRow(generatedRows, screenWidth, initialRowCount);
 
-            for (int r = 0; r <= generatedRows; r++) {
+            for (int r = 0; r < generatedRows; r++) {
                 for (int c = 0, len = marbles[r].length; c < len; c++) {
                     double cy = marbles[r][c].getCenterY();
                     marbles[r][c].setCenter(marbles[r][c].getCenterX(), cy + ySpacing);
