@@ -23,16 +23,6 @@ public class Main extends GameEngine {
             mFrame.add(mPanel, BorderLayout.CENTER);
             mFrame.revalidate();
             initMarbleGrid();
-
-            mPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mousePressed(java.awt.event.MouseEvent e) {
-                    if (launchMarble != null) {
-                        launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
-                        launchMarble.launch(e.getX(), e.getY());
-                    }
-                }
-            });
         });
     }
 

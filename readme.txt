@@ -28,7 +28,7 @@ Marbles中centerX = centerX + (centerX % (side * Math.sqrt(3)) == 0 ? -side * Ma
 
 添加功能,设置所有六边形每秒y轴+五分之二六边形边长
 
-
+读取学习Gameengine,Gameengine只读,优化全部代码
 
 
 

@@ -4,6 +4,7 @@ import java.awt.geom.Point2D;
 public class LaunchPad {
     private double side;
     private int maxRowCount;
+    private double topY;
     public Point2D.Double cannon;
 
     public LaunchPad(double side, int maxRowCount) {
@@ -21,20 +22,22 @@ public class LaunchPad {
     }
 
     public void setCannonPosition(int mWidth, int mHeight) {
-        double topY = calculateTopY();
-        cannon.x = mWidth / 2.0;
-        cannon.y = mHeight - topY / 2.0;
+        updateCannonPosition(mWidth, mHeight);
     }
 
     public void drawLaunchPad(Graphics2D g, int mWidth, int mHeight) {
-        double topY = calculateTopY();
-        cannon.x = mWidth / 2.0;
-        cannon.y = mHeight - topY / 2.0;
+        updateCannonPosition(mWidth, mHeight);
 
         g.setColor(Color.GRAY);
         g.fillRect(0, (int) topY, mWidth, mHeight - (int) topY);
         g.setColor(Color.BLACK);
         g.drawRect(0, (int) topY, mWidth, mHeight - (int) topY);
+    }
+
+    private void updateCannonPosition(int mWidth, int mHeight) {
+        topY = calculateTopY();
+        cannon.x = mWidth / 2.0;
+        cannon.y = mHeight - topY / 2.0;
     }
 
     public void drawCannon(Graphics2D g, double mouseX, double mouseY) {

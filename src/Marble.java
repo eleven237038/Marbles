@@ -94,7 +94,9 @@ public class Marble {
     public void reset() {
         this.cx = 0;
         this.cy = 0;
-        this.side = 24.22;
+        this.side = DEFAULT_SIDE;
         this.verticesDirty = false;
     }
+
+    private static final double DEFAULT_SIDE = 24.22;
 }

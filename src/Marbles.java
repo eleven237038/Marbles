@@ -1,7 +1,8 @@
 import java.awt.*;
 import java.util.Random;
 
-public class Marbles extends Marble {
+public class Marbles {
+    private static final double SQRT3 = Math.sqrt(3);
     private int rowCount;
     private Marble[][] marbles;
     private double ySpacing;
@@ -10,32 +11,30 @@ public class Marbles extends Marble {
     private double accumulatedY;
     private int screenWidth;
     private int maxRowCount;
+    private double side;
 
     public Marbles() {
-        super();
         this.marbles = null;
         this.rowCount = 0;
         this.ySpacing = 0;
         this.baseX = 0;
         this.accumulatedY = 0;
+        this.side = 24.22;
     }
+
+    public double getSide() { return side; }
 
     public void setMaxRowCount(int maxRowCount) {
         this.maxRowCount = maxRowCount;
     }
 
     public void StartMarbles(int screenWidth, int screenHeight, int initialRowCount) {
-        double side = getSide();
         this.screenWidth = screenWidth;
         this.ySpacing = side * 1.5;
 
         int totalRows = maxRowCount + initialRowCount;
         this.rowCount = initialRowCount;
         this.marbles = new Marble[totalRows][];
-
-        for (int r = 0; r < maxRowCount; r++) {
-            this.marbles[r] = null;
-        }
 
         for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
             int actualRow = maxRowCount + generatedRows;
@@ -52,12 +51,11 @@ public class Marbles extends Marble {
     }
 
     public void AddMarbleRow(int row, int screenWidth, int initialRowCount) {
-        double side = getSide();
         double baseY = -2 * side;
-        double xSpacing = side * Math.sqrt(3);
+        double xSpacing = side * SQRT3;
 
         if (marbles == null || row == maxRowCount) {
-            double[] initialBaseX = { side * Math.sqrt(3), side * Math.sqrt(3) / 2 };
+            double[] initialBaseX = { side * SQRT3, side * SQRT3 / 2 };
             this.baseX = initialBaseX[random.nextInt(2)];
             this.rowCount = initialRowCount;
             this.marbles = new Marble[maxRowCount + initialRowCount][];
@@ -81,9 +79,10 @@ public class Marbles extends Marble {
     private void initEdgeAttachment(Marble hex, int row, int col) {
         int[][] edgeAttachment = hex.getEdgeAttachment();
         double centerX = hex.getCenterX();
-        double refX = getSide() * Math.sqrt(3);
+        double refX = side * SQRT3;
+        boolean isEvenCol = Math.abs(centerX - refX) < 0.001;
 
-        if (centerX == refX) {
+        if (isEvenCol) {
             edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col + 1;
             edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1;
             edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col + 1;
@@ -107,21 +106,12 @@ public class Marbles extends Marble {
     public void update(double dt) {
         if (marbles == null) return;
 
-        double side = getSide();
         double yMove = side * 0.4 * dt;
-        double cx, cy;
 
         for (int r = maxRowCount; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
             for (Marble hex : marbles[r]) {
-                cx = hex.getCenterX();
-                cy = hex.getCenterY();
-                hex.setCenter(cx, cy + yMove);
-            }
-        }
-        for (int r = maxRowCount; r < marbles.length; r++) {
-            if (marbles[r] == null) continue;
-            for (Marble hex : marbles[r]) {
+                hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
                 hex.recalculateVerticesIfDirty();
             }
         }
