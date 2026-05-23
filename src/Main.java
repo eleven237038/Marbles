@@ -17,7 +17,7 @@ public class Main extends GameEngine {
             mPanel.setPreferredSize(new Dimension(mWidth, mHeight));
             mFrame.add(mPanel, BorderLayout.CENTER);
             mFrame.revalidate();
-            initMarbleRowGenerator();
+            initMarbleGrid();
         });
     }
 
@@ -29,7 +29,7 @@ public class Main extends GameEngine {
         mFrame.setResizable(false);
     }
 
-    private void initMarbleRowGenerator() {
+    private void initMarbleGrid() {
         hexGrid = new Marbles();
         hexGrid.initRow(mWidth, mHeight);
         launchPad = new LaunchPad(hexGrid.getSide(), 18);

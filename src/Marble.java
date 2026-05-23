@@ -5,6 +5,7 @@ public class Marble {
     private double cx, cy;
     private double side;
     private boolean initialized;
+    private boolean verticesDirty;
     public static final int RED = 1;
     public static final int BLUE = 2;
     public static final int YELLOW = 3;
@@ -38,6 +39,7 @@ public class Marble {
         this.row = 0;
         this.col = 0;
         this.edgeAttachment = new int[6][2]; // [方向][0=row, 1=col]
+        this.verticesDirty = false;
     }
 
     public void init(double cx, double cy, int row, int col) {
@@ -64,8 +66,13 @@ public class Marble {
     public void setCenter(double cx, double cy) {
         this.cx = cx;
         this.cy = cy;
-        if (initialized) {
+        this.verticesDirty = true;
+    }
+
+    public void recalculateVerticesIfDirty() {
+        if (verticesDirty) {
             calculateVertices();
+            verticesDirty = false;
         }
     }
 

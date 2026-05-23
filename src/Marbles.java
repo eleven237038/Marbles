@@ -7,6 +7,8 @@ public class Marbles extends Marble {
     protected double ySpacing;
     private Random random = new Random();
     private double baseX;
+    private double accumulatedY;
+    private int screenWidth;
 
     public Marbles() {
         super();
@@ -14,18 +16,19 @@ public class Marbles extends Marble {
         this.rowCount = 0;
         this.ySpacing = 0;
         this.baseX = 0;
+        this.accumulatedY = 0;
     }
 
     public void StartMarbles(int screenWidth, int screenHeight, int initialRowCount) {
         double side = getSide();
-
+        this.screenWidth = screenWidth;
         this.ySpacing = side * 1.5;
 
         for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
             AddMarbleRow(generatedRows, screenWidth, initialRowCount);
 
             for (int r = 0; r <= generatedRows; r++) {
-                for (int c = 0; c < marbles[r].length; c++) {
+                for (int c = 0, len = marbles[r].length; c < len; c++) {
                     double cy = marbles[r][c].getCenterY();
                     marbles[r][c].setCenter(marbles[r][c].getCenterX(), cy + ySpacing);
                 }
@@ -35,6 +38,7 @@ public class Marbles extends Marble {
 
     public void AddMarbleRow(int row, int screenWidth, int initialRowCount) {
         double side = getSide();
+        double baseY = -2 * side;
         double xSpacing = side * Math.sqrt(3);
 
         if (row == 0) {
@@ -42,8 +46,12 @@ public class Marbles extends Marble {
             this.baseX = initialBaseX[random.nextInt(2)];
             this.rowCount = initialRowCount;
             this.marbles = new Marble[initialRowCount][];
+        } else if (row >= marbles.length) {
+            Marble[][] newMarbles = new Marble[marbles.length + 1][];
+            System.arraycopy(marbles, 0, newMarbles, 0, marbles.length);
+            this.marbles = newMarbles;
         }
-        double baseY = -2 * side;
+
         int PerRow = (int)(screenWidth / (side * Math.sqrt(3)));
 
         this.marbles[row] = new Marble[PerRow];
@@ -87,10 +95,28 @@ public class Marbles extends Marble {
 
     public void update(double dt) {
         if (marbles != null) {
+            double side = getSide();
+            double yMove = side * 0.4 * dt;
+            double cx, cy;
             for (Marble[] row : marbles) {
                 for (Marble hex : row) {
-                    hex.update(dt);
+                    cx = hex.getCenterX();
+                    cy = hex.getCenterY();
+                    hex.setCenter(cx, cy + yMove);
                 }
+            }
+            for (Marble[] row : marbles) {
+                for (Marble hex : row) {
+                    hex.recalculateVerticesIfDirty();
+                }
+            }
+
+            accumulatedY += yMove;
+            if (accumulatedY >= ySpacing) {
+                int newRow = rowCount;
+                this.rowCount = newRow + 1;
+                AddMarbleRow(newRow, screenWidth, this.rowCount);
+                accumulatedY -= ySpacing;
             }
         }
     }
@@ -118,10 +144,6 @@ public class Marbles extends Marble {
                 }
             }
         }
-    }
-
-    public void updateEdgeAttachment() {
-        // edgeAttachment已在创建时初始化，此方法可用于后续更新逻辑
     }
 
     public void resetRow() {
