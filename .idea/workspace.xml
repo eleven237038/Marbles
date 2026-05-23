@@ -4,9 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更正下降规则(有bug)">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更正下降规则">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/LaunchMarble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/LaunchMarble.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/LaunchPad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/LaunchPad.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,7 +96,7 @@
       <workItem from="1779418512612" duration="5199000" />
       <workItem from="1779441257723" duration="12576000" />
       <workItem from="1779504261191" duration="7571000" />
-      <workItem from="1779514667342" duration="12519000" />
+      <workItem from="1779514667342" duration="16338000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -200,7 +202,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779535965952</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="更正下降规则">
+      <option name="closed" value="true" />
+      <created>1779538744959</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1779538744959</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -225,6 +235,7 @@
     <MESSAGE value="更正六边形生成规则,增加初始朝向随机性" />
     <MESSAGE value="更正六边形生成规则,为下降规则做准备" />
     <MESSAGE value="更正下降规则(有bug)" />
-    <option name="LAST_COMMIT_MESSAGE" value="更正下降规则(有bug)" />
+    <MESSAGE value="更正下降规则" />
+    <option name="LAST_COMMIT_MESSAGE" value="更正下降规则" />
   </component>
 </project>
