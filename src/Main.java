@@ -11,8 +11,7 @@ public class Main extends GameEngine {
     private double mouseY = 0;
 
     public static void main(String[] args) {
-        Main game = new Main();
-        GameEngine.createGame(game, 60);
+        StartMenu.display();
     }
 
     @Override
