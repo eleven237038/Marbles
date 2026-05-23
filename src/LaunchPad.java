@@ -17,7 +17,7 @@ public class LaunchPad {
         if (maxRowCount % 2 == 1) {
             return 3 * ((maxRowCount - 1) / 2.0 + Math.sqrt(3) / 2) * side;
         } else {
-            return 3 * (maxRowCount / 2.0 + 0.5 + Math.sqrt(3) / 2) * side;
+            return (3 * ((maxRowCount - 2) / 2.0 + Math.sqrt(3) / 2 + 0.5)) * side;
         }
     }
 

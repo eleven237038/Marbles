@@ -4,14 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="为碰撞设置做准备">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="代码优化">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/GameEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/LaunchMarble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/LaunchMarble.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/LaunchPad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/LaunchPad.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,6 +28,9 @@
     &quot;accountId&quot;: &quot;4521151b-dff9-427e-9ba5-e192808e912c&quot;
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/Main.java" root0="SKIP_HIGHLIGHTING" />
+  </component>
   <component name="JsbtTreeLayoutManager">
     <layout place="tools.popupGrunt">
       <scroll-view-position x="0" y="0" />
@@ -58,12 +56,13 @@
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "demo",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "F:/0-SchoolWork/3-2-Games Programming/Ass-2/Marble",
+    "last_opened_file_path": "F:/0-SchoolWork/3-2-Games Programming/Ass-2/Marble/Marbles",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "proofread",
     "vue.rearranger.settings.migration": "true",
     "应用程序.HexGrid.executor": "Run",
     "应用程序.Main.executor": "Run",
@@ -97,6 +96,7 @@
       <workItem from="1779441257723" duration="12576000" />
       <workItem from="1779504261191" duration="7571000" />
       <workItem from="1779514667342" duration="21533000" />
+      <workItem from="1779552872011" duration="436000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -226,7 +226,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779545841723</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="代码优化">
+      <option name="closed" value="true" />
+      <created>1779552942253</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1779552942253</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -254,6 +262,7 @@
     <MESSAGE value="更正下降规则" />
     <MESSAGE value="添加LaunchMarble实体" />
     <MESSAGE value="为碰撞设置做准备" />
-    <option name="LAST_COMMIT_MESSAGE" value="为碰撞设置做准备" />
+    <MESSAGE value="代码优化" />
+    <option name="LAST_COMMIT_MESSAGE" value="代码优化" />
   </component>
 </project>
