@@ -5,13 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更正六边形生成规则,为下降规则做准备">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/org/example/GameEngine.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/org/example/GameEngine.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/org/example/MarbleGrid.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/org/example/MarbleGrid.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/readme.txt" beforeDir="false" afterPath="$PROJECT_DIR$/readme.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/GameEngine.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MarbleRowGenerator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +99,7 @@
       <workItem from="1779418512612" duration="5199000" />
       <workItem from="1779441257723" duration="12576000" />
       <workItem from="1779504261191" duration="7571000" />
-      <workItem from="1779514667342" duration="6873000" />
+      <workItem from="1779514667342" duration="9545000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -189,7 +189,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779505191361</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="更正六边形生成规则,为下降规则做准备">
+      <option name="closed" value="true" />
+      <created>1779532794450</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1779532794450</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
