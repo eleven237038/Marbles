@@ -26,7 +26,7 @@ public class StartMenu extends JPanel {
     private int exitX, exitY;
     private final int SETTING_SIZE = 60;
 
-    private int fallOffset = -250;
+    private int fallOffset = -350;
     private final Timer animationTimer = new Timer();
 
     public StartMenu(StartMenuListener listener) {
@@ -130,19 +130,21 @@ public class StartMenu extends JPanel {
     }
 
     private void drawLuxuryTitle(Graphics2D g2d, int w, int h, int offset) {
-        Font titleFont = new Font("Arial Black", Font.BOLD, 100);
+        Font titleFont = new Font("Arial Black", Font.BOLD, 54);
         g2d.setFont(titleFont);
         String title = "MARBLE";
-        int baseX = w / 2 - 230;
-        int baseY = h / 4 + offset;
+        FontMetrics fm = g2d.getFontMetrics();
+        int titleWidth = fm.stringWidth(title);
+        int baseX = (w - titleWidth) / 2;
+        int baseY = h / 5 + offset;
 
         g2d.setColor(new Color(0, 0, 0, 50));
-        g2d.drawString(title, baseX + 6, baseY + 6);
+        g2d.drawString(title, baseX + 4, baseY + 4);
         g2d.setColor(new Color(0, 0, 0, 30));
-        g2d.drawString(title, baseX + 3, baseY + 3);
+        g2d.drawString(title, baseX + 2, baseY + 2);
 
         LinearGradientPaint textGrad = new LinearGradientPaint(
-                baseX, baseY - 60, baseX + 460, baseY + 60,
+                baseX, baseY - 35, baseX + titleWidth, baseY + 35,
                 new float[]{0, 0.25f, 0.5f, 0.75f, 1f},
                 new Color[]{
                         new Color(255, 70, 70),
@@ -155,34 +157,51 @@ public class StartMenu extends JPanel {
         g2d.setPaint(textGrad);
         g2d.drawString(title, baseX, baseY);
 
-        g2d.setStroke(new BasicStroke(3.5f));
+        g2d.setStroke(new BasicStroke(2.5f));
         g2d.setColor(new Color(255, 255, 255, 220));
         g2d.drawString(title, baseX, baseY);
 
-        g2d.setStroke(new BasicStroke(1.5f));
+        g2d.setStroke(new BasicStroke(1f));
         g2d.setColor(new Color(0, 0, 0, 80));
         g2d.drawString(title, baseX, baseY);
     }
 
     private void drawCompactMarbles(Graphics2D g2d, int w, int h, int offset) {
         int centerX = w / 2;
-        int titleY = h / 4 + offset;
+        int titleY = h / 5 + offset;
 
-        int[][] positions = {
-                {centerX - 220, titleY - 75},
-                {centerX + 220, titleY - 75},
-                {centerX - 260, titleY},
-                {centerX + 260, titleY},
-                {centerX - 150, titleY + 60},
-                {centerX - 50, titleY + 80},
-                {centerX + 50, titleY + 80},
-                {centerX + 150, titleY + 60}
+        // 初始位置（屏幕上方外）
+        int[][] startPositions = {
+                {centerX - 100, titleY - 400},
+                {centerX + 100, titleY - 400},
+                {centerX - 160, titleY - 380},
+                {centerX + 160, titleY - 380},
+                {centerX - 60, titleY - 360},
+                {centerX, titleY - 420},
+                {centerX + 60, titleY - 360},
+                {centerX, titleY - 480}
+        };
+
+        // 停止位置（屏幕内，环绕标题不遮挡）
+        int[][] endPositions = {
+                {centerX - 100, titleY - 85},
+                {centerX + 100, titleY - 85},
+                {centerX - 155, titleY - 25},
+                {centerX + 155, titleY - 25},
+                {centerX - 55, titleY + 50},
+                {centerX, titleY + 70},
+                {centerX + 55, titleY + 50},
+                {centerX, titleY - 130}
         };
 
         for (int i = 0; i < decorMarbles.size(); i++) {
             Marble m = decorMarbles.get(i);
-            m.setCenter(positions[i][0], positions[i][1]);
-            m.setSide(28);
+            // 动画进度（0.0 = 开始位置, 1.0 = 停止位置）
+            float progress = offset >= 0 ? 1.0f : Math.min(1.0f, (offset + 350) / 350f);
+            int cx = (int) (startPositions[i][0] + (endPositions[i][0] - startPositions[i][0]) * progress);
+            int cy = (int) (startPositions[i][1] + (endPositions[i][1] - startPositions[i][1]) * progress);
+            m.setCenter(cx, cy);
+            m.setSide(26);
             m.draw(g2d);
         }
     }
@@ -202,8 +221,8 @@ public class StartMenu extends JPanel {
 
         int x = startX + BTN_WIDTH / 2;
         int y = startY + BTN_HEIGHT / 2;
-        int[] xP = {x - 18, x + 18, x - 18};
-        int[] yP = {y - 18, y, y + 18};
+        int[] xP = {x - 16, x + 16, x - 16};
+        int[] yP = {y - 16, y, y + 16};
         g2d.fillPolygon(xP, yP, 3);
     }
 
