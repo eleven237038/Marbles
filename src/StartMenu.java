@@ -3,9 +3,13 @@ import java.awt.*;
 import java.awt.geom.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.imageio.ImageIO;
 
 public class StartMenu extends JPanel {
     // 回调接口，用于通知主类开始游戏
@@ -17,22 +21,29 @@ public class StartMenu extends JPanel {
     private final ArrayList<Marble> decorMarbles = new ArrayList<>();
     private boolean startHover = false;
     private boolean settingHover = false;
-    private boolean exitHover = false;
 
     private final int BTN_WIDTH = 200;
     private final int BTN_HEIGHT = 80;
     private int startX, startY;
     private int settingX, settingY;
-    private int exitX, exitY;
     private final int SETTING_SIZE = 60;
 
     private int fallOffset = -300;
     private final Timer animationTimer = new Timer();
+    private BufferedImage settingsIcon; // 设置图标图片
 
     public StartMenu(StartMenuListener listener) {
         this.listener = listener;
         setBackground(new Color(240, 248, 255));
         setPreferredSize(new Dimension(483, 1080));
+
+        // 加载设置图标
+        try {
+            settingsIcon = ImageIO.read(new File("settings.png"));
+        } catch (IOException e) {
+            System.out.println("警告：找不到settings.png文件，将使用默认齿轮图标");
+            settingsIcon = null;
+        }
 
         initDecorMarbles();
         startAnimation();
@@ -48,9 +59,6 @@ public class StartMenu extends JPanel {
                 if (new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my)) {
                     openSettings();
                 }
-                if (new Rectangle(exitX, exitY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my)) {
-                    System.exit(0);
-                }
             }
 
             @Override
@@ -59,7 +67,6 @@ public class StartMenu extends JPanel {
                 int my = e.getY();
                 startHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
                 settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
-                exitHover = new Rectangle(exitX, exitY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
                 repaint();
             }
         });
@@ -101,14 +108,10 @@ public class StartMenu extends JPanel {
         settingX = 30;
         settingY = h - SETTING_SIZE - 30;
 
-        exitX = w / 2 - BTN_WIDTH / 2;
-        exitY = startY + BTN_HEIGHT + 30;
-
         drawBackground(g2d, w, h);
         drawLuxuryTitle(g2d, w, h, fallOffset);
         drawCompactMarbles(g2d, w, h, fallOffset);
         drawStartButton(g2d);
-        drawExitButton(g2d);
         drawStandardGearButton(g2d, h);
     }
 
@@ -217,27 +220,6 @@ public class StartMenu extends JPanel {
         g2d.fillPolygon(xP, yP, 3);
     }
 
-    private void drawExitButton(Graphics2D g2d) {
-        RoundRectangle2D btn = new RoundRectangle2D.Double(exitX, exitY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
-        Color c1 = exitHover ? new Color(255, 100, 100) : new Color(200, 60, 60);
-        Color c2 = exitHover ? new Color(180, 40, 40) : new Color(150, 30, 30);
-        LinearGradientPaint btnGrad = new LinearGradientPaint(exitX, exitY, exitX, exitY + BTN_HEIGHT,
-                new float[]{0, 1}, new Color[]{c1, c2});
-        g2d.setPaint(btnGrad);
-        g2d.fill(btn);
-
-        g2d.setStroke(new BasicStroke(2.5f));
-        g2d.setColor(Color.WHITE);
-        g2d.draw(btn);
-
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Arial", Font.BOLD, 24));
-        String text = "退出";
-        FontMetrics fm = g2d.getFontMetrics();
-        int textWidth = fm.stringWidth(text);
-        g2d.drawString(text, exitX + (BTN_WIDTH - textWidth) / 2, exitY + BTN_HEIGHT / 2 + 8);
-    }
-
     private void drawStandardGearButton(Graphics2D g2d, int h) {
         int x = settingX;
         int y = settingY;
@@ -248,9 +230,16 @@ public class StartMenu extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.draw(btn);
 
-        double cx = x + SETTING_SIZE / 2.0;
-        double cy = y + SETTING_SIZE / 2.0;
-        drawStandardGear(g2d, cx, cy, 22, 12, 8);
+        // 绘制设置图标
+        if (settingsIcon != null) {
+            // 缩放图片到按钮大小并居中绘制
+            g2d.drawImage(settingsIcon, x + 5, y + 5, SETTING_SIZE - 10, SETTING_SIZE - 10, null);
+        } else {
+            // 备用：如果图片加载失败，显示原来的齿轮图标
+            double cx = x + SETTING_SIZE / 2.0;
+            double cy = y + SETTING_SIZE / 2.0;
+            drawStandardGear(g2d, cx, cy, 22, 12, 8);
+        }
     }
 
     private void drawStandardGear(Graphics2D g2d, double cx, double cy, double outerR, double innerR, int teeth) {
