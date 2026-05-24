@@ -146,14 +146,6 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 		mWidth = 500;
 		mHeight = 500;
 
-		// Create window
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				// Create the window	
-				setupWindow(500,500);
-			}
-		});
 	}
 
 	// Create Game Function

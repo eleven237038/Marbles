@@ -8,7 +8,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class StartMenu extends JPanel {
-    private final JFrame frame;
+    // 回调接口，用于通知主类开始游戏
+    public interface StartMenuListener {
+        void onStartGame();
+    }
+
+    private final StartMenuListener listener;
     private final ArrayList<Marble> decorMarbles = new ArrayList<>();
     private boolean startHover = false;
     private boolean settingHover = false;
@@ -24,13 +29,10 @@ public class StartMenu extends JPanel {
     private int fallOffset = -250;
     private final Timer animationTimer = new Timer();
 
-    public StartMenu() {
-        frame = new JFrame("弹珠游戏 - 主菜单");
-        frame.setSize(900, 650);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocationRelativeTo(null);
-        frame.add(this);
+    public StartMenu(StartMenuListener listener) {
+        this.listener = listener;
         setBackground(new Color(240, 248, 255));
+        setPreferredSize(new Dimension(483, 1080));
 
         initDecorMarbles();
         startAnimation();
@@ -41,7 +43,7 @@ public class StartMenu extends JPanel {
                 int mx = e.getX();
                 int my = e.getY();
                 if (new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my)) {
-                    startGame();
+                    listener.onStartGame();
                 }
                 if (new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my)) {
                     openSettings();
@@ -61,8 +63,6 @@ public class StartMenu extends JPanel {
                 repaint();
             }
         });
-
-        frame.setVisible(true);
     }
 
     private void initDecorMarbles() {
@@ -260,19 +260,7 @@ public class StartMenu extends JPanel {
         g2d.fillOval((int) cx - 6, (int) cy - 6, 12, 12);
     }
 
-    private void startGame() {
-        frame.dispose();
-        SwingUtilities.invokeLater(() -> {
-            Main game = new Main();
-            GameEngine.createGame(game, 60);
-        });
-    }
-
     private void openSettings() {
-        JOptionPane.showMessageDialog(frame, "打开设置");
-    }
-
-    public static void display() {
-        SwingUtilities.invokeLater(() -> new StartMenu());
+        JOptionPane.showMessageDialog(this, "设置功能开发中...");
     }
 }

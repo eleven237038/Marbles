@@ -3,35 +3,87 @@ import java.awt.event.MouseEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.*;
 
-public class Main extends GameEngine {
+public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private Marbles hexGrid;
     private LaunchPad launchPad;
     private LaunchMarble launchMarble;
     private double mouseX = 0;
     private double mouseY = 0;
+    private CardLayout cardLayout;
+    private JPanel mainPanel;
+    private boolean gameStarted = false;
     private boolean frozen = false;
     private double deadline;
 
-    public void 冻结状态() {
-        frozen = true;
-    }
-
-    private void collisionWithDeadline() {
-        if (hexGrid == null) return;
-        double radius = hexGrid.getSide() * 0.866;
-        for (int r = hexGrid.getMaxRowCount(); r < hexGrid.getMarblesLength(); r++) {
-            for (int c = 0; c < 50; c++) {
-                Marble marble = hexGrid.getHex(r, c);
-                if (marble != null && marble.getCenterY() + radius >= deadline) {
-                    冻结状态();
-                    return;
-                }
-            }
-        }
-    }
-
     public static void main(String[] args) {
-        StartMenu.display();
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("弹珠游戏");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setResizable(false);
+
+            CardLayout cardLayout = new CardLayout();
+            JPanel mainPanel = new JPanel(cardLayout);
+
+            Main game = new Main(frame);
+
+            StartMenu startMenu = new StartMenu(game);
+
+            mainPanel.add(startMenu, "menu");
+            mainPanel.add(game.mPanel, "game");
+
+            frame.setContentPane(mainPanel);
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+
+            game.cardLayout = cardLayout;
+            game.mainPanel = mainPanel;
+        });
+    }
+
+    public Main(JFrame frame) {
+        mFrame = frame;
+        mPanel = new GamePanel();
+        mWidth = 483;
+        mHeight = 1080;
+
+        mPanel.setDoubleBuffered(true);
+        mPanel.addMouseListener(this);
+        mPanel.addMouseMotionListener(this);
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .addKeyEventDispatcher(new KeyEventDispatcher() {
+                    @Override
+                    public boolean dispatchKeyEvent(KeyEvent e) {
+                        switch (e.getID()) {
+                        case KeyEvent.KEY_PRESSED:
+                            Main.this.keyPressed(e);
+                            return false;
+                        case KeyEvent.KEY_RELEASED:
+                            Main.this.keyReleased(e);
+                            return false;
+                        case KeyEvent.KEY_TYPED:
+                            Main.this.keyTyped(e);
+                            return false;
+                        default:
+                            return false;
+                        }
+                    }
+                });
+
+        Insets insets = mFrame.getInsets();
+        mFrame.setSize(mWidth + insets.left + insets.right, mHeight + insets.top + insets.bottom);
+    }
+
+    @Override
+    public void onStartGame() {
+        cardLayout.show(mainPanel, "game");
+
+        if (!gameStarted) {
+            gameStarted = true;
+            init();
+            gameLoop(60);
+        }
     }
 
     @Override
@@ -43,14 +95,6 @@ public class Main extends GameEngine {
             mFrame.revalidate();
             initMarbleGrid();
         });
-    }
-
-    @Override
-    public void setupWindow(int width, int height) {
-        mWidth = 483;
-        mHeight = 1080;
-        super.setupWindow(mWidth, mHeight);
-        mFrame.setResizable(false);
     }
 
     private void initMarbleGrid() {
@@ -71,6 +115,20 @@ public class Main extends GameEngine {
         if (hexGrid != null) hexGrid.update(dt);
         if (launchMarble != null) launchMarble.update(dt);
         collisionWithDeadline();
+    }
+
+    private void collisionWithDeadline() {
+        if (hexGrid == null) return;
+        double radius = hexGrid.getSide() * 0.866;
+        for (int r = hexGrid.getMaxRowCount(); r < hexGrid.getMarblesLength(); r++) {
+            for (int c = 0; c < 50; c++) {
+                Marble marble = hexGrid.getHex(r, c);
+                if (marble != null && marble.getCenterY() + radius >= deadline) {
+                    frozen = true;
+                    return;
+                }
+            }
+        }
     }
 
     @Override
@@ -99,7 +157,7 @@ public class Main extends GameEngine {
     @Override
     public void mousePressed(MouseEvent event) {
         if (frozen) return;
-        if (launchMarble != null) {
+        if (launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(event.getX(), event.getY());
         }
@@ -108,10 +166,10 @@ public class Main extends GameEngine {
     @Override
     public void keyPressed(KeyEvent event) {
         if (frozen) return;
-        if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null) {
+        if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x + 100,
-                               mouseY > 0 ? mouseY : launchPad.cannon.y);
+                    mouseY > 0 ? mouseY : launchPad.cannon.y);
         }
     }
 }
