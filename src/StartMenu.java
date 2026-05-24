@@ -21,6 +21,8 @@ public class StartMenu extends JPanel {
     private final ArrayList<Marble> decorMarbles = new ArrayList<>();
     private boolean startHover = false;
     private boolean settingHover = false;
+    private boolean startPressed = false; // 开始按钮按下状态
+    private boolean settingPressed = false; // 设置按钮按下状态
     private boolean isSoundOn = true; // 声音开关状态
 
     private final int BTN_WIDTH = 200;
@@ -49,28 +51,78 @@ public class StartMenu extends JPanel {
         initDecorMarbles();
         startAnimation();
 
-        addMouseListener(new MouseAdapter() {
+        // 创建统一的鼠标事件适配器
+        MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 int mx = e.getX();
                 int my = e.getY();
-                if (new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my)) {
+                startPressed = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
+                settingPressed = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
+                repaint();
+
+                if (startPressed) {
                     listener.onStartGame();
                 }
-                if (new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my)) {
+                if (settingPressed) {
                     openSettings();
                 }
             }
 
             @Override
-            public void mouseMoved(MouseEvent e) {
-                int mx = e.getX();
-                int my = e.getY();
-                startHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
-                settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
+            public void mouseReleased(MouseEvent e) {
+                startPressed = false;
+                settingPressed = false;
                 repaint();
             }
-        });
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                updateHoverState(e.getX(), e.getY());
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                updateHoverState(e.getX(), e.getY());
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                updateHoverState(e.getX(), e.getY());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                startHover = false;
+                settingHover = false;
+                setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                repaint();
+            }
+
+            private void updateHoverState(int mx, int my) {
+                boolean oldStartHover = startHover;
+                boolean oldSettingHover = settingHover;
+
+                startHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
+                settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
+
+                // 设置鼠标光标
+                if (startHover || settingHover) {
+                    setCursor(new Cursor(Cursor.HAND_CURSOR));
+                } else {
+                    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                }
+
+                // 只有当悬停状态改变时才重绘
+                if (oldStartHover != startHover || oldSettingHover != settingHover) {
+                    repaint();
+                }
+            }
+        };
+
+        // 同时添加两种监听器，确保所有鼠标事件都能被捕获
+        addMouseListener(mouseAdapter);
+        addMouseMotionListener(mouseAdapter);
     }
 
     private void initDecorMarbles() {
@@ -119,7 +171,6 @@ public class StartMenu extends JPanel {
     private void enableHighQualityRender(Graphics2D g2d) {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        // 移除了可能导致兼容性问题的KEY_RENDER
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
     }
 
@@ -202,8 +253,13 @@ public class StartMenu extends JPanel {
 
     private void drawStartButton(Graphics2D g2d) {
         RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
-        Color c1 = startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
-        Color c2 = startHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
+
+        // 添加按下状态的颜色变化，与设置窗口按钮一致
+        Color c1 = startPressed ? new Color(50, 140, 255) :
+                startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
+        Color c2 = startPressed ? new Color(30, 110, 255) :
+                startHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
+
         LinearGradientPaint btnGrad = new LinearGradientPaint(startX, startY, startX, startY + BTN_HEIGHT,
                 new float[]{0, 1}, new Color[]{c1, c2});
         g2d.setPaint(btnGrad);
@@ -225,7 +281,10 @@ public class StartMenu extends JPanel {
         int x = settingX;
         int y = settingY;
         RoundRectangle2D btn = new RoundRectangle2D.Double(x, y, SETTING_SIZE, SETTING_SIZE, 20, 20);
-        g2d.setColor(settingHover ? new Color(140, 140, 255) : new Color(110, 110, 245));
+
+        // 添加按下状态的颜色变化，与设置窗口按钮一致
+        g2d.setColor(settingPressed ? new Color(50, 50, 200) :
+                settingHover ? new Color(140, 140, 255) : new Color(110, 110, 245));
         g2d.fill(btn);
         g2d.setStroke(new BasicStroke(2f));
         g2d.setColor(Color.WHITE);
