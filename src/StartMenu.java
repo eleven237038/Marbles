@@ -60,9 +60,9 @@ public class StartMenu extends JPanel {
             public void mouseMoved(MouseEvent e) {
                 int mx = e.getX();
                 int my = e.getY();
-                boolean newStartHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
-                boolean newSettingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
-                boolean newExitHover = new Rectangle(exitX, exitY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
+                boolean newStartHover = mx >= startX && mx <= startX + BTN_WIDTH && my >= startY && my <= startY + BTN_HEIGHT;
+                boolean newSettingHover = mx >= settingX && mx <= settingX + SETTING_SIZE && my >= settingY && my <= settingY + SETTING_SIZE;
+                boolean newExitHover = mx >= exitX && mx <= exitX + BTN_WIDTH && my >= exitY && my <= exitY + BTN_HEIGHT;
                 if (newStartHover != startHover || newSettingHover != settingHover || newExitHover != exitHover) {
                     startHover = newStartHover;
                     settingHover = newSettingHover;
