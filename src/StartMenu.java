@@ -21,6 +21,7 @@ public class StartMenu extends JPanel {
     private final ArrayList<Marble> decorMarbles = new ArrayList<>();
     private boolean startHover = false;
     private boolean settingHover = false;
+    private boolean isSoundOn = true; // 声音开关状态
 
     private final int BTN_WIDTH = 200;
     private final int BTN_HEIGHT = 80;
@@ -118,7 +119,7 @@ public class StartMenu extends JPanel {
     private void enableHighQualityRender(Graphics2D g2d) {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        // 移除了可能导致兼容性问题的KEY_RENDER
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
     }
 
@@ -259,7 +260,101 @@ public class StartMenu extends JPanel {
         g2d.fillOval((int) cx - 6, (int) cy - 6, 12, 12);
     }
 
+    // 新的设置窗口实现（更大尺寸+英文按钮+声音开关）
     private void openSettings() {
-        JOptionPane.showMessageDialog(this, "设置功能开发中...");
+        // 创建模态对话框（主窗口仍然可见，但需要先关闭设置窗口才能操作主窗口）
+        JDialog settingsDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Settings", Dialog.ModalityType.APPLICATION_MODAL);
+        settingsDialog.setSize(350, 250); // 窗口改大
+        settingsDialog.setLocationRelativeTo(this); // 相对于主窗口居中
+        settingsDialog.setResizable(false);
+        settingsDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        // 创建主面板
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 20));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+        mainPanel.setBackground(new Color(240, 248, 255));
+
+        // 标题标签
+        JLabel titleLabel = new JLabel("Settings", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial Black", Font.BOLD, 28));
+        titleLabel.setForeground(new Color(70, 150, 255));
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // 按钮面板
+        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 20));
+        buttonPanel.setBackground(new Color(240, 248, 255));
+
+        // 声音开关按钮
+        JButton soundButton = createStyledButton(isSoundOn ? "Sound on" : "Sound off");
+        soundButton.addActionListener(e -> {
+            isSoundOn = !isSoundOn;
+            soundButton.setText(isSoundOn ? "Sound on" : "Sound off");
+            // 这里可以添加实际的声音控制逻辑
+            // if (isSoundOn) { 开启声音 } else { 关闭声音 }
+        });
+
+        // 游戏帮助按钮
+        JButton helpButton = createStyledButton("How to play");
+        helpButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(settingsDialog,
+                    "游戏玩法：\n1. 点击屏幕或按空格键发射弹珠\n2. 相同颜色的弹珠碰撞会消除\n3. 不要让弹珠堆到屏幕底部",
+                    "How to play", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        buttonPanel.add(soundButton);
+        buttonPanel.add(helpButton);
+
+        mainPanel.add(buttonPanel, BorderLayout.CENTER);
+
+        settingsDialog.setContentPane(mainPanel);
+        settingsDialog.setVisible(true);
+    }
+
+    // 创建与主菜单风格一致的按钮
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int width = getWidth();
+                int height = getHeight();
+
+                // 绘制渐变背景
+                Color c1 = getModel().isPressed() ? new Color(50, 140, 255) :
+                        getModel().isRollover() ? new Color(100, 190, 255) : new Color(70, 150, 255);
+                Color c2 = getModel().isPressed() ? new Color(30, 110, 255) :
+                        getModel().isRollover() ? new Color(50, 140, 255) : new Color(30, 110, 255);
+
+                LinearGradientPaint grad = new LinearGradientPaint(0, 0, 0, height,
+                        new float[]{0, 1}, new Color[]{c1, c2});
+                g2d.setPaint(grad);
+                g2d.fillRoundRect(0, 0, width, height, 25, 25);
+
+                // 绘制白色边框
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.setColor(Color.WHITE);
+                g2d.drawRoundRect(0, 0, width - 1, height - 1, 25, 25);
+
+                // 绘制文字
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(new Font("Arial", Font.BOLD, 18));
+                FontMetrics fm = g2d.getFontMetrics();
+                int textX = (width - fm.stringWidth(getText())) / 2;
+                int textY = (height + fm.getAscent() - fm.getDescent()) / 2;
+                g2d.drawString(getText(), textX, textY);
+
+                g2d.dispose();
+            }
+        };
+
+        button.setPreferredSize(new Dimension(250, 55)); // 按钮也相应变大
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        return button;
     }
 }
