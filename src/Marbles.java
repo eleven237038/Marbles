@@ -1,33 +1,47 @@
 import java.awt.*;
 import java.util.Random;
 
-public class Marbles extends Marble {
+public class Marbles {
+    private static final double SQRT3 = Math.sqrt(3);
     private int rowCount;
     private Marble[][] marbles;
-    protected double ySpacing;
+    private double ySpacing;
     private Random random = new Random();
     private double baseX;
     private double accumulatedY;
     private int screenWidth;
+    private int maxRowCount;
+    private double side;
 
     public Marbles() {
-        super();
         this.marbles = null;
         this.rowCount = 0;
         this.ySpacing = 0;
         this.baseX = 0;
         this.accumulatedY = 0;
+        this.side = 24.22;
+    }
+
+    public double getSide() { return side; }
+
+    public void setMaxRowCount(int maxRowCount) {
+        this.maxRowCount = maxRowCount;
     }
 
     public void StartMarbles(int screenWidth, int screenHeight, int initialRowCount) {
-        double side = getSide();
         this.screenWidth = screenWidth;
         this.ySpacing = side * 1.5;
 
-        for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
-            AddMarbleRow(generatedRows, screenWidth, initialRowCount);
+        int totalRows = maxRowCount + initialRowCount;
+        this.rowCount = initialRowCount;
+        this.marbles = new Marble[totalRows][];
 
-            for (int r = 0; r <= generatedRows; r++) {
+        for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
+            int actualRow = maxRowCount + generatedRows;
+            AddMarbleRow(actualRow, screenWidth, initialRowCount);
+
+            for (int r = maxRowCount; r < actualRow; r++) {
+                if (marbles[r] == null) continue;
                 for (int c = 0, len = marbles[r].length; c < len; c++) {
                     double cy = marbles[r][c].getCenterY();
                     marbles[r][c].setCenter(marbles[r][c].getCenterX(), cy + ySpacing);
@@ -37,55 +51,51 @@ public class Marbles extends Marble {
     }
 
     public void AddMarbleRow(int row, int screenWidth, int initialRowCount) {
-        double side = getSide();
         double baseY = -2 * side;
-        double xSpacing = side * Math.sqrt(3);
+        double xSpacing = side * SQRT3;
 
-        if (row == 0) {
-            double[] initialBaseX = { side * Math.sqrt(3), side * Math.sqrt(3) / 2 };
+        if (marbles == null || row == maxRowCount) {
+            double[] initialBaseX = { side * SQRT3, side * SQRT3 / 2 };
             this.baseX = initialBaseX[random.nextInt(2)];
             this.rowCount = initialRowCount;
-            this.marbles = new Marble[initialRowCount][];
+            this.marbles = new Marble[maxRowCount + initialRowCount][];
         } else if (row >= marbles.length) {
             Marble[][] newMarbles = new Marble[marbles.length + 1][];
             System.arraycopy(marbles, 0, newMarbles, 0, marbles.length);
             this.marbles = newMarbles;
         }
 
-        int PerRow = (int)(screenWidth / (side * Math.sqrt(3)));
+        int perRow = (int)(screenWidth / xSpacing);
+        this.marbles[row] = new Marble[perRow];
 
-        this.marbles[row] = new Marble[PerRow];
-
-
-        for (int col = 0; col < PerRow; col++) {
+        for (int col = 0; col < perRow; col++) {
             this.marbles[row][col] = new Marble();
             this.marbles[row][col].init(baseX + col * xSpacing, baseY, row, col);
             initEdgeAttachment(marbles[row][col], row, col);
         }
-        this.baseX = baseX + (baseX % (side * Math.sqrt(3)) == 0 ? -side * Math.sqrt(3) / 2 : side * Math.sqrt(3) / 2);
+        this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
     }
 
     private void initEdgeAttachment(Marble hex, int row, int col) {
         int[][] edgeAttachment = hex.getEdgeAttachment();
         double centerX = hex.getCenterX();
-        double refX = getSide() * Math.sqrt(3);
+        double refX = side * SQRT3;
+        boolean isEvenCol = Math.abs(centerX - refX) < 0.001;
 
-        if (centerX == refX) {
-            // centerX == side * Math.sqrt(3): 右上,正右,右下,左下,正左,左上
-            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col + 1; // 右上
-            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1; // 正右
-            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col + 1; // 右下
-            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col;     // 左下
-            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1; // 正左
-            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1; // 左上
+        if (isEvenCol) {
+            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col + 1;
+            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1;
+            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col + 1;
+            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col;
+            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1;
+            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1;
         } else {
-            // centerX != side * Math.sqrt(3)
-            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col;     // 右上
-            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1; // 正右
-            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col;     // 右下
-            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col - 1; // 左下
-            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1; // 正左
-            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1; // 左上
+            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col;
+            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1;
+            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col;
+            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col - 1;
+            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1;
+            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1;
         }
     }
 
@@ -94,30 +104,24 @@ public class Marbles extends Marble {
     }
 
     public void update(double dt) {
-        if (marbles != null) {
-            double side = getSide();
-            double yMove = side * 0.4 * dt;
-            double cx, cy;
-            for (Marble[] row : marbles) {
-                for (Marble hex : row) {
-                    cx = hex.getCenterX();
-                    cy = hex.getCenterY();
-                    hex.setCenter(cx, cy + yMove);
-                }
-            }
-            for (Marble[] row : marbles) {
-                for (Marble hex : row) {
-                    hex.recalculateVerticesIfDirty();
-                }
-            }
+        if (marbles == null) return;
 
-            accumulatedY += yMove;
-            if (accumulatedY >= ySpacing) {
-                int newRow = rowCount;
-                this.rowCount = newRow + 1;
-                AddMarbleRow(newRow, screenWidth, this.rowCount);
-                accumulatedY -= ySpacing;
+        double yMove = side * 0.4 * dt;
+
+        for (int r = maxRowCount; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (Marble hex : marbles[r]) {
+                hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
+                hex.recalculateVerticesIfDirty();
             }
+        }
+
+        accumulatedY += yMove;
+        if (accumulatedY >= ySpacing) {
+            int newRow = maxRowCount + rowCount;
+            this.rowCount = rowCount + 1;
+            AddMarbleRow(newRow, screenWidth, this.rowCount);
+            accumulatedY -= ySpacing;
         }
     }
 
@@ -137,11 +141,11 @@ public class Marbles extends Marble {
     }
 
     public void draw(Graphics2D g) {
-        if (marbles != null) {
-            for (Marble[] row : marbles) {
-                for (Marble hex : row) {
-                    hex.draw(g);
-                }
+        if (marbles == null) return;
+        for (int r = maxRowCount; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (Marble hex : marbles[r]) {
+                hex.draw(g);
             }
         }
     }

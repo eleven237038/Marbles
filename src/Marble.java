@@ -1,5 +1,5 @@
 import java.awt.*;
-import java.awt.geom.*;
+import java.awt.geom.Point2D;
 import java.util.Random;
 
 public class Marble {
