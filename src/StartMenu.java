@@ -8,7 +8,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class StartMenu extends JPanel {
-    // 回调接口，用于通知主类开始游戏
     public interface StartMenuListener {
         void onStartGame();
     }
@@ -25,8 +24,12 @@ public class StartMenu extends JPanel {
     private int settingX, settingY;
     private int exitX, exitY;
     private final int SETTING_SIZE = 60;
+    private static final Font TITLE_FONT = new Font("Arial Black", Font.BOLD, 54);
 
     private int fallOffset = -350;
+    private static final int ANIMATION_RANGE = 350;
+    private static final int ANIMATION_STEP = 3;
+    private static final int TIMER_INTERVAL = 16;
     private final Timer animationTimer = new Timer();
 
     public StartMenu(StartMenuListener listener) {
@@ -57,10 +60,15 @@ public class StartMenu extends JPanel {
             public void mouseMoved(MouseEvent e) {
                 int mx = e.getX();
                 int my = e.getY();
-                startHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
-                settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
-                exitHover = new Rectangle(exitX, exitY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
-                repaint();
+                boolean newStartHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
+                boolean newSettingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
+                boolean newExitHover = new Rectangle(exitX, exitY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
+                if (newStartHover != startHover || newSettingHover != settingHover || newExitHover != exitHover) {
+                    startHover = newStartHover;
+                    settingHover = newSettingHover;
+                    exitHover = newExitHover;
+                    repaint();
+                }
             }
         });
     }
@@ -78,13 +86,13 @@ public class StartMenu extends JPanel {
             @Override
             public void run() {
                 if (fallOffset < 0) {
-                    fallOffset += 3;
+                    fallOffset += ANIMATION_STEP;
                     repaint();
                 } else {
                     this.cancel();
                 }
             }
-        }, 0, 16);
+        }, 0, TIMER_INTERVAL);
     }
 
     @Override
@@ -130,8 +138,7 @@ public class StartMenu extends JPanel {
     }
 
     private void drawLuxuryTitle(Graphics2D g2d, int w, int h, int offset) {
-        Font titleFont = new Font("Arial Black", Font.BOLD, 54);
-        g2d.setFont(titleFont);
+        g2d.setFont(TITLE_FONT);
         String title = "MARBLE";
         FontMetrics fm = g2d.getFontMetrics();
         int titleWidth = fm.stringWidth(title);
@@ -170,7 +177,7 @@ public class StartMenu extends JPanel {
         int centerX = w / 2;
         int titleY = h / 5 + offset;
 
-        // 初始位置（屏幕上方外）
+        // 初始位置
         int[][] startPositions = {
                 {centerX - 100, titleY - 400},
                 {centerX + 100, titleY - 400},
@@ -182,7 +189,7 @@ public class StartMenu extends JPanel {
                 {centerX, titleY - 480}
         };
 
-        // 停止位置（屏幕内，环绕标题不遮挡）
+        // 停止位置
         int[][] endPositions = {
                 {centerX - 100, titleY - 85},
                 {centerX + 100, titleY - 85},
@@ -196,8 +203,7 @@ public class StartMenu extends JPanel {
 
         for (int i = 0; i < decorMarbles.size(); i++) {
             Marble m = decorMarbles.get(i);
-            // 动画进度（0.0 = 开始位置, 1.0 = 停止位置）
-            float progress = offset >= 0 ? 1.0f : Math.min(1.0f, (offset + 350) / 350f);
+            float progress = offset >= 0 ? 1.0f : Math.min(1.0f, (offset + ANIMATION_RANGE) / (float) ANIMATION_RANGE);
             int cx = (int) (startPositions[i][0] + (endPositions[i][0] - startPositions[i][0]) * progress);
             int cy = (int) (startPositions[i][1] + (endPositions[i][1] - startPositions[i][1]) * progress);
             m.setCenter(cx, cy);
