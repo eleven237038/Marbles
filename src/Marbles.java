@@ -23,6 +23,7 @@ public class Marbles {
     }
 
     public double getSide() { return side; }
+    public int getMaxRowCount() { return maxRowCount; }
 
     public void setMaxRowCount(int maxRowCount) {
         this.maxRowCount = maxRowCount;
@@ -134,6 +135,10 @@ public class Marbles {
 
     public int getRowCount() {
         return rowCount;
+    }
+
+    public int getMarblesLength() {
+        return marbles != null ? marbles.length : 0;
     }
 
     public double getVerticalSpacing() {

@@ -9,6 +9,26 @@ public class Main extends GameEngine {
     private LaunchMarble launchMarble;
     private double mouseX = 0;
     private double mouseY = 0;
+    private boolean frozen = false;
+    private double deadline;
+
+    public void 冻结状态() {
+        frozen = true;
+    }
+
+    private void collisionWithDeadline() {
+        if (hexGrid == null) return;
+        double radius = hexGrid.getSide() * 0.866;
+        for (int r = hexGrid.getMaxRowCount(); r < hexGrid.getMarblesLength(); r++) {
+            for (int c = 0; c < 50; c++) {
+                Marble marble = hexGrid.getHex(r, c);
+                if (marble != null && marble.getCenterY() + radius >= deadline) {
+                    冻结状态();
+                    return;
+                }
+            }
+        }
+    }
 
     public static void main(String[] args) {
         StartMenu.display();
@@ -39,6 +59,7 @@ public class Main extends GameEngine {
         hexGrid.setMaxRowCount(18);
         hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);
+        deadline = launchPad.getTopY();
         launchMarble = new LaunchMarble();
         launchMarble.setScreenSize(mWidth, mHeight);
         launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
@@ -46,8 +67,10 @@ public class Main extends GameEngine {
 
     @Override
     public void update(double dt) {
+        if (frozen) return;
         if (hexGrid != null) hexGrid.update(dt);
         if (launchMarble != null) launchMarble.update(dt);
+        collisionWithDeadline();
     }
 
     @Override
@@ -68,12 +91,14 @@ public class Main extends GameEngine {
 
     @Override
     public void mouseMoved(MouseEvent event) {
+        if (frozen) return;
         mouseX = event.getX();
         mouseY = event.getY();
     }
 
     @Override
     public void mousePressed(MouseEvent event) {
+        if (frozen) return;
         if (launchMarble != null) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(event.getX(), event.getY());
@@ -82,6 +107,7 @@ public class Main extends GameEngine {
 
     @Override
     public void keyPressed(KeyEvent event) {
+        if (frozen) return;
         if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x + 100,

@@ -25,6 +25,10 @@ public class LaunchPad {
         updateCannonPosition(mWidth, mHeight);
     }
 
+    public double getTopY() {
+        return topY;
+    }
+
     public void drawLaunchPad(Graphics2D g, int mWidth, int mHeight) {
         updateCannonPosition(mWidth, mHeight);
 
