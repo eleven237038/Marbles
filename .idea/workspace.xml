@@ -5,12 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化代码">
+      <change afterPath="$PROJECT_DIR$/resources/again.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/exit.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/help.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/pause.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/settings.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/sound.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/readme.txt" beforeDir="false" afterPath="$PROJECT_DIR$/readme.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/LaunchMarble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/LaunchMarble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/StartMenu.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/StartMenu.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,7 +65,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "demo",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "F:/0-SchoolWork/3-2-Games Programming/Ass-2/Marble/Marbles",
+    "last_opened_file_path": "F:/0-SchoolWork/3-2-Games Programming/Ass-2/Marble/Marbles/resources",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -71,13 +74,14 @@
     "settings.editor.selected.configurable": "proofread",
     "vue.rearranger.settings.migration": "true",
     "应用程序.HexGrid.executor": "Run",
-    "应用程序.Main.executor": "Debug",
+    "应用程序.Main.executor": "Run",
     "应用程序.Marble.executor": "Run",
     "应用程序.MarbleGame.executor": "Run"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="F:\0-SchoolWork\3-2-Games Programming\Ass-2\Marble\Marbles\resources" />
       <recent name="F:\0-SchoolWork\3-2-Games Programming\Ass-2\Marble\src" />
     </key>
   </component>
@@ -106,6 +110,7 @@
       <workItem from="1779597389633" duration="805000" />
       <workItem from="1779626069370" duration="2785000" />
       <workItem from="1779629291622" duration="4841000" />
+      <workItem from="1779638018647" duration="1247000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
