@@ -34,18 +34,24 @@ public class StartMenu extends JPanel {
     private int fallOffset = -300;
     private final Timer animationTimer = new Timer();
     private BufferedImage settingsIcon; // 设置图标图片
+    private BufferedImage helpIcon; // 帮助图标图片
+    private BufferedImage soundIcon; // 声音图标图片
 
     public StartMenu(StartMenuListener listener) {
         this.listener = listener;
         setBackground(new Color(240, 248, 255));
         setPreferredSize(new Dimension(483, 1080));
 
-        // 加载设置图标
+        // 加载图标
         try {
             settingsIcon = ImageIO.read(new File("settings.png"));
+            helpIcon = ImageIO.read(new File("help.png"));
+            soundIcon = ImageIO.read(new File("sound.png"));
         } catch (IOException e) {
-            System.out.println("警告：找不到settings.png文件，将使用默认齿轮图标");
+            System.out.println("警告：找不到图标文件");
             settingsIcon = null;
+            helpIcon = null;
+            soundIcon = null;
         }
 
         initDecorMarbles();
@@ -280,20 +286,25 @@ public class StartMenu extends JPanel {
     private void drawStandardGearButton(Graphics2D g2d, int h) {
         int x = settingX;
         int y = settingY;
-        RoundRectangle2D btn = new RoundRectangle2D.Double(x, y, SETTING_SIZE, SETTING_SIZE, 20, 20);
 
-        // 添加按下状态的颜色变化，与设置窗口按钮一致
-        g2d.setColor(settingPressed ? new Color(50, 50, 200) :
-                settingHover ? new Color(140, 140, 255) : new Color(110, 110, 245));
-        g2d.fill(btn);
-        g2d.setStroke(new BasicStroke(2f));
-        g2d.setColor(Color.WHITE);
-        g2d.draw(btn);
+        // 悬停效果严格限制在图片范围内，不超出图片本身
+        if (settingHover || settingPressed) {
+            // 使用与图片相同的圆角半径，大小与图片完全一致
+            RoundRectangle2D btn = new RoundRectangle2D.Double(x, y, SETTING_SIZE, SETTING_SIZE, 15, 15);
+            Color c1 = settingPressed ? new Color(50, 140, 255, 180) :
+                    new Color(100, 190, 255, 150);
+            Color c2 = settingPressed ? new Color(30, 110, 255, 180) :
+                    new Color(50, 140, 255, 150);
+            LinearGradientPaint btnGrad = new LinearGradientPaint(x, y, x, y + SETTING_SIZE,
+                    new float[]{0, 1}, new Color[]{c1, c2});
+            g2d.setPaint(btnGrad);
+            g2d.fill(btn);
+        }
 
         // 绘制设置图标
         if (settingsIcon != null) {
             // 缩放图片到按钮大小并居中绘制
-            g2d.drawImage(settingsIcon, x + 5, y + 5, SETTING_SIZE - 10, SETTING_SIZE - 10, null);
+            g2d.drawImage(settingsIcon, x, y, SETTING_SIZE, SETTING_SIZE, null);
         } else {
             // 备用：如果图片加载失败，显示原来的齿轮图标
             double cx = x + SETTING_SIZE / 2.0;
@@ -319,7 +330,7 @@ public class StartMenu extends JPanel {
         g2d.fillOval((int) cx - 6, (int) cy - 6, 12, 12);
     }
 
-    // 新的设置窗口实现（更大尺寸+英文按钮+声音开关）
+    // 新的设置窗口实现（更大尺寸+英文按钮+声音开关+帮助图标）
     private void openSettings() {
         // 创建模态对话框（主窗口仍然可见，但需要先关闭设置窗口才能操作主窗口）
         JDialog settingsDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Settings", Dialog.ModalityType.APPLICATION_MODAL);
@@ -343,8 +354,8 @@ public class StartMenu extends JPanel {
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 20));
         buttonPanel.setBackground(new Color(240, 248, 255));
 
-        // 声音开关按钮
-        JButton soundButton = createStyledButton(isSoundOn ? "Sound on" : "Sound off");
+        // 声音开关按钮（带图标）
+        JButton soundButton = createStyledButton(isSoundOn ? "Sound on" : "Sound off", true, true);
         soundButton.addActionListener(e -> {
             isSoundOn = !isSoundOn;
             soundButton.setText(isSoundOn ? "Sound on" : "Sound off");
@@ -352,8 +363,8 @@ public class StartMenu extends JPanel {
             // if (isSoundOn) { 开启声音 } else { 关闭声音 }
         });
 
-        // 游戏帮助按钮
-        JButton helpButton = createStyledButton("How to play");
+        // 游戏帮助按钮（带图标，文字与Sound on对齐）
+        JButton helpButton = createStyledButton("How to play", true, false);
         helpButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(settingsDialog,
                     "游戏玩法：\n1. 点击屏幕或按空格键发射弹珠\n2. 相同颜色的弹珠碰撞会消除\n3. 不要让弹珠堆到屏幕底部",
@@ -367,10 +378,14 @@ public class StartMenu extends JPanel {
 
         settingsDialog.setContentPane(mainPanel);
         settingsDialog.setVisible(true);
+
+        // 修复：关闭设置窗口后重置设置按钮状态
+        settingPressed = false;
+        repaint();
     }
 
-    // 创建与主菜单风格一致的按钮
-    private JButton createStyledButton(String text) {
+    // 创建与主菜单风格一致的按钮（支持添加图标，文字对齐）
+    private JButton createStyledButton(String text, boolean hasIcon, boolean isSoundButton) {
         JButton button = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -396,13 +411,35 @@ public class StartMenu extends JPanel {
                 g2d.setColor(Color.WHITE);
                 g2d.drawRoundRect(0, 0, width - 1, height - 1, 25, 25);
 
-                // 绘制文字
+                // 绘制文字和图标
                 g2d.setColor(Color.WHITE);
                 g2d.setFont(new Font("Arial", Font.BOLD, 18));
                 FontMetrics fm = g2d.getFontMetrics();
-                int textX = (width - fm.stringWidth(getText())) / 2;
+                String buttonText = getText();
+                int textWidth = fm.stringWidth(buttonText);
                 int textY = (height + fm.getAscent() - fm.getDescent()) / 2;
-                g2d.drawString(getText(), textX, textY);
+
+                if (hasIcon) {
+                    // 统一图标大小32x32，左边距15像素
+                    int iconSize = 32;
+                    int iconX = 15;
+                    int iconY = (height - iconSize) / 2;
+
+                    // 根据按钮类型选择不同的图标
+                    BufferedImage iconToDraw = isSoundButton ? soundIcon : helpIcon;
+
+                    if (iconToDraw != null) {
+                        g2d.drawImage(iconToDraw, iconX, iconY, iconSize, iconSize, null);
+                    }
+
+                    // 文字单独居中，两个按钮的文字在同一垂直线上
+                    int textX = (width - textWidth) / 2;
+                    g2d.drawString(buttonText, textX, textY);
+                } else {
+                    // 普通按钮，文字居中
+                    int textX = (width - textWidth) / 2;
+                    g2d.drawString(buttonText, textX, textY);
+                }
 
                 g2d.dispose();
             }
