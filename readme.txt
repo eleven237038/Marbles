@@ -31,6 +31,15 @@ Marbles中centerX = centerX + (centerX % (side * Math.sqrt(3)) == 0 ? -side * Ma
 读取学习Gameengine,Gameengine只读,优化全部代码
 
 
+为了实现发射的弹珠在碰到现有网格弹珠或者触达顶端时能够自动“吸附”并传递颜色，我们需要修改 `Marble.java`（添加颜色传递方法）、`Marbles.java`（添加碰撞网格对齐和坐标吸附的算法）以及 `Main.java`（执行逐帧的碰撞检测逻辑）。
+
+读取学习"F:\0-SchoolWork\3-2-Games Programming\Ass-2\1"里的内容,适配到当前代码
+
+
+
+
+
+
 
 
 

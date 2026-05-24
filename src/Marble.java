@@ -78,6 +78,8 @@ public class Marble {
     public double getSide() { return side; }
     public boolean isInitialized() { return initialized; }
     public int getColorType() { return colorType; }
+    // 新增：用于在碰撞后接收发射弹珠的颜色
+    public void setColorType(int colorType) { this.colorType = colorType; }
     public int getRow() { return row; }
     public int getCol() { return col; }
     public int[][] getEdgeAttachment() { return edgeAttachment; }

@@ -141,6 +141,137 @@ public class Marbles {
         return marbles != null ? marbles.length : 0;
     }
 
+    // 新增：供 Main 类进行碰撞检测时获取行数据
+    public Marble[] getRow(int row) {
+        if (marbles != null && row >= 0 && row < marbles.length) {
+            return marbles[row];
+        }
+        return null;
+    }
+
+    // 新增：核心算法，将发射的弹珠吸附到六边形网格的正确位置
+    public void attachMarble(Marble launchMarble, int screenWidth) {
+        double lx = launchMarble.getCenterX();
+        double ly = launchMarble.getCenterY();
+        double xSpacing = side * SQRT3;
+
+        // 1. 寻找网格中的一个参考球，用来推算当前动态网格的绝对坐标偏移
+        Marble ref = null;
+        for (int r = maxRowCount; r < marbles.length; r++) {
+            if (marbles[r] != null) {
+                for (Marble m : marbles[r]) {
+                    if (m != null && m.isInitialized()) {
+                        ref = m;
+                        break;
+                    }
+                }
+            }
+            if (ref != null) break;
+        }
+
+        if (ref == null) return;
+
+        // 2. 根据 Y 坐标差异，推算目标弹珠应该吸附在第几行
+        int rowOffset = (int) Math.round((ly - ref.getCenterY()) / ySpacing);
+        int targetRow = ref.getRow() + rowOffset;
+
+        if (targetRow < maxRowCount) targetRow = maxRowCount;
+
+        // 3. 计算这一行的基础 X 偏移量 (处理交错排列 - 健壮的整型状态判断)
+        double refBaseX = ref.getCenterX() - ref.getCol() * xSpacing;
+        double targetBaseX = refBaseX;
+
+        int refBaseState = (int) Math.round(refBaseX / (xSpacing / 2.0));
+        if (Math.abs(targetRow - ref.getRow()) % 2 == 1) {
+            targetBaseX = (refBaseState == 1) ? xSpacing : (xSpacing / 2.0);
+        }
+
+        // 4. 根据 X 坐标推算应该吸附在第几列
+        int targetCol = (int) Math.round((lx - targetBaseX) / xSpacing);
+        int maxCols = (int) (screenWidth / xSpacing);
+        if (targetCol < 0) targetCol = 0;
+        if (targetCol > maxCols) targetCol = maxCols;
+
+        // 检测目标网格是否被占用
+        boolean isOccupied = false;
+        if (targetRow < marbles.length && marbles[targetRow] != null && targetCol < marbles[targetRow].length) {
+            if (marbles[targetRow][targetCol] != null && marbles[targetRow][targetCol].isInitialized()) {
+                isOccupied = true;
+            }
+        }
+
+        // 如果计算出的完美位置被占用，启用邻域搜索，寻找物理距离最近的可用空位
+        if (isOccupied) {
+            int bestRow = targetRow;
+            int bestCol = targetCol;
+            double minDistSq = Double.MAX_VALUE;
+
+            for (int r = Math.max(maxRowCount, targetRow - 2); r <= targetRow + 2; r++) {
+                double rBaseX = refBaseX;
+                if (Math.abs(r - ref.getRow()) % 2 == 1) {
+                    rBaseX = (refBaseState == 1) ? xSpacing : (xSpacing / 2.0);
+                }
+
+                for (int c = Math.max(0, targetCol - 2); c <= targetCol + 2; c++) {
+                    boolean occ = false;
+                    if (r < marbles.length && marbles[r] != null && c < marbles[r].length) {
+                        if (marbles[r][c] != null && marbles[r][c].isInitialized()) {
+                            occ = true;
+                        }
+                    }
+                    if (!occ) {
+                        double cellX = rBaseX + c * xSpacing;
+                        double cellY = ref.getCenterY() + (r - ref.getRow()) * ySpacing;
+                        double dX = cellX - lx;
+                        double dY = cellY - ly;
+                        double distSq = dX * dX + dY * dY;
+
+                        if (distSq < minDistSq) {
+                            minDistSq = distSq;
+                            bestRow = r;
+                            bestCol = c;
+                        }
+                    }
+                }
+            }
+            targetRow = bestRow;
+            targetCol = bestCol;
+
+            // 根据新找到的安全行重新校正 BaseX
+            targetBaseX = refBaseX;
+            if (Math.abs(targetRow - ref.getRow()) % 2 == 1) {
+                targetBaseX = (refBaseState == 1) ? xSpacing : (xSpacing / 2.0);
+            }
+        }
+
+        // 扩容处理
+        if (targetRow >= marbles.length) {
+            Marble[][] newMarbles = new Marble[targetRow + 2][];
+            System.arraycopy(marbles, 0, newMarbles, 0, marbles.length);
+            marbles = newMarbles;
+        }
+
+        if (marbles[targetRow] == null) {
+            marbles[targetRow] = new Marble[maxCols + 1];
+        }
+
+        if (targetCol >= marbles[targetRow].length) {
+            Marble[] newRow = new Marble[targetCol + 1];
+            System.arraycopy(marbles[targetRow], 0, newRow, 0, marbles[targetRow].length);
+            marbles[targetRow] = newRow;
+        }
+
+        // 5. 实例化球体，赋予绝对坐标，并继承发射球的颜色
+        double exactX = targetBaseX + targetCol * xSpacing;
+        double exactY = ref.getCenterY() + (targetRow - ref.getRow()) * ySpacing;
+
+        marbles[targetRow][targetCol] = new Marble();
+        marbles[targetRow][targetCol].setColorType(launchMarble.getColorType());
+        marbles[targetRow][targetCol].init(exactX, exactY, targetRow, targetCol);
+
+        initEdgeAttachment(marbles[targetRow][targetCol], targetRow, targetCol);
+    }
+
     public double getVerticalSpacing() {
         return ySpacing;
     }

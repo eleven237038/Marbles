@@ -114,16 +114,82 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         if (frozen) return;
         if (hexGrid != null) hexGrid.update(dt);
         if (launchMarble != null) launchMarble.update(dt);
+        checkCollisions();
         collisionWithDeadline();
     }
 
+    // 修复：引入连续碰撞检测(CCD)，防止低帧率下速度过快导致的穿模跳过问题
+    private void checkCollisions() {
+        if (launchMarble == null || !launchMarble.isLaunched() || hexGrid == null) return;
+
+        double radius = hexGrid.getSide() * 0.866;
+        double collisionDist = radius * 2 - 2;
+
+        double prevX = launchMarble.getPrevCenterX();
+        double prevY = launchMarble.getPrevCenterY();
+        double currX = launchMarble.getCenterX();
+        double currY = launchMarble.getCenterY();
+
+        double dx = currX - prevX;
+        double dy = currY - prevY;
+
+        // 根据位移大小划分检测步长，确保每步跨度小于半径的一半
+        int steps = (int) Math.ceil(Math.sqrt(dx * dx + dy * dy) / (radius * 0.5));
+        if (steps < 1) steps = 1;
+
+        boolean collided = false;
+
+        for (int i = 1; i <= steps; i++) {
+            double checkX = prevX + dx * i / steps;
+            double checkY = prevY + dy * i / steps;
+
+            // 情况1：触顶判断
+            if (checkY <= radius * 2) {
+                collided = true;
+                launchMarble.setCenter(checkX, checkY);
+                break;
+            }
+
+            // 情况2：撞击到已有弹珠
+            for (int r = hexGrid.getMaxRowCount(); r < hexGrid.getMarblesLength(); r++) {
+                Marble[] row = hexGrid.getRow(r);
+                if (row == null) continue;
+                for (Marble m : row) {
+                    if (m != null && m.isInitialized()) {
+                        double dX = checkX - m.getCenterX();
+                        double dY = checkY - m.getCenterY();
+                        double distSq = dX * dX + dY * dY;
+                        if (distSq <= collisionDist * collisionDist) {
+                            collided = true;
+                            launchMarble.setCenter(checkX, checkY);
+                            break;
+                        }
+                    }
+                }
+                if (collided) break;
+            }
+            if (collided) break;
+        }
+
+        // 3. 处理碰撞后效
+        if (collided) {
+            hexGrid.attachMarble(launchMarble, mWidth);
+            launchMarble = new LaunchMarble();
+            launchMarble.setScreenSize(mWidth, mHeight);
+            launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
+        }
+    }
+
+    // 修复：去掉硬编码的 50 列，基于当前实际行长迭代，防止越界或漏判
     private void collisionWithDeadline() {
         if (hexGrid == null) return;
         double radius = hexGrid.getSide() * 0.866;
         for (int r = hexGrid.getMaxRowCount(); r < hexGrid.getMarblesLength(); r++) {
-            for (int c = 0; c < 50; c++) {
-                Marble marble = hexGrid.getHex(r, c);
-                if (marble != null && marble.getCenterY() + radius >= deadline) {
+            Marble[] row = hexGrid.getRow(r);
+            if (row == null) continue;
+            for (int c = 0; c < row.length; c++) {
+                Marble marble = row[c];
+                if (marble != null && marble.isInitialized() && marble.getCenterY() + radius >= deadline) {
                     frozen = true;
                     return;
                 }
