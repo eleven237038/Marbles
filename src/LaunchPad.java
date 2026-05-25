@@ -29,13 +29,24 @@ public class LaunchPad {
         return topY;
     }
 
+    // ====== 修改：移除灰色炮台，只绘制灰色虚线分界线 ======
     public void drawLaunchPad(Graphics2D g, int mWidth, int mHeight) {
         updateCannonPosition(mWidth, mHeight);
 
-        g.setColor(Color.GRAY);
-        g.fillRect(0, (int) topY, mWidth, mHeight - (int) topY);
-        g.setColor(Color.BLACK);
-        g.drawRect(0, (int) topY, mWidth, mHeight - (int) topY);
+        // 绘制弹珠下降区域与炮台区域的灰色虚线分界线
+        g.setColor(new Color(128, 128, 128, 200));
+        g.setStroke(new BasicStroke(
+                2.5f,
+                BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_BEVEL,
+                0,
+                new float[]{12, 6}, // 12像素实线，6像素空白
+                0
+        ));
+        g.drawLine(0, (int) topY, mWidth, (int) topY);
+
+        // 恢复默认笔触
+        g.setStroke(new BasicStroke(1));
     }
 
     private void updateCannonPosition(int mWidth, int mHeight) {

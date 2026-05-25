@@ -100,8 +100,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             pauseIcon = null;
         }
 
-        // 暂停按钮位置：左侧中间偏下，发射台上方
-        pauseButtonBounds = new Rectangle(30, 600, 60, 60);
+        // 先初始化按钮对象，位置在init中动态设置
+        pauseButtonBounds = new Rectangle(30, 0, 60, 60);
     }
 
     @Override
@@ -118,6 +118,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     @Override
     public void init() {
         initMarbleGrid();
+        // ====== 关键修改：动态设置暂停按钮位置在灰色虚线以下20像素 ======
+        pauseButtonBounds.y = (int) deadline + 20;
     }
 
     private void initMarbleGrid() {
@@ -216,11 +218,17 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
     @Override
     public void paintComponent() {
-        changeBackgroundColor(255, 255, 255);
-        clearBackground(mWidth, mHeight);
-
+        // 绘制与主界面相同的渐变背景
         Graphics2D g2 = (Graphics2D) mGraphics;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        LinearGradientPaint bg = new LinearGradientPaint(
+                0, 0, 0, mHeight,
+                new float[]{0, 1},
+                new Color[]{new Color(230, 245, 255), new Color(190, 225, 255)}
+        );
+        g2.setPaint(bg);
+        g2.fillRect(0, 0, mWidth, mHeight);
 
         if (hexGrid != null) hexGrid.draw(g2);
         if (launchPad != null) {
