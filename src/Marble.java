@@ -42,6 +42,7 @@ public class Marble {
     private int row;
     private int col;
     private int[][] edgeAttachment;
+    private boolean markedForRemove = false;
 
     public Marble() {
         this.cx = 0;
@@ -78,10 +79,15 @@ public class Marble {
     public double getSide() { return side; }
     public boolean isInitialized() { return initialized; }
     public int getColorType() { return colorType; }
+    // 新增：用于在碰撞后接收发射弹珠的颜色
+    public void setColorType(int colorType) { this.colorType = colorType; }
     public int getRow() { return row; }
     public int getCol() { return col; }
     public int[][] getEdgeAttachment() { return edgeAttachment; }
     public void setEdgeAttachment(int[][] edgeAttachment) { this.edgeAttachment = edgeAttachment; }
+
+    public void markForRemove(boolean b) { markedForRemove = b; }
+    public boolean isMarkedForRemove() { return markedForRemove; }
 
     public void draw(Graphics2D g) {
         if (!initialized) return;

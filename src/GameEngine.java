@@ -64,15 +64,19 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 	// Functions for setting up the window
 	//-------------------------------------------------------
 	// Function to create the window and display it
-	public void setupWindow(JFrame frame, int width, int height) {
-		mFrame = frame;
+	public void setupWindow(int width, int height) {
+		mFrame = new JFrame();
 		mPanel = new GamePanel();
 
 		mWidth = width;
 		mHeight = height;
 
-		mFrame.setTitle("弹珠游戏");
+		mFrame.setSize(width, height);
+		mFrame.setLocation(200,200);
+		mFrame.setTitle("Window");
 		mFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		mFrame.add(mPanel);
+		mFrame.setVisible(true);
 
 		mPanel.setDoubleBuffered(true);
 		mPanel.addMouseListener(this);
@@ -141,6 +145,7 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 		// Set default width, height
 		mWidth = 500;
 		mHeight = 500;
+
 	}
 
 	// Create Game Function

@@ -12,48 +12,73 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private boolean gameStarted = false;
+    private boolean frozen = false;
+    private double deadline;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // 创建统一的主窗口
             JFrame frame = new JFrame("弹珠游戏");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setResizable(false);
 
-            // 使用CardLayout实现面板切换
             CardLayout cardLayout = new CardLayout();
             JPanel mainPanel = new JPanel(cardLayout);
 
-            // 创建游戏实例
-            Main game = new Main();
-            game.setupWindow(frame, 483, 1080);
+            Main game = new Main(frame);
 
-            // 创建主菜单并传入回调
             StartMenu startMenu = new StartMenu(game);
 
-            // 添加两个面板到布局管理器
             mainPanel.add(startMenu, "menu");
             mainPanel.add(game.mPanel, "game");
 
-            // 设置窗口内容
             frame.setContentPane(mainPanel);
             frame.pack();
-            frame.setLocationRelativeTo(null); // 窗口居中
+            frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // 保存引用供回调使用
             game.cardLayout = cardLayout;
             game.mainPanel = mainPanel;
         });
     }
 
-    // 实现StartMenuListener接口的回调方法
+    public Main(JFrame frame) {
+        mFrame = frame;
+        mPanel = new GamePanel();
+        mWidth = 483;
+        mHeight = 1080;
+
+        mPanel.setDoubleBuffered(true);
+        mPanel.addMouseListener(this);
+        mPanel.addMouseMotionListener(this);
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .addKeyEventDispatcher(new KeyEventDispatcher() {
+                    @Override
+                    public boolean dispatchKeyEvent(KeyEvent e) {
+                        switch (e.getID()) {
+                            case KeyEvent.KEY_PRESSED:
+                                Main.this.keyPressed(e);
+                                return false;
+                            case KeyEvent.KEY_RELEASED:
+                                Main.this.keyReleased(e);
+                                return false;
+                            case KeyEvent.KEY_TYPED:
+                                Main.this.keyTyped(e);
+                                return false;
+                            default:
+                                return false;
+                        }
+                    }
+                });
+
+        Insets insets = mFrame.getInsets();
+        mFrame.setSize(mWidth + insets.left + insets.right, mHeight + insets.top + insets.bottom);
+    }
+
     @Override
     public void onStartGame() {
-        // 平滑切换到游戏面板
         cardLayout.show(mainPanel, "game");
 
-        // 只初始化和启动游戏一次
         if (!gameStarted) {
             gameStarted = true;
             init();
@@ -64,15 +89,12 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     @Override
     public void init() {
         SwingUtilities.invokeLater(() -> {
+            mFrame.setLayout(new BorderLayout());
+            mPanel.setPreferredSize(new Dimension(mWidth, mHeight));
+            mFrame.add(mPanel, BorderLayout.CENTER);
+            mFrame.revalidate();
             initMarbleGrid();
         });
-    }
-
-    @Override
-    public void setupWindow(JFrame frame, int width, int height) {
-        mWidth = 483;
-        mHeight = 1080;
-        super.setupWindow(frame, mWidth, mHeight);
     }
 
     private void initMarbleGrid() {
@@ -81,6 +103,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         hexGrid.setMaxRowCount(18);
         hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);
+        deadline = launchPad.getTopY();
         launchMarble = new LaunchMarble();
         launchMarble.setScreenSize(mWidth, mHeight);
         launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
@@ -88,8 +111,90 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
     @Override
     public void update(double dt) {
+        if (frozen) return;
         if (hexGrid != null) hexGrid.update(dt);
         if (launchMarble != null) launchMarble.update(dt);
+        checkCollisions();
+        collisionWithDeadline();
+    }
+
+    // 修复：引入连续碰撞检测(CCD)，防止低帧率下速度过快导致的穿模跳过问题
+    private void checkCollisions() {
+        if (launchMarble == null || !launchMarble.isLaunched() || hexGrid == null) return;
+
+        double radius = hexGrid.getSide() * 0.866;
+        double collisionDist = radius * 2 - 2;
+
+        double prevX = launchMarble.getPrevCenterX();
+        double prevY = launchMarble.getPrevCenterY();
+        double currX = launchMarble.getCenterX();
+        double currY = launchMarble.getCenterY();
+
+        double dx = currX - prevX;
+        double dy = currY - prevY;
+
+        // 根据位移大小划分检测步长，确保每步跨度小于半径的一半
+        int steps = (int) Math.ceil(Math.sqrt(dx * dx + dy * dy) / (radius * 0.5));
+        if (steps < 1) steps = 1;
+
+        boolean collided = false;
+
+        for (int i = 1; i <= steps; i++) {
+            double checkX = prevX + dx * i / steps;
+            double checkY = prevY + dy * i / steps;
+
+            // 情况1：触顶判断
+            if (checkY <= radius * 2) {
+                collided = true;
+                launchMarble.setCenter(checkX, checkY);
+                break;
+            }
+
+            // 情况2：撞击到已有弹珠
+            for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
+                Marble[] row = hexGrid.getRow(r);
+                if (row == null) continue;
+                for (Marble m : row) {
+                    if (m != null && m.isInitialized()) {
+                        double dX = checkX - m.getCenterX();
+                        double dY = checkY - m.getCenterY();
+                        double distSq = dX * dX + dY * dY;
+                        if (distSq <= collisionDist * collisionDist) {
+                            collided = true;
+                            launchMarble.setCenter(checkX, checkY);
+                            break;
+                        }
+                    }
+                }
+                if (collided) break;
+            }
+            if (collided) break;
+        }
+
+        // 3. 处理碰撞后效
+        if (collided) {
+            hexGrid.attachMarble(launchMarble, mWidth);
+            launchMarble = new LaunchMarble();
+            launchMarble.setScreenSize(mWidth, mHeight);
+            launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
+        }
+    }
+
+    // 修复：去掉硬编码的 50 列，基于当前实际行长迭代，防止越界或漏判
+    private void collisionWithDeadline() {
+        if (hexGrid == null) return;
+        double radius = hexGrid.getSide() * 0.866;
+        for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
+            Marble[] row = hexGrid.getRow(r);
+            if (row == null) continue;
+            for (int c = 0; c < row.length; c++) {
+                Marble marble = row[c];
+                if (marble != null && marble.isInitialized() && marble.getCenterY() + radius >= deadline) {
+                    frozen = true;
+                    return;
+                }
+            }
+        }
     }
 
     @Override
@@ -110,12 +215,14 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
     @Override
     public void mouseMoved(MouseEvent event) {
+        if (frozen) return;
         mouseX = event.getX();
         mouseY = event.getY();
     }
 
     @Override
     public void mousePressed(MouseEvent event) {
+        if (frozen) return;
         if (launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(event.getX(), event.getY());
@@ -124,6 +231,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
     @Override
     public void keyPressed(KeyEvent event) {
+        if (frozen) return;
         if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x + 100,

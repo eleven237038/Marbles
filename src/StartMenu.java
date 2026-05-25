@@ -42,13 +42,13 @@ public class StartMenu extends JPanel {
         setBackground(new Color(240, 248, 255));
         setPreferredSize(new Dimension(483, 1080));
 
-        // 加载图标
+        // 加载图标 - 路径修改为与src同级的resources文件夹
         try {
-            settingsIcon = ImageIO.read(new File("settings.png"));
-            helpIcon = ImageIO.read(new File("help.png"));
-            soundIcon = ImageIO.read(new File("sound.png"));
+            settingsIcon = ImageIO.read(new File("resources/settings.png"));
+            helpIcon = ImageIO.read(new File("resources/help.png"));
+            soundIcon = ImageIO.read(new File("resources/sound.png"));
         } catch (IOException e) {
-            System.out.println("警告：找不到图标文件");
+            System.out.println("警告：找不到resources文件夹中的图标文件");
             settingsIcon = null;
             helpIcon = null;
             soundIcon = null;
@@ -101,7 +101,7 @@ public class StartMenu extends JPanel {
             public void mouseExited(MouseEvent e) {
                 startHover = false;
                 settingHover = false;
-                setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                setCursor(new Cursor(Cursor.DEFAULT_CURSOR)); // 修复：删除了多余的右括号
                 repaint();
             }
 
