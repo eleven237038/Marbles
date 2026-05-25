@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.LinearGradientPaint;
+import java.util.Random;
 
 public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private Marbles hexGrid;
@@ -22,6 +23,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private boolean gameStarted = false;
     private boolean frozen = false;
     private double deadline;
+    private Random random = new Random();
 
     // 暂停按钮相关
     private BufferedImage pauseIcon;
@@ -118,8 +120,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     @Override
     public void init() {
         initMarbleGrid();
-        // ====== 关键修改：动态设置暂停按钮位置在灰色虚线以下20像素 ======
-        pauseButtonBounds.y = (int) deadline + 20;
+        // 动态设置暂停按钮位置在灰色虚线以下20像素
+        pauseButtonBounds.y = (int) deadline + 60;
     }
 
     private void initMarbleGrid() {
@@ -129,9 +131,14 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);
         deadline = launchPad.getTopY();
+
+        // 初始化：生成第一个当前弹珠和第一个下一个弹珠
         launchMarble = new LaunchMarble();
         launchMarble.setScreenSize(mWidth, mHeight);
         launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
+
+        // 生成第一个下一个弹珠颜色
+        launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
     }
 
     @Override
@@ -194,9 +201,16 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
         if (collided) {
             hexGrid.attachMarble(launchMarble, mWidth);
+
+            // 核心逻辑：真正的下一个弹珠机制
+            // 1. 用预览区的下一个颜色创建新的当前弹珠
             launchMarble = new LaunchMarble();
             launchMarble.setScreenSize(mWidth, mHeight);
             launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
+            launchMarble.setColorType(launchPad.getNextMarbleColorType());
+
+            // 2. 随机生成新的下一个弹珠颜色，更新预览区
+            launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
         }
     }
 
