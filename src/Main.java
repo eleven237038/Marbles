@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.LinearGradientPaint;
+import java.util.Random;
 
 public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private Marbles hexGrid;
@@ -22,6 +23,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private boolean gameStarted = false;
     private boolean frozen = false;
     private double deadline;
+    private Random random = new Random();
 
     // 暂停按钮相关
     private BufferedImage pauseIcon;
@@ -65,23 +67,24 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         mPanel.setDoubleBuffered(true);
         mPanel.addMouseListener(this);
         mPanel.addMouseMotionListener(this);
+        mPanel.setPreferredSize(new Dimension(mWidth, mHeight));
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
                 .addKeyEventDispatcher(new KeyEventDispatcher() {
                     @Override
                     public boolean dispatchKeyEvent(KeyEvent e) {
                         switch (e.getID()) {
-                        case KeyEvent.KEY_PRESSED:
-                            Main.this.keyPressed(e);
-                            return false;
-                        case KeyEvent.KEY_RELEASED:
-                            Main.this.keyReleased(e);
-                            return false;
-                        case KeyEvent.KEY_TYPED:
-                            Main.this.keyTyped(e);
-                            return false;
-                        default:
-                            return false;
+                            case KeyEvent.KEY_PRESSED:
+                                Main.this.keyPressed(e);
+                                return false;
+                            case KeyEvent.KEY_RELEASED:
+                                Main.this.keyReleased(e);
+                                return false;
+                            case KeyEvent.KEY_TYPED:
+                                Main.this.keyTyped(e);
+                                return false;
+                            default:
+                                return false;
                         }
                     }
                 });
@@ -99,8 +102,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             pauseIcon = null;
         }
 
-        // 暂停按钮位置：左侧中间偏下，发射台上方
-        pauseButtonBounds = new Rectangle(30, 600, 60, 60);
+        // 先初始化按钮对象，位置在init中动态设置
+        pauseButtonBounds = new Rectangle(30, 0, 60, 60);
     }
 
     @Override
@@ -116,9 +119,9 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
     @Override
     public void init() {
-        SwingUtilities.invokeLater(() -> {
-            initMarbleGrid();
-        });
+        initMarbleGrid();
+        // 动态设置暂停按钮位置在灰色虚线以下20像素
+        pauseButtonBounds.y = (int) deadline + 60;
     }
 
     private void initMarbleGrid() {
@@ -128,9 +131,14 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);
         deadline = launchPad.getTopY();
+
+        // 初始化：生成第一个当前弹珠和第一个下一个弹珠
         launchMarble = new LaunchMarble();
         launchMarble.setScreenSize(mWidth, mHeight);
         launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
+
+        // 生成第一个下一个弹珠颜色
+        launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
     }
 
     @Override
@@ -142,7 +150,6 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         collisionWithDeadline();
     }
 
-    // 修复：引入连续碰撞检测(CCD)，防止低帧率下速度过快导致的穿模跳过问题
     private void checkCollisions() {
         if (launchMarble == null || !launchMarble.isLaunched() || hexGrid == null) return;
 
@@ -157,7 +164,6 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         double dx = currX - prevX;
         double dy = currY - prevY;
 
-        // 根据位移大小划分检测步长，确保每步跨度小于半径的一半
         int steps = (int) Math.ceil(Math.sqrt(dx * dx + dy * dy) / (radius * 0.5));
         if (steps < 1) steps = 1;
 
@@ -167,14 +173,12 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             double checkX = prevX + dx * i / steps;
             double checkY = prevY + dy * i / steps;
 
-            // 情况1：触顶判断
             if (checkY <= radius * 2) {
                 collided = true;
                 launchMarble.setCenter(checkX, checkY);
                 break;
             }
 
-            // 情况2：撞击到已有弹珠
             for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
                 Marble[] row = hexGrid.getRow(r);
                 if (row == null) continue;
@@ -195,16 +199,21 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             if (collided) break;
         }
 
-        // 3. 处理碰撞后效
         if (collided) {
             hexGrid.attachMarble(launchMarble, mWidth);
+
+            // 核心逻辑：真正的下一个弹珠机制
+            // 1. 用预览区的下一个颜色创建新的当前弹珠
             launchMarble = new LaunchMarble();
             launchMarble.setScreenSize(mWidth, mHeight);
             launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
+            launchMarble.setColorType(launchPad.getNextMarbleColorType());
+
+            // 2. 随机生成新的下一个弹珠颜色，更新预览区
+            launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
         }
     }
 
-    // 修复：去掉硬编码的 50 列，基于当前实际行长迭代，防止越界或漏判
     private void collisionWithDeadline() {
         if (hexGrid == null) return;
         double radius = hexGrid.getSide() * 0.866;
@@ -223,11 +232,17 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
     @Override
     public void paintComponent() {
-        changeBackgroundColor(255, 255, 255);
-        clearBackground(mWidth, mHeight);
-
+        // 绘制与主界面相同的渐变背景
         Graphics2D g2 = (Graphics2D) mGraphics;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        LinearGradientPaint bg = new LinearGradientPaint(
+                0, 0, 0, mHeight,
+                new float[]{0, 1},
+                new Color[]{new Color(230, 245, 255), new Color(190, 225, 255)}
+        );
+        g2.setPaint(bg);
+        g2.fillRect(0, 0, mWidth, mHeight);
 
         if (hexGrid != null) hexGrid.draw(g2);
         if (launchPad != null) {
@@ -301,27 +316,27 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             }
         });
 
-        JPanel dialogMainPanel = new JPanel(new BorderLayout(10, 20));
-        dialogMainPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
-        dialogMainPanel.setBackground(new Color(240, 248, 255));
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 20));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+        mainPanel.setBackground(new Color(240, 248, 255));
 
         JLabel title = new JLabel("PAUSED", SwingConstants.CENTER);
         title.setFont(new Font("Arial Black", Font.BOLD, 28));
         title.setForeground(new Color(70, 150, 255));
-        dialogMainPanel.add(title, BorderLayout.NORTH);
+        mainPanel.add(title, BorderLayout.NORTH);
 
         JPanel btnPanel = new JPanel(new GridLayout(4, 1, 0, 20));
         btnPanel.setBackground(new Color(240, 248, 255));
 
         // 1. Resume
-        JButton btnResume = StartMenu.createStyledButtonStatic("Resume", true, true, "begin.png");
+        JButton btnResume = StartMenu.createStyledButtonStatic("Resume", true, "begin.png");
         btnResume.addActionListener(e -> {
             gamePaused = false;
             pauseDialog.dispose();
         });
 
         // 2. How to play
-        JButton btnHelp = StartMenu.createStyledButtonStatic("How to play", true, false, "help.png");
+        JButton btnHelp = StartMenu.createStyledButtonStatic("How to play", true, "help.png");
         btnHelp.addActionListener(e -> {
             JOptionPane.showMessageDialog(pauseDialog,
                     "游戏玩法：\n1. 点击/空格发射弹珠\n2. 3个同色相连即消除\n3. 不要让弹珠碰到底部红线",
@@ -329,19 +344,15 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         });
 
         // 3. Sound on/off
-        JButton btnSound = StartMenu.createStyledButtonStatic(StartMenu.isSoundOnStatic ? "Sound on" : "Sound off", true, false, "sound.png");
+        JButton btnSound = StartMenu.createStyledButtonStatic(StartMenu.isSoundOnStatic ? "Sound on" : "Sound off", true, "sound.png");
         btnSound.addActionListener(e -> {
             StartMenu.isSoundOnStatic = !StartMenu.isSoundOnStatic;
             btnSound.setText(StartMenu.isSoundOnStatic ? "Sound on" : "Sound off");
         });
 
         // 4. Quit：完全重置游戏并返回主菜单
-        JButton btnQuit = StartMenu.createStyledButtonStatic("Quit", true, true, "exit.png");
+        JButton btnQuit = StartMenu.createStyledButtonStatic("Quit", true, "exit.png");
         btnQuit.addActionListener(e -> {
-            pauseDialog.dispose();
-            // 切换到主菜单
-            cardLayout.show(mainPanel, "menu");
-            // 重置游戏状态
             gamePaused = false;
             frozen = false;
             gameStarted = false;
@@ -350,6 +361,9 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             launchMarble = null;
             // 恢复默认光标
             mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            pauseDialog.dispose();
+            // 切换到主菜单
+            cardLayout.show(this.mainPanel, "menu");
         });
 
         btnPanel.add(btnResume);
@@ -357,8 +371,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         btnPanel.add(btnSound);
         btnPanel.add(btnQuit);
 
-        dialogMainPanel.add(btnPanel, BorderLayout.CENTER);
-        pauseDialog.setContentPane(dialogMainPanel);
+        mainPanel.add(btnPanel, BorderLayout.CENTER);
+        pauseDialog.setContentPane(mainPanel);
         pauseDialog.setVisible(true);
 
         pausePressed = false;
@@ -366,13 +380,13 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     }
 
     @Override
-    public void mouseMoved(MouseEvent event) {
+    public void mouseMoved(MouseEvent e) {
         if (frozen || gamePaused) return;
-        mouseX = event.getX();
-        mouseY = event.getY();
+        mouseX = e.getX();
+        mouseY = e.getY();
 
         boolean oldHover = pauseHover;
-        pauseHover = pauseButtonBounds.contains(event.getPoint());
+        pauseHover = pauseButtonBounds.contains(e.getPoint());
         if (pauseHover) {
             mPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         } else {
@@ -383,10 +397,10 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     }
 
     @Override
-    public void mousePressed(MouseEvent event) {
+    public void mousePressed(MouseEvent e) {
         if (frozen) return;
 
-        if (pauseButtonBounds.contains(event.getPoint())) {
+        if (pauseButtonBounds.contains(e.getPoint())) {
             pausePressed = true;
             mPanel.repaint();
             openPauseMenu();
@@ -396,12 +410,12 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         if (gamePaused) return;
         if (launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
-            launchMarble.launch(event.getX(), event.getY());
+            launchMarble.launch(e.getX(), e.getY());
         }
     }
 
     @Override
-    public void mouseReleased(MouseEvent event) {
+    public void mouseReleased(MouseEvent e) {
         pausePressed = false;
         mPanel.repaint();
     }
