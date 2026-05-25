@@ -44,8 +44,10 @@ public class Marbles {
             for (int r = maxRowCount; r < actualRow; r++) {
                 if (marbles[r] == null) continue;
                 for (int c = 0, len = marbles[r].length; c < len; c++) {
-                    double cy = marbles[r][c].getCenterY();
-                    marbles[r][c].setCenter(marbles[r][c].getCenterX(), cy + ySpacing);
+                    if (marbles[r][c] != null) {
+                        double cy = marbles[r][c].getCenterY();
+                        marbles[r][c].setCenter(marbles[r][c].getCenterX(), cy + ySpacing);
+                    }
                 }
             }
         }
@@ -109,11 +111,14 @@ public class Marbles {
 
         double yMove = side * 0.4 * dt;
 
-        for (int r = maxRowCount; r < marbles.length; r++) {
+        // 修复：必须从 0 开始遍历更新，否则打到最下方的弹珠(行号<18)不会跟随掉落
+        for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
             for (Marble hex : marbles[r]) {
-                hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
-                hex.recalculateVerticesIfDirty();
+                if (hex != null) {
+                    hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
+                    hex.recalculateVerticesIfDirty();
+                }
             }
         }
 
@@ -157,7 +162,7 @@ public class Marbles {
 
         // 1. 寻找网格中的一个参考球，用来推算当前动态网格的绝对坐标偏移
         Marble ref = null;
-        for (int r = maxRowCount; r < marbles.length; r++) {
+        for (int r = 0; r < marbles.length; r++) { // 修复：从0开始找
             if (marbles[r] != null) {
                 for (Marble m : marbles[r]) {
                     if (m != null && m.isInitialized()) {
@@ -171,11 +176,14 @@ public class Marbles {
 
         if (ref == null) return;
 
-        // 2. 根据 Y 坐标差异，推算目标弹珠应该吸附在第几行
-        int rowOffset = (int) Math.round((ly - ref.getCenterY()) / ySpacing);
+        // 2. 根据 Y 坐标差异推算目标行
+        // 重点：由于网格始终在上方生成并下落，所以 行号越大 -> 物理Y越小(上方)，行号越小 -> 物理Y越大(下方)。
+        // 玩家从下方打上来的弹珠 ly 大于 ref 的 Y，因此目标行号应小于当前 ref 的行号。
+        int rowOffset = (int) Math.round((ref.getCenterY() - ly) / ySpacing);
         int targetRow = ref.getRow() + rowOffset;
 
-        if (targetRow < maxRowCount) targetRow = maxRowCount;
+        // 预留的 0~17 空间兜底防越界
+        if (targetRow < 0) targetRow = 0;
 
         // 3. 计算这一行的基础 X 偏移量 (处理交错排列 - 健壮的整型状态判断)
         double refBaseX = ref.getCenterX() - ref.getCol() * xSpacing;
@@ -200,13 +208,14 @@ public class Marbles {
             }
         }
 
-        // 如果计算出的完美位置被占用，启用邻域搜索，寻找物理距离最近的可用空位
+        // 如果计算出的完美位置被占用，启用邻域搜索
         if (isOccupied) {
             int bestRow = targetRow;
             int bestCol = targetCol;
             double minDistSq = Double.MAX_VALUE;
 
-            for (int r = Math.max(maxRowCount, targetRow - 2); r <= targetRow + 2; r++) {
+            // 修复：确保防越界最低为 0
+            for (int r = Math.max(0, targetRow - 2); r <= targetRow + 2; r++) {
                 double rBaseX = refBaseX;
                 if (Math.abs(r - ref.getRow()) % 2 == 1) {
                     rBaseX = (refBaseState == 1) ? xSpacing : (xSpacing / 2.0);
@@ -221,7 +230,8 @@ public class Marbles {
                     }
                     if (!occ) {
                         double cellX = rBaseX + c * xSpacing;
-                        double cellY = ref.getCenterY() + (r - ref.getRow()) * ySpacing;
+                        // 修正 Y 相对坐标算法
+                        double cellY = ref.getCenterY() - (r - ref.getRow()) * ySpacing;
                         double dX = cellX - lx;
                         double dY = cellY - ly;
                         double distSq = dX * dX + dY * dY;
@@ -263,7 +273,8 @@ public class Marbles {
 
         // 5. 实例化球体，赋予绝对坐标，并继承发射球的颜色
         double exactX = targetBaseX + targetCol * xSpacing;
-        double exactY = ref.getCenterY() + (targetRow - ref.getRow()) * ySpacing;
+        // 修正 Y 绝对坐标算法
+        double exactY = ref.getCenterY() - (targetRow - ref.getRow()) * ySpacing;
 
         marbles[targetRow][targetCol] = new Marble();
         marbles[targetRow][targetCol].setColorType(launchMarble.getColorType());
@@ -278,10 +289,11 @@ public class Marbles {
 
     public void draw(Graphics2D g) {
         if (marbles == null) return;
-        for (int r = maxRowCount; r < marbles.length; r++) {
+        // 修复：必须从 0 开始遍历绘制，以渲染玩家附加在其下方的所有弹珠
+        for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
             for (Marble hex : marbles[r]) {
-                hex.draw(g);
+                if (hex != null) hex.draw(g);
             }
         }
     }
@@ -289,8 +301,9 @@ public class Marbles {
     public void resetRow() {
         if (marbles != null) {
             for (Marble[] row : marbles) {
+                if (row == null) continue;
                 for (Marble hex : row) {
-                    hex.reset();
+                    if (hex != null) hex.reset();
                 }
             }
         }
