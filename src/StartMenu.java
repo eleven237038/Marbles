@@ -12,7 +12,6 @@ import java.util.TimerTask;
 import javax.imageio.ImageIO;
 
 public class StartMenu extends JPanel {
-    // 回调接口，用于通知主类开始游戏
     public interface StartMenuListener {
         void onStartGame();
     }
@@ -21,9 +20,9 @@ public class StartMenu extends JPanel {
     private final ArrayList<Marble> decorMarbles = new ArrayList<>();
     private boolean startHover = false;
     private boolean settingHover = false;
-    private boolean startPressed = false; // 开始按钮按下状态
-    private boolean settingPressed = false; // 设置按钮按下状态
-    private boolean isSoundOn = true; // 声音开关状态
+    private boolean startPressed = false;
+    private boolean settingPressed = false;
+    public static boolean isSoundOnStatic = true; // 静态，给暂停菜单使用
 
     private final int BTN_WIDTH = 200;
     private final int BTN_HEIGHT = 80;
@@ -33,16 +32,15 @@ public class StartMenu extends JPanel {
 
     private int fallOffset = -300;
     private final Timer animationTimer = new Timer();
-    private BufferedImage settingsIcon; // 设置图标图片
-    private BufferedImage helpIcon; // 帮助图标图片
-    private BufferedImage soundIcon; // 声音图标图片
+    private BufferedImage settingsIcon;
+    private BufferedImage helpIcon;
+    private BufferedImage soundIcon;
 
     public StartMenu(StartMenuListener listener) {
         this.listener = listener;
         setBackground(new Color(240, 248, 255));
         setPreferredSize(new Dimension(483, 1080));
 
-        // 加载图标 - 路径修改为与src同级的resources文件夹
         try {
             settingsIcon = ImageIO.read(new File("resources/settings.png"));
             helpIcon = ImageIO.read(new File("resources/help.png"));
@@ -57,7 +55,6 @@ public class StartMenu extends JPanel {
         initDecorMarbles();
         startAnimation();
 
-        // 创建统一的鼠标事件适配器
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -101,7 +98,7 @@ public class StartMenu extends JPanel {
             public void mouseExited(MouseEvent e) {
                 startHover = false;
                 settingHover = false;
-                setCursor(new Cursor(Cursor.DEFAULT_CURSOR)); // 修复：删除了多余的右括号
+                setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 repaint();
             }
 
@@ -112,21 +109,18 @@ public class StartMenu extends JPanel {
                 startHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
                 settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
 
-                // 设置鼠标光标
                 if (startHover || settingHover) {
                     setCursor(new Cursor(Cursor.HAND_CURSOR));
                 } else {
                     setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 }
 
-                // 只有当悬停状态改变时才重绘
                 if (oldStartHover != startHover || oldSettingHover != settingHover) {
                     repaint();
                 }
             }
         };
 
-        // 同时添加两种监听器，确保所有鼠标事件都能被捕获
         addMouseListener(mouseAdapter);
         addMouseMotionListener(mouseAdapter);
     }
@@ -199,13 +193,11 @@ public class StartMenu extends JPanel {
         int baseX = w / 2 - titleWidth / 2;
         int baseY = h / 5 + offset;
 
-        // 多层阴影效果
         g2d.setColor(new Color(0, 0, 0, 50));
         g2d.drawString(title, baseX + 6, baseY + 6);
         g2d.setColor(new Color(0, 0, 0, 30));
         g2d.drawString(title, baseX + 3, baseY + 3);
 
-        // 彩虹渐变文字
         LinearGradientPaint textGrad = new LinearGradientPaint(
                 baseX, baseY - 40, baseX + titleWidth, baseY + 40,
                 new float[]{0, 0.25f, 0.5f, 0.75f, 1f},
@@ -220,12 +212,10 @@ public class StartMenu extends JPanel {
         g2d.setPaint(textGrad);
         g2d.drawString(title, baseX, baseY);
 
-        // 白色描边
         g2d.setStroke(new BasicStroke(3.5f));
         g2d.setColor(new Color(255, 255, 255, 220));
         g2d.drawString(title, baseX, baseY);
 
-        // 黑色细描边
         g2d.setStroke(new BasicStroke(1.5f));
         g2d.setColor(new Color(0, 0, 0, 80));
         g2d.drawString(title, baseX, baseY);
@@ -235,18 +225,15 @@ public class StartMenu extends JPanel {
         int centerX = w / 2;
         int titleY = h / 5 + offset;
 
-        // 完全按照您的要求修改：
-        // 第8个弹珠x坐标与最下方中间弹珠相同(centerX)
-        // y坐标改回到RB字母正上方，紧贴字母
         int[][] positions = {
                 {centerX - 150, titleY - 60},
                 {centerX + 150, titleY - 60},
                 {centerX - 180, titleY},
                 {centerX + 180, titleY},
                 {centerX - 100, titleY + 50},
-                {centerX, titleY + 70}, // 最下方中间弹珠
+                {centerX, titleY + 70},
                 {centerX + 100, titleY + 50},
-                {centerX, titleY - 75}  // x=centerX(与最下方弹珠相同)，y=-75(RB正上方)
+                {centerX, titleY - 75}
         };
 
         for (int i = 0; i < decorMarbles.size(); i++) {
@@ -260,7 +247,6 @@ public class StartMenu extends JPanel {
     private void drawStartButton(Graphics2D g2d) {
         RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
 
-        // 添加按下状态的颜色变化，与设置窗口按钮一致
         Color c1 = startPressed ? new Color(50, 140, 255) :
                 startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
         Color c2 = startPressed ? new Color(30, 110, 255) :
@@ -275,7 +261,6 @@ public class StartMenu extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.draw(btn);
 
-        // Play三角形图标
         int x = startX + BTN_WIDTH / 2;
         int y = startY + BTN_HEIGHT / 2;
         int[] xP = {x - 18, x + 18, x - 18};
@@ -287,9 +272,7 @@ public class StartMenu extends JPanel {
         int x = settingX;
         int y = settingY;
 
-        // 悬停效果严格限制在图片范围内，不超出图片本身
         if (settingHover || settingPressed) {
-            // 使用与图片相同的圆角半径，大小与图片完全一致
             RoundRectangle2D btn = new RoundRectangle2D.Double(x, y, SETTING_SIZE, SETTING_SIZE, 15, 15);
             Color c1 = settingPressed ? new Color(50, 140, 255, 180) :
                     new Color(100, 190, 255, 150);
@@ -301,12 +284,9 @@ public class StartMenu extends JPanel {
             g2d.fill(btn);
         }
 
-        // 绘制设置图标
         if (settingsIcon != null) {
-            // 缩放图片到按钮大小并居中绘制
             g2d.drawImage(settingsIcon, x, y, SETTING_SIZE, SETTING_SIZE, null);
         } else {
-            // 备用：如果图片加载失败，显示原来的齿轮图标
             double cx = x + SETTING_SIZE / 2.0;
             double cy = y + SETTING_SIZE / 2.0;
             drawStandardGear(g2d, cx, cy, 22, 12, 8);
@@ -330,41 +310,32 @@ public class StartMenu extends JPanel {
         g2d.fillOval((int) cx - 6, (int) cy - 6, 12, 12);
     }
 
-    // 新的设置窗口实现（更大尺寸+英文按钮+声音开关+帮助图标）
     private void openSettings() {
-        // 创建模态对话框（主窗口仍然可见，但需要先关闭设置窗口才能操作主窗口）
         JDialog settingsDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Settings", Dialog.ModalityType.APPLICATION_MODAL);
-        settingsDialog.setSize(350, 250); // 窗口改大
-        settingsDialog.setLocationRelativeTo(this); // 相对于主窗口居中
+        settingsDialog.setSize(350, 250);
+        settingsDialog.setLocationRelativeTo(this);
         settingsDialog.setResizable(false);
         settingsDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        // 创建主面板
         JPanel mainPanel = new JPanel(new BorderLayout(10, 20));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
         mainPanel.setBackground(new Color(240, 248, 255));
 
-        // 标题标签
         JLabel titleLabel = new JLabel("Settings", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial Black", Font.BOLD, 28));
         titleLabel.setForeground(new Color(70, 150, 255));
         mainPanel.add(titleLabel, BorderLayout.NORTH);
 
-        // 按钮面板
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 20));
         buttonPanel.setBackground(new Color(240, 248, 255));
 
-        // 声音开关按钮（带图标）
-        JButton soundButton = createStyledButton(isSoundOn ? "Sound on" : "Sound off", true, true);
+        JButton soundButton = createStyledButtonStatic(isSoundOnStatic ? "Sound on" : "Sound off", true, false, "sound.png");
         soundButton.addActionListener(e -> {
-            isSoundOn = !isSoundOn;
-            soundButton.setText(isSoundOn ? "Sound on" : "Sound off");
-            // 这里可以添加实际的声音控制逻辑
-            // if (isSoundOn) { 开启声音 } else { 关闭声音 }
+            isSoundOnStatic = !isSoundOnStatic;
+            soundButton.setText(isSoundOnStatic ? "Sound on" : "Sound off");
         });
 
-        // 游戏帮助按钮（带图标，文字与Sound on对齐）
-        JButton helpButton = createStyledButton("How to play", true, false);
+        JButton helpButton = createStyledButtonStatic("How to play", true, false, "help.png");
         helpButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(settingsDialog,
                     "游戏玩法：\n1. 点击屏幕或按空格键发射弹珠\n2. 相同颜色的弹珠碰撞会消除\n3. 不要让弹珠堆到屏幕底部",
@@ -379,13 +350,12 @@ public class StartMenu extends JPanel {
         settingsDialog.setContentPane(mainPanel);
         settingsDialog.setVisible(true);
 
-        // 修复：关闭设置窗口后重置设置按钮状态
         settingPressed = false;
         repaint();
     }
 
-    // 创建与主菜单风格一致的按钮（支持添加图标，文字对齐）
-    private JButton createStyledButton(String text, boolean hasIcon, boolean isSoundButton) {
+    // ====== 静态按钮方法，给 Main 暂停菜单共用 ======
+    public static JButton createStyledButtonStatic(String text, boolean hasIcon, boolean isResumeOrQuit, String iconName) {
         JButton button = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -395,7 +365,6 @@ public class StartMenu extends JPanel {
                 int width = getWidth();
                 int height = getHeight();
 
-                // 绘制渐变背景
                 Color c1 = getModel().isPressed() ? new Color(50, 140, 255) :
                         getModel().isRollover() ? new Color(100, 190, 255) : new Color(70, 150, 255);
                 Color c2 = getModel().isPressed() ? new Color(30, 110, 255) :
@@ -406,51 +375,40 @@ public class StartMenu extends JPanel {
                 g2d.setPaint(grad);
                 g2d.fillRoundRect(0, 0, width, height, 25, 25);
 
-                // 绘制白色边框
                 g2d.setStroke(new BasicStroke(2f));
                 g2d.setColor(Color.WHITE);
                 g2d.drawRoundRect(0, 0, width - 1, height - 1, 25, 25);
 
-                // 绘制文字和图标
                 g2d.setColor(Color.WHITE);
                 g2d.setFont(new Font("Arial", Font.BOLD, 18));
                 FontMetrics fm = g2d.getFontMetrics();
-                String buttonText = getText();
-                int textWidth = fm.stringWidth(buttonText);
+                String btnText = getText();
+                int textWidth = fm.stringWidth(btnText);
                 int textY = (height + fm.getAscent() - fm.getDescent()) / 2;
+                int textX = (width - textWidth) / 2;
 
                 if (hasIcon) {
-                    // 统一图标大小32x32，左边距15像素
                     int iconSize = 32;
                     int iconX = 15;
                     int iconY = (height - iconSize) / 2;
-
-                    // 根据按钮类型选择不同的图标
-                    BufferedImage iconToDraw = isSoundButton ? soundIcon : helpIcon;
-
-                    if (iconToDraw != null) {
-                        g2d.drawImage(iconToDraw, iconX, iconY, iconSize, iconSize, null);
-                    }
-
-                    // 文字单独居中，两个按钮的文字在同一垂直线上
-                    int textX = (width - textWidth) / 2;
-                    g2d.drawString(buttonText, textX, textY);
-                } else {
-                    // 普通按钮，文字居中
-                    int textX = (width - textWidth) / 2;
-                    g2d.drawString(buttonText, textX, textY);
+                    try {
+                        BufferedImage icon = ImageIO.read(new File("resources/" + iconName));
+                        if (icon != null) {
+                            g2d.drawImage(icon, iconX, iconY, iconSize, iconSize, null);
+                        }
+                    } catch (Exception ex) {}
                 }
 
+                g2d.drawString(btnText, textX, textY);
                 g2d.dispose();
             }
         };
 
-        button.setPreferredSize(new Dimension(250, 55)); // 按钮也相应变大
+        button.setPreferredSize(new Dimension(250, 55));
         button.setContentAreaFilled(false);
         button.setBorderPainted(false);
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         return button;
     }
 }
