@@ -42,7 +42,6 @@ public class Marble {
     private int row;
     private int col;
     private int[][] edgeAttachment;
-    // 消除专用
     private boolean markedForRemove = false;
 
     public Marble() {

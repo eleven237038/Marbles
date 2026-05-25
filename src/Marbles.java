@@ -1,8 +1,23 @@
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Marbles {
     private static final double SQRT3 = Math.sqrt(3);
+    private static final int MIN_GROUP_SIZE = 3;
+    // 偶数行六边形邻接方向
+    private static final int[][] EVEN_ROW_DIRS = {
+            {-1, 0}, {-1, 1},
+            {0, -1},          {0, 1},
+            {1, 0}, {1, 1}
+    };
+    // 奇数行六边形邻接方向
+    private static final int[][] ODD_ROW_DIRS = {
+            {-1, -1}, {-1, 0},
+            {0, -1},          {0, 1},
+            {1, -1}, {1, 0}
+    };
     private int rowCount;
     private Marble[][] marbles;
     private double ySpacing;
@@ -282,7 +297,7 @@ public class Marbles {
     private void checkConnectedFromLaunch(int launchRow, int launchCol, int launchColor) {
         if (marbles == null) return;
 
-        java.util.List<Marble> connectedGroup = new java.util.ArrayList<>();
+        List<Marble> connectedGroup = new ArrayList<>();
         boolean[][] visited = new boolean[marbles.length][];
         for (int i = 0; i < marbles.length; i++) {
             if (marbles[i] != null) visited[i] = new boolean[marbles[i].length];
@@ -290,7 +305,7 @@ public class Marbles {
 
         dfs(launchRow, launchCol, launchColor, visited, connectedGroup);
 
-        if (connectedGroup.size() >= 3) {
+        if (connectedGroup.size() >= MIN_GROUP_SIZE) {
             for (Marble m : connectedGroup) {
                 int r = m.getRow();
                 int c = m.getCol();
@@ -301,7 +316,7 @@ public class Marbles {
         }
     }
 
-    private void dfs(int r, int c, int targetColor, boolean[][] visited, java.util.List<Marble> res) {
+    private void dfs(int r, int c, int targetColor, boolean[][] visited, List<Marble> res) {
         if (r < 0 || r >= marbles.length) return;
         if (marbles[r] == null || c < 0 || c >= marbles[r].length) return;
         if (visited[r][c]) return;
@@ -313,21 +328,7 @@ public class Marbles {
         visited[r][c] = true;
         res.add(current);
 
-        int[][] directions;
-        if (r % 2 == 0) {
-            directions = new int[][]{
-                    {-1, 0}, {-1, 1},
-                    {0, -1},          {0, 1},
-                    {1, 0}, {1, 1}
-            };
-        } else {
-            directions = new int[][]{
-                    {-1, -1}, {-1, 0},
-                    {0, -1},          {0, 1},
-                    {1, -1}, {1, 0}
-            };
-        }
-
+        int[][] directions = (r % 2 == 0) ? EVEN_ROW_DIRS : ODD_ROW_DIRS;
         for (int[] dir : directions) {
             dfs(r + dir[0], c + dir[1], targetColor, visited, res);
         }
