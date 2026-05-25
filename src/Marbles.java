@@ -275,6 +275,62 @@ public class Marbles {
         marbles[targetRow][targetCol].init(exactX, exactY, targetRow, targetCol);
 
         initEdgeAttachment(marbles[targetRow][targetCol], targetRow, targetCol);
+
+        checkConnectedFromLaunch(targetRow, targetCol, launchMarble.getColorType());
+    }
+
+    private void checkConnectedFromLaunch(int launchRow, int launchCol, int launchColor) {
+        if (marbles == null) return;
+
+        java.util.List<Marble> connectedGroup = new java.util.ArrayList<>();
+        boolean[][] visited = new boolean[marbles.length][];
+        for (int i = 0; i < marbles.length; i++) {
+            if (marbles[i] != null) visited[i] = new boolean[marbles[i].length];
+        }
+
+        dfs(launchRow, launchCol, launchColor, visited, connectedGroup);
+
+        if (connectedGroup.size() >= 3) {
+            for (Marble m : connectedGroup) {
+                int r = m.getRow();
+                int c = m.getCol();
+                if (r >= 0 && r < marbles.length && c >= 0 && c < marbles[r].length) {
+                    marbles[r][c] = null;
+                }
+            }
+        }
+    }
+
+    private void dfs(int r, int c, int targetColor, boolean[][] visited, java.util.List<Marble> res) {
+        if (r < 0 || r >= marbles.length) return;
+        if (marbles[r] == null || c < 0 || c >= marbles[r].length) return;
+        if (visited[r][c]) return;
+
+        Marble current = marbles[r][c];
+        if (current == null || !current.isInitialized()) return;
+        if (current.getColorType() != targetColor) return;
+
+        visited[r][c] = true;
+        res.add(current);
+
+        int[][] directions;
+        if (r % 2 == 0) {
+            directions = new int[][]{
+                    {-1, 0}, {-1, 1},
+                    {0, -1},          {0, 1},
+                    {1, 0}, {1, 1}
+            };
+        } else {
+            directions = new int[][]{
+                    {-1, -1}, {-1, 0},
+                    {0, -1},          {0, 1},
+                    {1, -1}, {1, 0}
+            };
+        }
+
+        for (int[] dir : directions) {
+            dfs(r + dir[0], c + dir[1], targetColor, visited, res);
+        }
     }
 
     public double getVerticalSpacing() {

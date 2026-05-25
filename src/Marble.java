@@ -42,6 +42,8 @@ public class Marble {
     private int row;
     private int col;
     private int[][] edgeAttachment;
+    // 消除专用
+    private boolean markedForRemove = false;
 
     public Marble() {
         this.cx = 0;
@@ -84,6 +86,9 @@ public class Marble {
     public int getCol() { return col; }
     public int[][] getEdgeAttachment() { return edgeAttachment; }
     public void setEdgeAttachment(int[][] edgeAttachment) { this.edgeAttachment = edgeAttachment; }
+
+    public void markForRemove(boolean b) { markedForRemove = b; }
+    public boolean isMarkedForRemove() { return markedForRemove; }
 
     public void draw(Graphics2D g) {
         if (!initialized) return;
