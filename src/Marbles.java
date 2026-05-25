@@ -23,7 +23,7 @@ public class Marbles {
         this.ySpacing = 0;
         this.baseX = 0;
         this.accumulatedY = 0;
-        // [Bug 10] 修复：统一设定大小，避免在其他类硬编码导致不一致
+        // 统一设定大小，避免在其他类硬编码导致不一致
         this.side = 24.22;
     }
 
@@ -94,10 +94,18 @@ public class Marbles {
 
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
-            for (Marble hex : marbles[r]) {
+            // 使用索引遍历，便于将销毁的弹珠设为 null
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble hex = marbles[r][c];
                 if (hex != null) {
                     hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
+                    hex.update(dt); // 处理弹珠内部可能存在的动画更新
                     hex.recalculateVerticesIfDirty();
+                    
+                    // 如果弹珠消除动画播放完毕并标记死亡，从网格中移除
+                    if (hex.isDead()) {
+                        marbles[r][c] = null;
+                    }
                 }
             }
         }
@@ -268,17 +276,27 @@ public class Marbles {
         dfs(launchRow, launchCol, launchColor, visited, connectedGroup);
 
         if (connectedGroup.size() >= MIN_GROUP_SIZE) {
+            // 获取发出的源头球绝对坐标
+            Marble launchM = marbles[launchRow][launchCol];
+            double originX = launchM != null ? launchM.getCenterX() : 0;
+            double originY = launchM != null ? launchM.getCenterY() : 0;
+            
             for (Marble m : connectedGroup) {
-                int r = m.getRow();
-                int c = m.getCol();
-                if (r >= 0 && r < marbles.length && c >= 0 && c < marbles[r].length) {
-                    marbles[r][c] = null;
+                // 计算每个弹珠到发射点的物理距离，以产生由近及远的递进式延迟
+                double dist = 0;
+                if (launchM != null) {
+                    dist = Math.sqrt(Math.pow(m.getCenterX() - originX, 2) + Math.pow(m.getCenterY() - originY, 2));
                 }
+                
+                // 距离除以传播速度常数得到延迟(单位为秒)
+                // 600.0 数值越大动画越快，越小越慢(递进感越强)
+                double delay = dist / 600.0; 
+                m.startPop(delay);
             }
         }
     }
 
-    // [核心修复] 使用网格结合绝对物理距离的方式检测连通同色。
+    // 使用网格结合绝对物理距离的方式检测连通同色。
     // 这取代了极容易因为动态生成行偏移行号导致计算失误的固化方向矩阵匹配逻辑。
     private void dfs(int r, int c, int targetColor, boolean[][] visited, List<Marble> res) {
         if (r < 0 || r >= marbles.length) return;
@@ -286,7 +304,8 @@ public class Marbles {
         if (visited[r][c]) return;
 
         Marble current = marbles[r][c];
-        if (current == null || !current.isInitialized()) return;
+        // 忽略处于动画状态（即将死亡）的弹珠
+        if (current == null || !current.isInitialized() || current.isPopping()) return;
         if (current.getColorType() != targetColor) return;
 
         visited[r][c] = true;
@@ -304,7 +323,7 @@ public class Marbles {
                     int nc = c + dc;
                     if (nc >= 0 && nc < marbles[nr].length) {
                         Marble neighbor = marbles[nr][nc];
-                        if (neighbor != null && neighbor.isInitialized() && neighbor.getColorType() == targetColor) {
+                        if (neighbor != null && neighbor.isInitialized() && !neighbor.isPopping() && neighbor.getColorType() == targetColor) {
                             double dx = current.getCenterX() - neighbor.getCenterX();
                             double dy = current.getCenterY() - neighbor.getCenterY();
                             if (dx * dx + dy * dy <= thresholdSq) {

@@ -12,6 +12,12 @@ public class Marble {
     public static final int YELLOW = 3;
     public static final int PURPLE = 4;
 
+    // 动画状态相关
+    private boolean popping = false;
+    private boolean dead = false;
+    private double popDelay = 0;
+    private double popProgress = 0;
+
     // 主体色系
     private static final Color[] BASE_COLOR = {
             null,
@@ -64,7 +70,29 @@ public class Marble {
         this.initialized = true;
     }
 
-    public void update(double dt) {}
+    // 开始触发消除动画并设置延迟时间
+    public void startPop(double delay) {
+        this.popping = true;
+        this.popDelay = delay;
+        this.popProgress = 0;
+    }
+    
+    public boolean isPopping() { return popping; }
+    public boolean isDead() { return dead; }
+
+    public void update(double dt) {
+        // 更新弹出动画
+        if (popping) {
+            if (popDelay > 0) {
+                popDelay -= dt;
+            } else {
+                popProgress += dt * 6.0; // 动画速度，约 0.16 秒播放完成
+                if (popProgress >= 1.0) {
+                    dead = true;
+                }
+            }
+        }
+    }
 
     public void setCenter(double cx, double cy) {
         this.cx = cx;
@@ -90,13 +118,30 @@ public class Marble {
     public boolean isMarkedForRemove() { return markedForRemove; }
 
     public void draw(Graphics2D g) {
-        if (!initialized) return;
+        // 如果未初始化或动画已经播放完成完全消失，则不绘制
+        if (!initialized || dead) return;
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-        // 精准半径：弹珠之间刚好接触，无重叠、无空隙
-        double radius = side * 0.866;
+        double scale = 1.0;
+        float alpha = 1.0f;
+        
+        // 当处于正在爆裂的状态，并且延迟时间已到，开始放大且透明化
+        if (popping && popDelay <= 0) {
+            scale = 1.0 + popProgress * 0.4; // 最大膨胀 1.4 倍
+            alpha = 1.0f - (float)popProgress;
+            if (alpha < 0f) alpha = 0f;
+            if (alpha > 1f) alpha = 1f;
+        }
+
+        Composite originalComposite = g.getComposite();
+        if (alpha < 1.0f) {
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+        }
+
+        // 精准半径：结合动画放大倍数
+        double radius = side * 0.866 * scale;
         double x = cx - radius;
         double y = cy - radius;
         double diameter = radius * 2;
@@ -107,7 +152,7 @@ public class Marble {
 
         // 阴影
         g.setColor(new Color(0,0,0,40));
-        g.fillOval((int)(x+2), (int)(y+2), (int)diameter, (int)diameter);
+        g.fillOval((int)(x + 2 * scale), (int)(y + 2 * scale), (int)diameter, (int)diameter);
 
         // 球体渐变
         Point2D center = new Point2D.Double(cx, cy);
@@ -118,23 +163,30 @@ public class Marble {
         g.fillOval((int)x, (int)y, (int)diameter, (int)diameter);
 
         // 双层精致边框
-        g.setStroke(new BasicStroke(1.8f));
+        g.setStroke(new BasicStroke(1.8f * (float)scale));
         g.setColor(new Color(0,0,0,70));
         g.drawOval((int)x, (int)y, (int)diameter, (int)diameter);
 
-        g.setStroke(new BasicStroke(0.8f));
+        g.setStroke(new BasicStroke(0.8f * (float)scale));
         g.setColor(new Color(255,255,255,50));
-        g.drawOval((int)(x+1), (int)(y+1), (int)(diameter-2), (int)(diameter-2));
+        g.drawOval((int)(x + 1 * scale), (int)(y + 1 * scale), (int)(diameter - 2 * scale), (int)(diameter - 2 * scale));
 
         // 主高光
         g.setColor(new Color(255,255,255,200));
         double highlightR = radius * 0.32;
-        g.fillOval((int)(cx-radius*0.48), (int)(cy-radius*0.48), (int)highlightR, (int)highlightR);
+        g.fillOval((int)(cx - radius * 0.48), (int)(cy - radius * 0.48), (int)highlightR, (int)highlightR);
 
         // 玻璃反光点
         g.setColor(new Color(255,255,255,120));
-        g.fillOval((int)(cx+radius*0.25), (int)(cy-radius*0.2), 4,4);
-        g.fillOval((int)(cx-radius*0.2), (int)(cy+radius*0.3), 3,3);
+        int reflect1Size = Math.max(1, (int)(4 * scale));
+        int reflect2Size = Math.max(1, (int)(3 * scale));
+        g.fillOval((int)(cx + radius * 0.25), (int)(cy - radius * 0.2), reflect1Size, reflect1Size);
+        g.fillOval((int)(cx - radius * 0.2), (int)(cy + radius * 0.3), reflect2Size, reflect2Size);
+
+        // 还原画布透明度
+        if (alpha < 1.0f) {
+            g.setComposite(originalComposite);
+        }
     }
 
     public void reset() {
@@ -142,5 +194,11 @@ public class Marble {
         this.cy = 0;
         this.side = 24.22;
         this.initialized = false;
+        
+        // 重置动画状态
+        this.popping = false;
+        this.dead = false;
+        this.popDelay = 0;
+        this.popProgress = 0;
     }
 }

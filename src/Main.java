@@ -114,7 +114,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
         if (!gameStarted) {
             gameStarted = true;
-            // [Bug 7] 修复：销毁菜单里的后台 Timer
+            // 销毁菜单里的后台 Timer
             if (startMenu != null) {
                 startMenu.stopAnimation();
             }
@@ -123,7 +123,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         }
     }
 
-    // [Bug 6] 修复：安全退出接口
+    // 安全退出接口
     @Override
     public void onExitGame() {
         System.exit(0);
@@ -132,7 +132,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     @Override
     public void init() {
         initMarbleGrid();
-        // [Bug 9] 修复: 此时 deadline 已经初始化好了，正确对齐位置
+        // 此时 deadline 已经初始化好了，正确对齐位置
         pauseButtonBounds.y = (int) deadline + 20;
     }
 
@@ -177,7 +177,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         double dx = currX - prevX;
         double dy = currY - prevY;
 
-        // [Bug 11] 修复：加大碰撞检测分步密度，减少穿模
+        // 加大碰撞检测分步密度，减少穿模
         int steps = (int) Math.ceil(Math.sqrt(dx * dx + dy * dy) / (radius * 0.25));
         if (steps < 1) steps = 1;
 
@@ -187,7 +187,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             double checkX = prevX + dx * i / steps;
             double checkY = prevY + dy * i / steps;
 
-            // [Bug 2] 修复：触顶判断改为真正的 radius 而不是 radius * 2
+            // 触顶判断改为真正的 radius 而不是 radius * 2
             if (checkY <= radius) {
                 collided = true;
                 launchMarble.setCenter(checkX, checkY);
@@ -198,7 +198,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
                 Marble[] row = hexGrid.getRow(r);
                 if (row == null) continue;
                 for (Marble m : row) {
-                    if (m != null && m.isInitialized()) {
+                    // 忽略正在播放消除动画的弹珠
+                    if (m != null && m.isInitialized() && !m.isPopping()) {
                         double dX = checkX - m.getCenterX();
                         double dY = checkY - m.getCenterY();
                         double distSq = dX * dX + dY * dY;
@@ -217,15 +218,14 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         if (collided) {
             hexGrid.attachMarble(launchMarble, mWidth);
 
-            // [Bug 5, Bug 8, Bug 12] 修复: 在 init 时提前赋予下一次正确的颜色类型
-            // 且不再强转整数保留 double 精确度，继承原始炮台状态
+            // 在 init 时提前赋予下一次正确的颜色类型
             int nextColor = launchPad.getNextMarbleColorType();
             launchMarble = new LaunchMarble();
             launchMarble.setScreenSize(mWidth, mHeight);
             launchMarble.setColorType(nextColor);
             launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
 
-            // 2. 随机生成新的下一个弹珠颜色，更新预览区
+            // 随机生成新的下一个弹珠颜色，更新预览区
             launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
         }
     }
@@ -238,7 +238,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             if (row == null) continue;
             for (int c = 0; c < row.length; c++) {
                 Marble marble = row[c];
-                if (marble != null && marble.isInitialized() && marble.getCenterY() + radius >= deadline) {
+                // 忽略正在播放消除动画的弹珠，防止动画越界触发失败
+                if (marble != null && marble.isInitialized() && !marble.isPopping() && marble.getCenterY() + radius >= deadline) {
                     frozen = true;
                     return;
                 }
@@ -397,7 +398,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        // [Bug 4] 修复: 暂停按钮的UI状态需要在拦截前处理
+        // 暂停按钮的UI状态需要在拦截前处理
         mouseX = e.getX();
         mouseY = e.getY();
 
@@ -442,7 +443,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     @Override
     public void keyPressed(KeyEvent event) {
         if (frozen || gamePaused) return;
-        // [Bug 12] 修复: 保持精确 double
+        // 保持精确 double
         if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x,
