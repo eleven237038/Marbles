@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="修复碰撞bug">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加消除动画" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -335,7 +330,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779722094427</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="添加消除动画">
+      <option name="closed" value="true" />
+      <created>1779722741718</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1779722741718</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -372,6 +375,7 @@
     <MESSAGE value="合并碰撞后消除逻辑" />
     <MESSAGE value="合并UI,优化代码" />
     <MESSAGE value="修复碰撞bug" />
-    <option name="LAST_COMMIT_MESSAGE" value="修复碰撞bug" />
+    <MESSAGE value="添加消除动画" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加消除动画" />
   </component>
 </project>

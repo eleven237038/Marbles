@@ -135,8 +135,9 @@ public class Marble {
             if (alpha > 1f) alpha = 1f;
         }
 
-        Composite originalComposite = g.getComposite();
+        Composite originalComposite = null;
         if (alpha < 1.0f) {
+            originalComposite = g.getComposite();
             g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
         }
 
