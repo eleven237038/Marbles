@@ -6,18 +6,7 @@ import java.util.Random;
 public class Marbles {
     private static final double SQRT3 = Math.sqrt(3);
     private static final int MIN_GROUP_SIZE = 3;
-    // 偶数行六边形邻接方向
-    private static final int[][] EVEN_ROW_DIRS = {
-            {-1, 0}, {-1, 1},
-            {0, -1},          {0, 1},
-            {1, 0}, {1, 1}
-    };
-    // 奇数行六边形邻接方向
-    private static final int[][] ODD_ROW_DIRS = {
-            {-1, -1}, {-1, 0},
-            {0, -1},          {0, 1},
-            {1, -1}, {1, 0}
-    };
+    
     private int rowCount;
     private Marble[][] marbles;
     private double ySpacing;
@@ -34,6 +23,7 @@ public class Marbles {
         this.ySpacing = 0;
         this.baseX = 0;
         this.accumulatedY = 0;
+        // [Bug 10] 修复：统一设定大小，避免在其他类硬编码导致不一致
         this.side = 24.22;
     }
 
@@ -89,32 +79,8 @@ public class Marbles {
         for (int col = 0; col < perRow; col++) {
             this.marbles[row][col] = new Marble();
             this.marbles[row][col].init(baseX + col * xSpacing, baseY, row, col);
-            initEdgeAttachment(marbles[row][col], row, col);
         }
         this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
-    }
-
-    private void initEdgeAttachment(Marble hex, int row, int col) {
-        int[][] edgeAttachment = hex.getEdgeAttachment();
-        double centerX = hex.getCenterX();
-        double refX = side * SQRT3;
-        boolean isEvenCol = Math.abs(centerX - refX) < 0.001;
-
-        if (isEvenCol) {
-            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col + 1;
-            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1;
-            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col + 1;
-            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col;
-            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1;
-            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1;
-        } else {
-            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col;
-            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1;
-            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col;
-            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col - 1;
-            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1;
-            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1;
-        }
     }
 
     public void initRow(int screenWidth, int screenHeight) {
@@ -160,7 +126,6 @@ public class Marbles {
         return marbles != null ? marbles.length : 0;
     }
 
-    // 新增：供 Main 类进行碰撞检测时获取行数据
     public Marble[] getRow(int row) {
         if (marbles != null && row >= 0 && row < marbles.length) {
             return marbles[row];
@@ -168,7 +133,6 @@ public class Marbles {
         return null;
     }
 
-    // 新增：核心算法，将发射的弹珠吸附到六边形网格的正确位置
     public void attachMarble(Marble launchMarble, int screenWidth) {
         double lx = launchMarble.getCenterX();
         double ly = launchMarble.getCenterY();
@@ -289,8 +253,6 @@ public class Marbles {
         marbles[targetRow][targetCol].setColorType(launchMarble.getColorType());
         marbles[targetRow][targetCol].init(exactX, exactY, targetRow, targetCol);
 
-        initEdgeAttachment(marbles[targetRow][targetCol], targetRow, targetCol);
-
         checkConnectedFromLaunch(targetRow, targetCol, launchMarble.getColorType());
     }
 
@@ -316,6 +278,8 @@ public class Marbles {
         }
     }
 
+    // [核心修复] 使用网格结合绝对物理距离的方式检测连通同色。
+    // 这取代了极容易因为动态生成行偏移行号导致计算失误的固化方向矩阵匹配逻辑。
     private void dfs(int r, int c, int targetColor, boolean[][] visited, List<Marble> res) {
         if (r < 0 || r >= marbles.length) return;
         if (marbles[r] == null || c < 0 || c >= marbles[r].length) return;
@@ -328,9 +292,28 @@ public class Marbles {
         visited[r][c] = true;
         res.add(current);
 
-        int[][] directions = (r % 2 == 0) ? EVEN_ROW_DIRS : ODD_ROW_DIRS;
-        for (int[] dir : directions) {
-            dfs(r + dir[0], c + dir[1], targetColor, visited, res);
+        // 物理距离判断，容错系数取 1.1（允许 10% 左右像素偏移）
+        double thresholdSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);
+
+        // 搜索相邻的行(r-1到r+1)和相关的列偏移
+        for (int dr = -1; dr <= 1; dr++) {
+            int nr = r + dr;
+            if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
+                // 六边形网格列差一般不会超过正负 2
+                for (int dc = -2; dc <= 2; dc++) {
+                    int nc = c + dc;
+                    if (nc >= 0 && nc < marbles[nr].length) {
+                        Marble neighbor = marbles[nr][nc];
+                        if (neighbor != null && neighbor.isInitialized() && neighbor.getColorType() == targetColor) {
+                            double dx = current.getCenterX() - neighbor.getCenterX();
+                            double dy = current.getCenterY() - neighbor.getCenterY();
+                            if (dx * dx + dy * dy <= thresholdSq) {
+                                dfs(nr, nc, targetColor, visited, res);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

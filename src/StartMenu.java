@@ -16,6 +16,7 @@ import javax.imageio.ImageIO;
 public class StartMenu extends JPanel {
     public interface StartMenuListener {
         void onStartGame();
+        void onExitGame(); // 统一交由 Main 代理退出事件
     }
 
     private final StartMenuListener listener;
@@ -100,8 +101,9 @@ public class StartMenu extends JPanel {
                 if (settingPressed) {
                     openSettings();
                 }
+                // [Bug 6] 修复: 交由接口处理退出逻辑进行清理
                 if (new Rectangle(exitX, exitY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my)) {
-                    System.exit(0);
+                    listener.onExitGame();
                 }
             }
 
@@ -181,6 +183,14 @@ public class StartMenu extends JPanel {
                 }
             }
         }, 0, 16);
+    }
+
+    // [Bug 7] 修复：提供停止并在 GC 时清理 Timer 的机制
+    public void stopAnimation() {
+        if (animationTimer != null) {
+            animationTimer.cancel();
+            animationTimer.purge();
+        }
     }
 
     @Override

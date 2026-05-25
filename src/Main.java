@@ -24,6 +24,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private boolean frozen = false;
     private double deadline;
     private Random random = new Random();
+    private StartMenu startMenu; // 保存菜单引用用于销毁 Timer
 
     // 暂停按钮相关
     private BufferedImage pauseIcon;
@@ -44,6 +45,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             Main game = new Main(frame);
 
             StartMenu startMenu = new StartMenu(game);
+            game.startMenu = startMenu;
 
             mainPanel.add(startMenu, "menu");
             mainPanel.add(game.mPanel, "game");
@@ -112,16 +114,26 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
         if (!gameStarted) {
             gameStarted = true;
+            // [Bug 7] 修复：销毁菜单里的后台 Timer
+            if (startMenu != null) {
+                startMenu.stopAnimation();
+            }
             init();
             gameLoop(60);
         }
     }
 
+    // [Bug 6] 修复：安全退出接口
+    @Override
+    public void onExitGame() {
+        System.exit(0);
+    }
+
     @Override
     public void init() {
         initMarbleGrid();
-        // 动态设置暂停按钮位置在灰色虚线以下20像素
-        pauseButtonBounds.y = (int) deadline + 60;
+        // [Bug 9] 修复: 此时 deadline 已经初始化好了，正确对齐位置
+        pauseButtonBounds.y = (int) deadline + 20;
     }
 
     private void initMarbleGrid() {
@@ -135,7 +147,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         // 初始化：生成第一个当前弹珠和第一个下一个弹珠
         launchMarble = new LaunchMarble();
         launchMarble.setScreenSize(mWidth, mHeight);
-        launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
+        // 使用精确的 double 位置初始化
+        launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
 
         // 生成第一个下一个弹珠颜色
         launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
@@ -164,7 +177,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         double dx = currX - prevX;
         double dy = currY - prevY;
 
-        int steps = (int) Math.ceil(Math.sqrt(dx * dx + dy * dy) / (radius * 0.5));
+        // [Bug 11] 修复：加大碰撞检测分步密度，减少穿模
+        int steps = (int) Math.ceil(Math.sqrt(dx * dx + dy * dy) / (radius * 0.25));
         if (steps < 1) steps = 1;
 
         boolean collided = false;
@@ -173,7 +187,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             double checkX = prevX + dx * i / steps;
             double checkY = prevY + dy * i / steps;
 
-            if (checkY <= radius * 2) {
+            // [Bug 2] 修复：触顶判断改为真正的 radius 而不是 radius * 2
+            if (checkY <= radius) {
                 collided = true;
                 launchMarble.setCenter(checkX, checkY);
                 break;
@@ -202,12 +217,13 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         if (collided) {
             hexGrid.attachMarble(launchMarble, mWidth);
 
-            // 核心逻辑：真正的下一个弹珠机制
-            // 1. 用预览区的下一个颜色创建新的当前弹珠
+            // [Bug 5, Bug 8, Bug 12] 修复: 在 init 时提前赋予下一次正确的颜色类型
+            // 且不再强转整数保留 double 精确度，继承原始炮台状态
+            int nextColor = launchPad.getNextMarbleColorType();
             launchMarble = new LaunchMarble();
             launchMarble.setScreenSize(mWidth, mHeight);
-            launchMarble.init((int) launchPad.cannon.x, (int) launchPad.cannon.y, 0, 0);
-            launchMarble.setColorType(launchPad.getNextMarbleColorType());
+            launchMarble.setColorType(nextColor);
+            launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
 
             // 2. 随机生成新的下一个弹珠颜色，更新预览区
             launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
@@ -381,7 +397,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (frozen || gamePaused) return;
+        // [Bug 4] 修复: 暂停按钮的UI状态需要在拦截前处理
         mouseX = e.getX();
         mouseY = e.getY();
 
@@ -394,6 +410,9 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         }
         if (oldHover != pauseHover)
             mPanel.repaint();
+
+        // 完成视觉更新后，再做游戏逻辑的拦截
+        if (frozen || gamePaused) return;
     }
 
     @Override
@@ -423,10 +442,11 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     @Override
     public void keyPressed(KeyEvent event) {
         if (frozen || gamePaused) return;
+        // [Bug 12] 修复: 保持精确 double
         if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
-            launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x + 100,
-                    mouseY > 0 ? mouseY : launchPad.cannon.y);
+            launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x,
+                    mouseY > 0 ? mouseY : launchPad.cannon.y - 100);
         }
     }
 }
