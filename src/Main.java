@@ -150,7 +150,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
                 break;
             }
 
-            // 情况2：撞击到已有弹珠 (修复：必须从 0 开始检测，包括刚附着到底部的弹珠)
+            // 情况2：撞击到已有弹珠
             for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
                 Marble[] row = hexGrid.getRow(r);
                 if (row == null) continue;
@@ -184,7 +184,6 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private void collisionWithDeadline() {
         if (hexGrid == null) return;
         double radius = hexGrid.getSide() * 0.866;
-        // 修复：必须从 0 开始检测触底，以便检测出玩家堆积过多造成的触底
         for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
             Marble[] row = hexGrid.getRow(r);
             if (row == null) continue;

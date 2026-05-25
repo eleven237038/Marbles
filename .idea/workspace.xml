@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化代码">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化代码,修复bug">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
@@ -23,12 +23,12 @@
     &quot;assignee&quot;: &quot;eleven237038&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/eleven237038/Marbles.git&quot;,
-    &quot;accountId&quot;: &quot;4521151b-dff9-427e-9ba5-e192808e912c&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/eleven237038/Marbles.git",
+    "accountId": "30ac1859-9ad9-4a4c-b639-2c1a9f7a6d36"
   }
-}</component>
+}]]></component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/src/Main.java" root0="SKIP_HIGHLIGHTING" />
   </component>
@@ -106,7 +106,7 @@
       <workItem from="1779629291622" duration="4841000" />
       <workItem from="1779638018647" duration="1247000" />
       <workItem from="1779696979686" duration="4000" />
-      <workItem from="1779697011646" duration="886000" />
+      <workItem from="1779697011646" duration="2027000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -292,7 +292,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779629554907</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="优化代码,修复bug">
+      <option name="closed" value="true" />
+      <created>1779697920593</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1779697920593</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -325,6 +333,7 @@
     <MESSAGE value="合并UI弹珠样式" />
     <MESSAGE value="合并UI分支" />
     <MESSAGE value="优化代码" />
-    <option name="LAST_COMMIT_MESSAGE" value="优化代码" />
+    <MESSAGE value="优化代码,修复bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="优化代码,修复bug" />
   </component>
 </project>
