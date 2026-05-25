@@ -24,6 +24,7 @@ public class StartMenu extends JPanel {
     private boolean startPressed = false; // 开始按钮按下状态
     private boolean settingPressed = false; // 设置按钮按下状态
     private boolean isSoundOn = true; // 声音开关状态
+    public static boolean isSoundOnStatic = true; // 静态，给暂停菜单使用
 
     private final int BTN_WIDTH = 180;
     private final int BTN_HEIGHT = 70;
@@ -499,6 +500,64 @@ public class StartMenu extends JPanel {
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+        return button;
+    }
+
+    // ====== 静态按钮方法，给 Main 暂停菜单共用 ======
+    public static JButton createStyledButtonStatic(String text, boolean hasIcon, boolean isResumeOrQuit, String iconName) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int width = getWidth();
+                int height = getHeight();
+
+                Color c1 = getModel().isPressed() ? new Color(50, 140, 255) :
+                        getModel().isRollover() ? new Color(100, 190, 255) : new Color(70, 150, 255);
+                Color c2 = getModel().isPressed() ? new Color(30, 110, 255) :
+                        getModel().isRollover() ? new Color(50, 140, 255) : new Color(30, 110, 255);
+
+                LinearGradientPaint grad = new LinearGradientPaint(0, 0, 0, height,
+                        new float[]{0, 1}, new Color[]{c1, c2});
+                g2d.setPaint(grad);
+                g2d.fillRoundRect(0, 0, width, height, 25, 25);
+
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.setColor(Color.WHITE);
+                g2d.drawRoundRect(0, 0, width - 1, height - 1, 25, 25);
+
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(new Font("Arial", Font.BOLD, 18));
+                FontMetrics fm = g2d.getFontMetrics();
+                String btnText = getText();
+                int textWidth = fm.stringWidth(btnText);
+                int textY = (height + fm.getAscent() - fm.getDescent()) / 2;
+                int textX = (width - textWidth) / 2;
+
+                if (hasIcon) {
+                    int iconSize = 32;
+                    int iconX = 15;
+                    int iconY = (height - iconSize) / 2;
+                    try {
+                        BufferedImage icon = ImageIO.read(new File("resources/" + iconName));
+                        if (icon != null) {
+                            g2d.drawImage(icon, iconX, iconY, iconSize, iconSize, null);
+                        }
+                    } catch (Exception ex) {}
+                }
+
+                g2d.drawString(btnText, textX, textY);
+                g2d.dispose();
+            }
+        };
+
+        button.setPreferredSize(new Dimension(250, 55));
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
     }
 }

@@ -1,7 +1,15 @@
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import javax.swing.*;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+import java.awt.geom.RoundRectangle2D;
+import java.awt.LinearGradientPaint;
 
 public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private Marbles hexGrid;
@@ -14,6 +22,13 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private boolean gameStarted = false;
     private boolean frozen = false;
     private double deadline;
+
+    // 暂停按钮相关
+    private BufferedImage pauseIcon;
+    private Rectangle pauseButtonBounds;
+    private boolean pauseHover = false;
+    private boolean pausePressed = false;
+    private boolean gamePaused = false;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -73,6 +88,19 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
         Insets insets = mFrame.getInsets();
         mFrame.setSize(mWidth + insets.left + insets.right, mHeight + insets.top + insets.bottom);
+
+        // 加载pause.png精灵图
+        try {
+            File pauseFile = new File("resources/pause.png");
+            if (pauseFile.exists()) {
+                pauseIcon = ImageIO.read(pauseFile);
+            }
+        } catch (IOException e) {
+            pauseIcon = null;
+        }
+
+        // 暂停按钮位置：左侧中间偏下，发射台上方
+        pauseButtonBounds = new Rectangle(30, 600, 60, 60);
     }
 
     @Override
@@ -89,10 +117,6 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     @Override
     public void init() {
         SwingUtilities.invokeLater(() -> {
-            mFrame.setLayout(new BorderLayout());
-            mPanel.setPreferredSize(new Dimension(mWidth, mHeight));
-            mFrame.add(mPanel, BorderLayout.CENTER);
-            mFrame.revalidate();
             initMarbleGrid();
         });
     }
@@ -111,7 +135,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
     @Override
     public void update(double dt) {
-        if (frozen) return;
+        if (frozen || gamePaused) return;
         if (hexGrid != null) hexGrid.update(dt);
         if (launchMarble != null) launchMarble.update(dt);
         checkCollisions();
@@ -211,18 +235,165 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             launchPad.drawCannon(g2, mouseX, mouseY);
         }
         if (launchMarble != null) launchMarble.draw(g2);
+
+        // 最后绘制暂停按钮，确保在最上层
+        drawPauseButton(g2);
+    }
+
+    // 图片完全占据按钮，无任何内边距
+    private void drawPauseButton(Graphics2D g2) {
+        int x = pauseButtonBounds.x;
+        int y = pauseButtonBounds.y;
+        int w = pauseButtonBounds.width;
+        int h = pauseButtonBounds.height;
+
+        // 绘制按钮背景
+        RoundRectangle2D bg = new RoundRectangle2D.Double(x, y, w, h, 15, 15);
+
+        if (pausePressed) {
+            Color c1 = new Color(50, 140, 255, 200);
+            Color c2 = new Color(30, 110, 255, 200);
+            LinearGradientPaint grad = new LinearGradientPaint(x, y, x, y + h,
+                    new float[]{0, 1}, new Color[]{c1, c2});
+            g2.setPaint(grad);
+        } else if (pauseHover) {
+            Color c1 = new Color(100, 190, 255, 180);
+            Color c2 = new Color(50, 140, 255, 180);
+            LinearGradientPaint grad = new LinearGradientPaint(x, y, x, y + h,
+                    new float[]{0, 1}, new Color[]{c1, c2});
+            g2.setPaint(grad);
+        } else {
+            g2.setColor(new Color(255, 255, 255, 180));
+        }
+        g2.fill(bg);
+
+        // 蓝色边框
+        g2.setStroke(new BasicStroke(2f));
+        g2.setColor(new Color(70, 150, 255, 200));
+        g2.draw(bg);
+
+        // 绘制pause.png精灵图：完全填满按钮
+        if (pauseIcon != null) {
+            g2.drawImage(pauseIcon, x, y, w, h, null);
+        } else {
+            // 备用：蓝色暂停符号
+            g2.setColor(new Color(70, 150, 255));
+            g2.fillRect(x + 18, y + 15, 8, 30);
+            g2.fillRect(x + 34, y + 15, 8, 30);
+        }
+    }
+
+    public void openPauseMenu() {
+        gamePaused = true;
+
+        JDialog pauseDialog = new JDialog(SwingUtilities.getWindowAncestor(mPanel), "Pause Menu", Dialog.ModalityType.APPLICATION_MODAL);
+        pauseDialog.setSize(350, 380);
+        pauseDialog.setLocationRelativeTo(mPanel);
+        pauseDialog.setResizable(false);
+        pauseDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        // 点击右上角X关闭后继续游戏
+        pauseDialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                gamePaused = false;
+                mPanel.repaint();
+            }
+        });
+
+        JPanel dialogMainPanel = new JPanel(new BorderLayout(10, 20));
+        dialogMainPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+        dialogMainPanel.setBackground(new Color(240, 248, 255));
+
+        JLabel title = new JLabel("PAUSED", SwingConstants.CENTER);
+        title.setFont(new Font("Arial Black", Font.BOLD, 28));
+        title.setForeground(new Color(70, 150, 255));
+        dialogMainPanel.add(title, BorderLayout.NORTH);
+
+        JPanel btnPanel = new JPanel(new GridLayout(4, 1, 0, 20));
+        btnPanel.setBackground(new Color(240, 248, 255));
+
+        // 1. Resume
+        JButton btnResume = StartMenu.createStyledButtonStatic("Resume", true, true, "begin.png");
+        btnResume.addActionListener(e -> {
+            gamePaused = false;
+            pauseDialog.dispose();
+        });
+
+        // 2. How to play
+        JButton btnHelp = StartMenu.createStyledButtonStatic("How to play", true, false, "help.png");
+        btnHelp.addActionListener(e -> {
+            JOptionPane.showMessageDialog(pauseDialog,
+                    "游戏玩法：\n1. 点击/空格发射弹珠\n2. 3个同色相连即消除\n3. 不要让弹珠碰到底部红线",
+                    "How to play", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        // 3. Sound on/off
+        JButton btnSound = StartMenu.createStyledButtonStatic(StartMenu.isSoundOnStatic ? "Sound on" : "Sound off", true, false, "sound.png");
+        btnSound.addActionListener(e -> {
+            StartMenu.isSoundOnStatic = !StartMenu.isSoundOnStatic;
+            btnSound.setText(StartMenu.isSoundOnStatic ? "Sound on" : "Sound off");
+        });
+
+        // 4. Quit：完全重置游戏并返回主菜单
+        JButton btnQuit = StartMenu.createStyledButtonStatic("Quit", true, true, "exit.png");
+        btnQuit.addActionListener(e -> {
+            pauseDialog.dispose();
+            // 切换到主菜单
+            cardLayout.show(mainPanel, "menu");
+            // 重置游戏状态
+            gamePaused = false;
+            frozen = false;
+            gameStarted = false;
+            // 清空游戏对象，释放资源
+            hexGrid = null;
+            launchMarble = null;
+            // 恢复默认光标
+            mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        });
+
+        btnPanel.add(btnResume);
+        btnPanel.add(btnHelp);
+        btnPanel.add(btnSound);
+        btnPanel.add(btnQuit);
+
+        dialogMainPanel.add(btnPanel, BorderLayout.CENTER);
+        pauseDialog.setContentPane(dialogMainPanel);
+        pauseDialog.setVisible(true);
+
+        pausePressed = false;
+        mPanel.repaint();
     }
 
     @Override
     public void mouseMoved(MouseEvent event) {
-        if (frozen) return;
+        if (frozen || gamePaused) return;
         mouseX = event.getX();
         mouseY = event.getY();
+
+        boolean oldHover = pauseHover;
+        pauseHover = pauseButtonBounds.contains(event.getPoint());
+        if (pauseHover) {
+            mPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        } else {
+            mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        }
+        if (oldHover != pauseHover)
+            mPanel.repaint();
     }
 
     @Override
     public void mousePressed(MouseEvent event) {
         if (frozen) return;
+
+        if (pauseButtonBounds.contains(event.getPoint())) {
+            pausePressed = true;
+            mPanel.repaint();
+            openPauseMenu();
+            return;
+        }
+
+        if (gamePaused) return;
         if (launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(event.getX(), event.getY());
@@ -230,8 +401,14 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     }
 
     @Override
+    public void mouseReleased(MouseEvent event) {
+        pausePressed = false;
+        mPanel.repaint();
+    }
+
+    @Override
     public void keyPressed(KeyEvent event) {
-        if (frozen) return;
+        if (frozen || gamePaused) return;
         if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x + 100,
