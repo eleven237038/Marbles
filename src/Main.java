@@ -12,7 +12,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.LinearGradientPaint;
 import java.util.Random;
 
-public class Main extends GameEngine implements StartMenu.StartMenuListener {
+public class Main extends GameEngine implements StartScreen.StartScreenListener {
     private Marbles hexGrid;
     private LaunchPad launchPad;
     private LaunchMarble launchMarble;
@@ -24,7 +24,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private boolean frozen = false;
     private double deadline;
     private Random random = new Random();
-    private StartMenu startMenu; // 保存菜单引用用于销毁 Timer
+    private StartScreen startScreen; // 保存菜单引用用于销毁 Timer
 
     // 窗口尺寸
     private static final int WINDOW_WIDTH = 1080;
@@ -47,8 +47,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
             Main game = new Main(frame);
 
-            StartMenu startMenu = new StartMenu(game);
-            game.startMenu = startMenu;
+            StartScreen startScreen = new StartScreen(game);
+            game.startScreen = startScreen;
 
             // 创建居中容器
             JPanel gameContainer = new JPanel(new GridBagLayout());
@@ -56,7 +56,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             gameContainer.add(game.mPanel, new GridBagConstraints());
 
             // 开始界面直接填充窗口
-            mainPanel.add(startMenu, "menu");
+            mainPanel.add(startScreen, "menu");
             mainPanel.add(gameContainer, "game");
 
             frame.setContentPane(mainPanel);
@@ -69,7 +69,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             frame.setSize(targetWidth, targetHeight);
 
             // 开始界面填充整个窗口（在窗口大小设置之后）
-            startMenu.setPreferredSize(new Dimension(frame.getWidth(), frame.getHeight()));
+            startScreen.setPreferredSize(new Dimension(frame.getWidth(), frame.getHeight()));
 
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
@@ -131,8 +131,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         if (!gameStarted) {
             gameStarted = true;
             // 销毁菜单里的后台 Timer
-            if (startMenu != null) {
-                startMenu.stopAnimation();
+            if (startScreen != null) {
+                startScreen.stopAnimation();
             }
             init();
             gameLoop(60);
@@ -362,14 +362,14 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         btnPanel.setBackground(new Color(240, 248, 255));
 
         // 1. Resume
-        JButton btnResume = StartMenu.createStyledButtonStatic("Resume", true, "begin.png");
+        JButton btnResume = StartScreen.createStyledButtonStatic("Resume", true, "begin.png");
         btnResume.addActionListener(e -> {
             gamePaused = false;
             pauseDialog.dispose();
         });
 
         // 2. How to play
-        JButton btnHelp = StartMenu.createStyledButtonStatic("How to play", true, "help.png");
+        JButton btnHelp = StartScreen.createStyledButtonStatic("How to play", true, "help.png");
         btnHelp.addActionListener(e -> {
             JOptionPane.showMessageDialog(pauseDialog,
                     "游戏玩法：\n1. 点击/空格发射弹珠\n2. 3个同色相连即消除\n3. 不要让弹珠碰到底部红线",
@@ -377,14 +377,14 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         });
 
         // 3. Sound on/off
-        JButton btnSound = StartMenu.createStyledButtonStatic(StartMenu.isSoundOnStatic ? "Sound on" : "Sound off", true, "sound.png");
+        JButton btnSound = StartScreen.createStyledButtonStatic(StartScreen.isSoundOnStatic ? "Sound on" : "Sound off", true, "sound.png");
         btnSound.addActionListener(e -> {
-            StartMenu.isSoundOnStatic = !StartMenu.isSoundOnStatic;
-            btnSound.setText(StartMenu.isSoundOnStatic ? "Sound on" : "Sound off");
+            StartScreen.isSoundOnStatic = !StartScreen.isSoundOnStatic;
+            btnSound.setText(StartScreen.isSoundOnStatic ? "Sound on" : "Sound off");
         });
 
         // 4. Quit：完全重置游戏并返回主菜单
-        JButton btnQuit = StartMenu.createStyledButtonStatic("Quit", true, "exit.png");
+        JButton btnQuit = StartScreen.createStyledButtonStatic("Quit", true, "exit.png");
         btnQuit.addActionListener(e -> {
             gamePaused = false;
             frozen = false;

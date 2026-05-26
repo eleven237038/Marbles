@@ -13,13 +13,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.imageio.ImageIO;
 
-public class StartMenu extends JPanel {
-    public interface StartMenuListener {
+public class StartScreen extends JPanel {
+    public interface StartScreenListener {
         void onStartGame();
-        void onExitGame(); // 统一交由 Main 代理退出事件
+        void onExitGame();
     }
 
-    private final StartMenuListener listener;
+    private final StartScreenListener listener;
     private final ArrayList<Marble> decorMarbles = new ArrayList<>();
     private boolean startHover = false;
     private boolean settingHover = false;
@@ -71,7 +71,7 @@ public class StartMenu extends JPanel {
     private BufferedImage soundIcon;
     private BufferedImage shutdownIcon;
 
-    public StartMenu(StartMenuListener listener) {
+    public StartScreen(StartScreenListener listener) {
         this.listener = listener;
         setBackground(new Color(240, 248, 255));
         setPreferredSize(new Dimension(483, 483)); // 同步修改主菜单以适配正方形屏幕
