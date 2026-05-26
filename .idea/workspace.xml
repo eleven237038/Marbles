@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更名,统一格式">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更改GameScreen内数值引用,方便之后调整添加板块">
       <change beforePath="$PROJECT_DIR$/src/GameScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/GameScreen.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -113,7 +113,7 @@
       <workItem from="1779708556511" duration="1102000" />
       <workItem from="1779763989436" duration="2154000" />
       <workItem from="1779778283561" duration="3579000" />
-      <workItem from="1779793397803" duration="1021000" />
+      <workItem from="1779793397803" duration="1421000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -419,7 +419,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779794101729</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="更改GameScreen内数值引用,方便之后调整添加板块">
+      <option name="closed" value="true" />
+      <created>1779794538460</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1779794538460</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -437,7 +445,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="更新弹珠行生成规则" />
     <MESSAGE value="更新弹珠附着点规则" />
     <MESSAGE value="更新发射台初始窗口" />
     <MESSAGE value="更正六边形生成规则,增加初始朝向随机性" />
@@ -462,6 +469,7 @@
     <MESSAGE value="优化下落动画" />
     <MESSAGE value="将游戏界面作为独立文件提取,方便布局" />
     <MESSAGE value="更名,统一格式" />
-    <option name="LAST_COMMIT_MESSAGE" value="更名,统一格式" />
+    <MESSAGE value="更改GameScreen内数值引用,方便之后调整添加板块" />
+    <option name="LAST_COMMIT_MESSAGE" value="更改GameScreen内数值引用,方便之后调整添加板块" />
   </component>
 </project>

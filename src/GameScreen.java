@@ -30,7 +30,7 @@ public class GameScreen {
 
     // 移动速度比例(基于 side)
     private static final double MARBLE_MOVE_SPEED = 0.4;            // 弹珠网格下降速度
-    private static final double LAUNCH_SPEED = 500;                  // 发射速度(固定值,像素/秒)
+    private static final double LAUNCH_SPEED = 1500;                  // 发射速度(与掉落加速度一致)
 
     // 游戏界面内部比例(这些比例使得游戏可以适应不同尺寸)
     private static final double CANNON_Y_RATIO = 4.0 / 5.0;          // 发射台Y位置:距底部1/5处
@@ -105,7 +105,8 @@ public class GameScreen {
 
         // 掉落物理参数
         private double fallVy = 0;
-        private double fallAy = 1500;
+        private double fallAy = 1500;  // 重力加速度
+        private static final double FALL_DEATH_Y = 1500;  // 掉落死亡阈值
 
         // 单独动画状态
         private boolean alone = false;
@@ -215,7 +216,7 @@ public class GameScreen {
                     } else {
                         cy += (400 + random.nextDouble() * 100) * dt;
                         verticesDirty = true;
-                        if (cy > 1500) {
+                        if (cy > FALL_DEATH_Y) {
                             dead = true;
                         }
                     }
@@ -227,7 +228,7 @@ public class GameScreen {
                     cy += fallVy * dt;
                     fallVy += fallAy * dt;
                     verticesDirty = true;
-                    if (cy > 1500) {
+                    if (cy > FALL_DEATH_Y) {
                         dead = true;
                     }
                 }
@@ -339,7 +340,7 @@ public class GameScreen {
     public class LaunchMarble {
         private double vx;
         private double vy;
-        private double launchSpeed = 500;
+        private double launchSpeed = LAUNCH_SPEED;  // 与掉落加速度一致
         private boolean launched;
         private double prevCx;
         private double prevCy;
@@ -660,7 +661,6 @@ public class GameScreen {
     public void attachMarble(Marble launchMarble, int gameWidth) {
         double lx = launchMarble.getCenterX();
         double ly = launchMarble.getCenterY();
-        double xSpacing = this.xSpacing;  // 使用已计算的 xSpacing
 
         // 1. 寻找参考球,推算网格偏移
         Marble ref = null;
@@ -815,7 +815,8 @@ public class GameScreen {
         visited[r][c] = true;
         res.add(current);
 
-        double thresholdSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);
+        // thresholdSq 在 checkConnectedFromLaunch 中已计算,这里直接使用类成员
+        double thresholdSq = side * SQRT3 * 1.1 * side * SQRT3 * 1.1;
 
         for (int dr = -1; dr <= 1; dr++) {
             int nr = r + dr;
