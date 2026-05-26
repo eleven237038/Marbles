@@ -7,17 +7,34 @@ import java.util.Random;
 /**
  * GameScreen - 整合弹珠游戏所有核心游戏逻辑
  * 包括: Marble[][] 生成规则、发射弹珠规则、碰撞检测、消除规则等
+ *
+ * 设计原则: GameScreen 是一个独立的游戏界面模块,可嵌入到任意窗口中
+ * 所有尺寸相关的数值都以 side(弹珠半径的2倍)为基准进行相对计算
+ * 不会直接依赖屏幕像素值,而是根据传入的游戏界面尺寸按比例计算
  */
 public class GameScreen {
     // ==================== 常量定义 ====================
     private static final double SQRT3 = Math.sqrt(3);
     private static final int MIN_GROUP_SIZE = 3;
     private static final double SCALE = 1.25;
-    private static final double BASE_RATIO_W = 1.0 / 5.0;
-    private static final double BASE_RATIO_H = 0.45;
-    private static final double BARREL_LEN = 45 * SCALE;
-    private static final int AMMO_SLOT_SIZE = (int)(16 * SCALE);
-    private static final double AMMO_OFFSET_X_RATIO = 0.375;
+
+    // 基于 side 的固定缩放比例(使发射台等UI元素在不同尺寸下保持比例)
+    private double uiScale = 1.0;
+
+    // 基于 side 的固定比例常量(用于计算发射台尺寸)
+    private static final double BASE_WIDTH_RATIO = 1.0 / 5.0;        // 发射台宽度为游戏界面宽度的1/5
+    private static final double BASE_HEIGHT_RATIO = 0.45;            // 发射台高度为宽度的0.45倍
+    private static final double BARREL_LEN_RATIO = 45.0 / 24.22 * 2;  // 炮管长度相对于 side
+    private static final double AMMO_SLOT_SIZE_RATIO = 16.0 / 24.22 * 2; // 弹药槽大小
+    private static final double AMMO_OFFSET_X_RATIO = 0.375;          // 弹药槽X偏移比例
+
+    // 移动速度比例(基于 side)
+    private static final double MARBLE_MOVE_SPEED = 0.4;            // 弹珠网格下降速度
+    private static final double LAUNCH_SPEED = 500;                  // 发射速度(固定值,像素/秒)
+
+    // 游戏界面内部比例(这些比例使得游戏可以适应不同尺寸)
+    private static final double CANNON_Y_RATIO = 4.0 / 5.0;          // 发射台Y位置:距底部1/5处
+    private static final double DEADLINE_MARGIN_RATIO = 0.0;           // deadline 边距(为0,使用计算值)
 
     // ==================== 颜色定义 ====================
     private static final Color[] MARBLE_COLORS = {
@@ -41,24 +58,28 @@ public class GameScreen {
     private static final Color EYE_HIGHLIGHT = new Color(255, 255, 255);
 
     // ==================== 游戏状态 ====================
-    private int screenWidth;
-    private int screenHeight;
-    private double side;
+    private int gameWidth;    // 游戏界面宽度
+    private int gameHeight;   // 游戏界面高度
+    private double side;       // 弹珠大小基准值(所有尺寸的基准)
     private int maxRowCount;
-    private double ySpacing;
+    private double ySpacing;   // 基于 side 计算
+    private double xSpacing;  // 基于 side 计算(六边形网格)
     private double baseX;
     private double accumulatedY;
     private int rowCount;
     private Marble[][] marbles;
     private Random random = new Random();
 
-    // 发射台状态
+    // 发射台状态(基于 side 和比例计算)
     private Point2D.Double cannon;
     private double headAngle = -Math.PI / 2;
     private int nextMarbleColor;
-    private double topY;
-    private int currentBaseWidth;
-    private int currentBaseHeight;
+    private double topY;              // deadline 位置(基于计算)
+    private int currentBaseWidth;     // 基于 gameWidth 计算
+    private int currentBaseHeight;    // 基于 currentBaseWidth 计算
+    private double barrelLen;        // 基于 side 计算
+    private int ammoSlotSize;         // 基于 side 计算
+    private double uiScaleFactor;     // UI元素的缩放因子
 
     // 发射弹珠状态
     private LaunchMarble launchMarble;
@@ -367,7 +388,7 @@ public class GameScreen {
         }
 
         public void update(double dt) {
-            if (launched && screenWidth > 0 && screenHeight > 0) {
+            if (launched && gameWidth > 0 && gameHeight > 0) {
                 prevCx = getCenterX();
                 prevCy = getCenterY();
 
@@ -379,8 +400,8 @@ public class GameScreen {
                 if (cx <= radius) {
                     cx = radius;
                     vx = -vx;
-                } else if (cx >= screenWidth - radius) {
-                    cx = screenWidth - radius;
+                } else if (cx >= gameWidth - radius) {
+                    cx = gameWidth - radius;
                     vx = -vx;
                 }
 
@@ -417,10 +438,11 @@ public class GameScreen {
 
     // ==================== GameScreen 构造函数 ====================
     public GameScreen() {
-        this.side = 24.22;
+        this.side = 24.22;  // 基准尺寸
         this.marbles = null;
         this.rowCount = 0;
         this.ySpacing = 0;
+        this.xSpacing = 0;
         this.baseX = 0;
         this.accumulatedY = 0;
         this.cannon = new Point2D.Double();
@@ -429,24 +451,42 @@ public class GameScreen {
     }
 
     // ==================== 初始化 ====================
-    public void init(int screenWidth, int screenHeight, int maxRowCount) {
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeight;
+    public void init(int gameWidth, int gameHeight, int maxRowCount) {
+        this.gameWidth = gameWidth;
+        this.gameHeight = gameHeight;
         this.maxRowCount = maxRowCount;
-        this.side = 24.22;
-        initRow(screenWidth, screenHeight);
-        setCannonPosition(screenWidth, screenHeight);
+        this.side = 24.22;  // 固定基准值
+
+        // 基于 side 计算间距
+        this.ySpacing = side * 1.5;
+        this.xSpacing = side * SQRT3;
+
+        // 计算UI缩放因子,使弹珠在不同尺寸下保持比例
+        // 使用标准尺寸(483)作为参考,计算缩放比例
+        this.uiScaleFactor = gameWidth / 483.0;
+
+        // 计算基于比例的尺寸
+        this.barrelLen = side * BARREL_LEN_RATIO * uiScaleFactor;
+        this.ammoSlotSize = (int)(side * AMMO_SLOT_SIZE_RATIO * uiScaleFactor);
+        this.currentBaseWidth = (int)(gameWidth * BASE_WIDTH_RATIO);
+        this.currentBaseHeight = (int)(currentBaseWidth * BASE_HEIGHT_RATIO);
+
+        initRow(gameWidth, gameHeight);
+        setCannonPosition(gameWidth, gameHeight);
         prepareNextMarble();
     }
 
     public double getSide() { return side; }
     public int getMaxRowCount() { return maxRowCount; }
     public void setMaxRowCount(int maxRowCount) { this.maxRowCount = maxRowCount; }
+    public int getGameWidth() { return gameWidth; }
+    public int getGameHeight() { return gameHeight; }
 
     // ==================== Marble[][] 生成规则 ====================
-    public void StartMarbles(int screenWidth, int screenHeight, int initialRowCount) {
-        this.screenWidth = screenWidth;
+    public void StartMarbles(int gameWidth, int gameHeight, int initialRowCount) {
+        this.gameWidth = gameWidth;
         this.ySpacing = side * 1.5;
+        this.xSpacing = side * SQRT3;
 
         int totalRows = maxRowCount + initialRowCount;
         this.rowCount = initialRowCount;
@@ -454,7 +494,7 @@ public class GameScreen {
 
         for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
             int actualRow = maxRowCount + generatedRows;
-            AddMarbleRow(actualRow, screenWidth, initialRowCount);
+            AddMarbleRow(actualRow, gameWidth, initialRowCount);
 
             for (int r = maxRowCount; r < actualRow; r++) {
                 if (marbles[r] == null) continue;
@@ -468,9 +508,8 @@ public class GameScreen {
         }
     }
 
-    public void AddMarbleRow(int row, int screenWidth, int initialRowCount) {
+    public void AddMarbleRow(int row, int gameWidth, int initialRowCount) {
         double baseY = -2 * side;
-        double xSpacing = side * SQRT3;
 
         if (marbles == null || row == maxRowCount) {
             double[] initialBaseX = { side * SQRT3, side * SQRT3 / 2 };
@@ -483,7 +522,7 @@ public class GameScreen {
             this.marbles = newMarbles;
         }
 
-        int perRow = (int)(screenWidth / xSpacing);
+        int perRow = (int)(gameWidth / xSpacing);
         this.marbles[row] = new Marble[perRow];
 
         for (int col = 0; col < perRow; col++) {
@@ -493,8 +532,8 @@ public class GameScreen {
         this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
     }
 
-    public void initRow(int screenWidth, int screenHeight) {
-        StartMarbles(screenWidth, screenHeight, 4);
+    public void initRow(int gameWidth, int gameHeight) {
+        StartMarbles(gameWidth, gameHeight, 4);
     }
 
     // ==================== 游戏更新 ====================
@@ -525,7 +564,7 @@ public class GameScreen {
         if (accumulatedY >= ySpacing) {
             int newRow = maxRowCount + rowCount;
             this.rowCount = rowCount + 1;
-            AddMarbleRow(newRow, screenWidth, this.rowCount);
+            AddMarbleRow(newRow, gameWidth, this.rowCount);
             accumulatedY -= ySpacing;
         }
 
@@ -577,19 +616,22 @@ public class GameScreen {
     }
 
     public void setCannonPosition(int w, int h) {
-        currentBaseWidth = (int)(w * BASE_RATIO_W);
-        currentBaseHeight = (int)(currentBaseWidth * BASE_RATIO_H);
+        // 发射台尺寸基于游戏界面宽度按比例计算
+        currentBaseWidth = (int)(w * BASE_WIDTH_RATIO);
+        currentBaseHeight = (int)(currentBaseWidth * BASE_HEIGHT_RATIO);
 
         cannon.x = w / 2.0;
-        cannon.y = h - (h / 5.0);
+        // 发射台Y坐标:距离底部1/5处
+        cannon.y = h * CANNON_Y_RATIO;
+        // deadline 位置:发射台顶部
         topY = cannon.y - currentBaseHeight;
     }
 
     public double getTopY() { return topY; }
 
     public Point2D.Double getMuzzlePosition() {
-        double muzzleX = cannon.x + Math.cos(headAngle) * BARREL_LEN;
-        double muzzleY = cannon.y + Math.sin(headAngle) * BARREL_LEN;
+        double muzzleX = cannon.x + Math.cos(headAngle) * barrelLen;
+        double muzzleY = cannon.y + Math.sin(headAngle) * barrelLen;
         return new Point2D.Double(muzzleX, muzzleY);
     }
 
@@ -615,10 +657,10 @@ public class GameScreen {
         return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone();
     }
 
-    public void attachMarble(Marble launchMarble, int screenWidth) {
+    public void attachMarble(Marble launchMarble, int gameWidth) {
         double lx = launchMarble.getCenterX();
         double ly = launchMarble.getCenterY();
-        double xSpacing = side * SQRT3;
+        double xSpacing = this.xSpacing;  // 使用已计算的 xSpacing
 
         // 1. 寻找参考球,推算网格偏移
         Marble ref = null;
@@ -652,7 +694,7 @@ public class GameScreen {
 
         // 4. 计算目标列
         int targetCol = (int) Math.round((lx - targetBaseX) / xSpacing);
-        int maxCols = (int)(screenWidth / xSpacing);
+        int maxCols = (int)(gameWidth / xSpacing);
         if (targetCol < 0) targetCol = 0;
         if (targetCol > maxCols) targetCol = maxCols;
 
@@ -796,7 +838,7 @@ public class GameScreen {
     }
 
     // ==================== 悬空检测与消除 ====================
-    public void checkAllEdgeAttachments(int screenWidth) {
+    public void checkAllEdgeAttachments(int gameWidth) {
         if (marbles == null) return;
 
         for (int r = 0; r < marbles.length; r++) {
@@ -818,7 +860,7 @@ public class GameScreen {
 
                 if (allZero) {
                     int triggerEdge = 0;
-                    double xSpacing = side * SQRT3;
+                    double xSpacing = this.xSpacing;
 
                     if (m.getCol() % 2 == 0) {
                         triggerEdge = 4;
@@ -948,11 +990,11 @@ public class GameScreen {
     public void drawLaunchPad(Graphics2D g, int w, int h) {
         setCannonPosition(w, h);
         g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 10, new float[]{10, 7}, 0));
-        for (int i = 0; i < w; i += (int)(20 * SCALE)) {
+        for (int i = 0; i < w; i += (int)(20 * uiScaleFactor)) {
             float hue = (float) (i / (float) w);
             Color rainbow = Color.getHSBColor(hue, 0.8f, 0.9f);
             g.setColor(rainbow);
-            g.drawLine(i, (int) topY, Math.min(i + (int)(12 * SCALE), w), (int) topY);
+            g.drawLine(i, (int) topY, Math.min(i + (int)(12 * uiScaleFactor), w), (int) topY);
         }
         g.setStroke(new BasicStroke(1));
     }
@@ -973,26 +1015,26 @@ public class GameScreen {
         g.fillOval(baseX, baseY, currentBaseWidth, currentBaseHeight);
 
         g.setColor(new Color(255, 255, 200, 120));
-        g.setStroke(new BasicStroke((int)(2 * SCALE)));
-        g.drawOval(baseX + (int)(2 * SCALE), baseY + (int)(2 * SCALE), currentBaseWidth - (int)(4 * SCALE), currentBaseHeight - (int)(4 * SCALE));
+        g.setStroke(new BasicStroke((int)(2 * uiScaleFactor)));
+        g.drawOval(baseX + (int)(2 * uiScaleFactor), baseY + (int)(2 * uiScaleFactor), currentBaseWidth - (int)(4 * uiScaleFactor), currentBaseHeight - (int)(4 * uiScaleFactor));
 
         g.setColor(new Color(255, 255, 180));
-        drawStar(g, cannon.x - currentBaseWidth/2 - (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
-        drawStar(g, cannon.x + currentBaseWidth/2 + (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
+        drawStar(g, cannon.x - currentBaseWidth/2 - (int)(5 * uiScaleFactor), cannon.y - (int)(5 * uiScaleFactor), (int)(6 * uiScaleFactor));
+        drawStar(g, cannon.x + currentBaseWidth/2 + (int)(5 * uiScaleFactor), cannon.y - (int)(5 * uiScaleFactor), (int)(6 * uiScaleFactor));
 
         int turretWidth = (int)(currentBaseWidth * 0.75);
-        int turretHeight = (int)(turretWidth * BASE_RATIO_H);
+        int turretHeight = (int)(turretWidth * BASE_HEIGHT_RATIO);
         int turretX = (int)(cannon.x - turretWidth/2);
         int turretY = (int)(cannon.y - turretHeight/2);
-        Point2D turretCenter = new Point2D.Double(cannon.x, cannon.y - (int)(5 * SCALE));
+        Point2D turretCenter = new Point2D.Double(cannon.x, cannon.y - (int)(5 * uiScaleFactor));
         RadialGradientPaint turretGrad = new RadialGradientPaint(turretCenter, turretWidth/1.3f,
                 new float[]{0f, 0.8f, 1f},
                 new Color[]{TURRET_COLOR_TOP, TURRET_COLOR_BOTTOM, new Color(180, 80, 30)});
         g.setPaint(turretGrad);
-        g.fillRoundRect(turretX, turretY, turretWidth, turretHeight, (int)(20 * SCALE), (int)(20 * SCALE));
+        g.fillRoundRect(turretX, turretY, turretWidth, turretHeight, (int)(20 * uiScaleFactor), (int)(20 * uiScaleFactor));
 
         g.setColor(new Color(255, 255, 220, 100));
-        g.fillRoundRect(turretX + (int)(5 * SCALE), turretY + (int)(2 * SCALE), turretWidth - (int)(10 * SCALE), (int)(8 * SCALE), (int)(5 * SCALE), (int)(5 * SCALE));
+        g.fillRoundRect(turretX + (int)(5 * uiScaleFactor), turretY + (int)(2 * uiScaleFactor), turretWidth - (int)(10 * uiScaleFactor), (int)(8 * uiScaleFactor), (int)(5 * uiScaleFactor), (int)(5 * uiScaleFactor));
 
         int eyeRadius = (int)(currentBaseWidth * 0.1125);
         int leftEyeX = (int)(cannon.x - currentBaseWidth * 0.2);
@@ -1005,15 +1047,15 @@ public class GameScreen {
         g.fillOval(rightEyeX - eyeRadius, rightEyeY - eyeRadius/2, eyeRadius*2, eyeRadius);
 
         double angleToMouse = Math.atan2(my - leftEyeY, mx - leftEyeX);
-        double pupilOffsetX = Math.cos(angleToMouse) * (2.5 * SCALE);
-        double pupilOffsetY = Math.sin(angleToMouse) * (2.5 * SCALE);
+        double pupilOffsetX = Math.cos(angleToMouse) * (2.5 * uiScaleFactor);
+        double pupilOffsetY = Math.sin(angleToMouse) * (2.5 * uiScaleFactor);
         g.setColor(EYE_PUPIL);
-        g.fillOval((int)(leftEyeX - 3 * SCALE + pupilOffsetX), (int)(leftEyeY - 3 * SCALE + pupilOffsetY), (int)(6 * SCALE), (int)(6 * SCALE));
-        g.fillOval((int)(rightEyeX - 3 * SCALE + pupilOffsetX), (int)(rightEyeY - 3 * SCALE + pupilOffsetY), (int)(6 * SCALE), (int)(6 * SCALE));
+        g.fillOval((int)(leftEyeX - 3 * uiScaleFactor + pupilOffsetX), (int)(leftEyeY - 3 * uiScaleFactor + pupilOffsetY), (int)(6 * uiScaleFactor), (int)(6 * uiScaleFactor));
+        g.fillOval((int)(rightEyeX - 3 * uiScaleFactor + pupilOffsetX), (int)(rightEyeY - 3 * uiScaleFactor + pupilOffsetY), (int)(6 * uiScaleFactor), (int)(6 * uiScaleFactor));
 
         g.setColor(EYE_HIGHLIGHT);
-        g.fillOval((int)(leftEyeX - 1 * SCALE + pupilOffsetX), (int)(leftEyeY - 4 * SCALE + pupilOffsetY), (int)(3 * SCALE), (int)(3 * SCALE));
-        g.fillOval((int)(rightEyeX - 1 * SCALE + pupilOffsetX), (int)(rightEyeY - 4 * SCALE + pupilOffsetY), (int)(3 * SCALE), (int)(3 * SCALE));
+        g.fillOval((int)(leftEyeX - 1 * uiScaleFactor + pupilOffsetX), (int)(leftEyeY - 4 * uiScaleFactor + pupilOffsetY), (int)(3 * uiScaleFactor), (int)(3 * uiScaleFactor));
+        g.fillOval((int)(rightEyeX - 1 * uiScaleFactor + pupilOffsetX), (int)(rightEyeY - 4 * uiScaleFactor + pupilOffsetY), (int)(3 * uiScaleFactor), (int)(3 * uiScaleFactor));
 
         g.setColor(new Color(255, 160, 80));
         int[] earXLeft = {
@@ -1039,46 +1081,46 @@ public class GameScreen {
         };
         g.fillPolygon(earXRight, earYRight, 3);
 
-        int barrelStartX = (int)(cannon.x + Math.cos(headAngle) * (12 * SCALE));
-        int barrelStartY = (int)(cannon.y + Math.sin(headAngle) * (12 * SCALE));
-        int barrelEndX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
-        int barrelEndY = (int)(cannon.y + Math.sin(headAngle) * BARREL_LEN);
+        int barrelStartX = (int)(cannon.x + Math.cos(headAngle) * (12 * uiScaleFactor));
+        int barrelStartY = (int)(cannon.y + Math.sin(headAngle) * (12 * uiScaleFactor));
+        int barrelEndX = (int)(cannon.x + Math.cos(headAngle) * barrelLen);
+        int barrelEndY = (int)(cannon.y + Math.sin(headAngle) * barrelLen);
 
         Point2D barrelStart = new Point2D.Double(barrelStartX, barrelStartY);
         Point2D barrelEnd = new Point2D.Double(barrelEndX, barrelEndY);
         LinearGradientPaint barrelGrad = new LinearGradientPaint(barrelStart, barrelEnd,
                 new float[]{0f, 1f}, new Color[]{BARREL_COLOR_TOP, BARREL_COLOR_BOTTOM});
-        g.setStroke(new BasicStroke((int)(12 * SCALE), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.setStroke(new BasicStroke((int)(12 * uiScaleFactor), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         g.setPaint(barrelGrad);
         g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
 
-        g.setStroke(new BasicStroke((int)(15 * SCALE), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.setStroke(new BasicStroke((int)(15 * uiScaleFactor), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         g.setColor(new Color(255, 200, 100, 60));
         g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
 
-        int tipX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
-        int tipY = (int)(cannon.y + Math.sin(headAngle) * BARREL_LEN);
+        int tipX = (int)(cannon.x + Math.cos(headAngle) * barrelLen);
+        int tipY = (int)(cannon.y + Math.sin(headAngle) * barrelLen);
         g.setStroke(new BasicStroke(1));
-        RadialGradientPaint tipGrad = new RadialGradientPaint(tipX, tipY, (int)(12 * SCALE),
+        RadialGradientPaint tipGrad = new RadialGradientPaint(tipX, tipY, (int)(12 * uiScaleFactor),
                 new float[]{0f, 1f}, new Color[]{BARREL_TIP_COLOR, new Color(255, 100, 30)});
         g.setPaint(tipGrad);
-        g.fillOval(tipX - (int)(8 * SCALE), tipY - (int)(8 * SCALE), (int)(16 * SCALE), (int)(16 * SCALE));
+        g.fillOval(tipX - (int)(8 * uiScaleFactor), tipY - (int)(8 * uiScaleFactor), (int)(16 * uiScaleFactor), (int)(16 * uiScaleFactor));
         g.setColor(Color.WHITE);
-        g.fillOval(tipX - (int)(3 * SCALE), tipY - (int)(3 * SCALE), (int)(6 * SCALE), (int)(6 * SCALE));
+        g.fillOval(tipX - (int)(3 * uiScaleFactor), tipY - (int)(3 * uiScaleFactor), (int)(6 * uiScaleFactor), (int)(6 * uiScaleFactor));
 
         int slotX = (int)(cannon.x + currentBaseWidth * AMMO_OFFSET_X_RATIO);
         int slotY = (int)(cannon.y - currentBaseWidth * 0.15);
-        int size = AMMO_SLOT_SIZE;
+        int size = ammoSlotSize;
 
         Point2D slotCenter = new Point2D.Double(slotX, slotY);
         RadialGradientPaint slotGrad = new RadialGradientPaint(slotCenter, size/2f,
                 new float[]{0f, 0.6f, 1f}, new Color[]{new Color(160, 100, 180), AMMO_BG_COLOR, new Color(30, 20, 40)});
         g.setPaint(slotGrad);
-        g.fillRoundRect(slotX - size/2, slotY - size/2, size, size, (int)(8 * SCALE), (int)(8 * SCALE));
+        g.fillRoundRect(slotX - size/2, slotY - size/2, size, size, (int)(8 * uiScaleFactor), (int)(8 * uiScaleFactor));
 
         g.setColor(new Color(255, 215, 0, 200));
-        g.setStroke(new BasicStroke((float)(1.5 * SCALE)));
-        g.drawRoundRect(slotX - size/2, slotY - size/2, size, size, (int)(8 * SCALE), (int)(8 * SCALE));
+        g.setStroke(new BasicStroke((float)(1.5 * uiScaleFactor)));
+        g.drawRoundRect(slotX - size/2, slotY - size/2, size, size, (int)(8 * uiScaleFactor), (int)(8 * uiScaleFactor));
 
         int marbleRadius = (int)(size * 0.4);
         Color marbleColor = MARBLE_COLORS[nextMarbleColor];
@@ -1096,8 +1138,8 @@ public class GameScreen {
 
         long time = System.currentTimeMillis();
         float angle1 = (time % 1000) / 1000f * (float)Math.PI * 2;
-        drawStar(g, slotX + (int)(Math.cos(angle1) * 10 * SCALE), slotY + (int)(Math.sin(angle1) * 10 * SCALE), (int)(2 * SCALE));
-        drawStar(g, slotX - (int)(Math.cos(angle1+2) * 8 * SCALE), slotY + (int)(Math.sin(angle1+1.5) * 8 * SCALE), (int)(2 * SCALE));
+        drawStar(g, slotX + (int)(Math.cos(angle1) * 10 * uiScaleFactor), slotY + (int)(Math.sin(angle1) * 10 * uiScaleFactor), (int)(2 * uiScaleFactor));
+        drawStar(g, slotX - (int)(Math.cos(angle1+2) * 8 * uiScaleFactor), slotY + (int)(Math.sin(angle1+1.5) * 8 * uiScaleFactor), (int)(2 * uiScaleFactor));
 
         double dyToLine = cannon.y - topY;
         double sinTheta = Math.sin(headAngle);
@@ -1108,20 +1150,20 @@ public class GameScreen {
         lineEndY = (int) topY;
 
         g.setColor(new Color(255, 100, 200, 100));
-        g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, new float[]{(int)(6 * SCALE), (int)(8 * SCALE)}, 0));
+        g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, new float[]{(int)(6 * uiScaleFactor), (int)(8 * uiScaleFactor)}, 0));
         g.drawLine((int)cannon.x, (int)cannon.y, lineEndX, lineEndY);
 
-        g.setStroke(new BasicStroke((int)(3 * SCALE)));
+        g.setStroke(new BasicStroke((int)(3 * uiScaleFactor)));
         g.setColor(new Color(100, 200, 255, 180));
-        g.drawOval(lineEndX - (int)(12 * SCALE), lineEndY - (int)(12 * SCALE), (int)(24 * SCALE), (int)(24 * SCALE));
+        g.drawOval(lineEndX - (int)(12 * uiScaleFactor), lineEndY - (int)(12 * uiScaleFactor), (int)(24 * uiScaleFactor), (int)(24 * uiScaleFactor));
         g.setColor(new Color(255, 180, 80, 200));
-        g.drawOval(lineEndX - (int)(8 * SCALE), lineEndY - (int)(8 * SCALE), (int)(16 * SCALE), (int)(16 * SCALE));
+        g.drawOval(lineEndX - (int)(8 * uiScaleFactor), lineEndY - (int)(8 * uiScaleFactor), (int)(16 * uiScaleFactor), (int)(16 * uiScaleFactor));
 
-        g.setStroke(new BasicStroke((float)(1.5 * SCALE)));
+        g.setStroke(new BasicStroke((float)(1.5 * uiScaleFactor)));
         g.setColor(new Color(255, 50, 100, 200));
-        g.drawOval(lineEndX - (int)(6 * SCALE), lineEndY - (int)(6 * SCALE), (int)(12 * SCALE), (int)(12 * SCALE));
-        g.drawOval(lineEndX - (int)(2 * SCALE), lineEndY - (int)(2 * SCALE), (int)(4 * SCALE), (int)(4 * SCALE));
-        g.fillOval(lineEndX - (int)(1 * SCALE), lineEndY - (int)(1 * SCALE), (int)(2 * SCALE), (int)(2 * SCALE));
+        g.drawOval(lineEndX - (int)(6 * uiScaleFactor), lineEndY - (int)(6 * uiScaleFactor), (int)(12 * uiScaleFactor), (int)(12 * uiScaleFactor));
+        g.drawOval(lineEndX - (int)(2 * uiScaleFactor), lineEndY - (int)(2 * uiScaleFactor), (int)(4 * uiScaleFactor), (int)(4 * uiScaleFactor));
+        g.fillOval(lineEndX - (int)(1 * uiScaleFactor), lineEndY - (int)(1 * uiScaleFactor), (int)(2 * uiScaleFactor), (int)(2 * uiScaleFactor));
 
         g.setStroke(new BasicStroke(1));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);

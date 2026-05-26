@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化下落动画" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更名,统一格式">
+      <change beforePath="$PROJECT_DIR$/src/GameScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/GameScreen.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -111,7 +113,7 @@
       <workItem from="1779708556511" duration="1102000" />
       <workItem from="1779763989436" duration="2154000" />
       <workItem from="1779778283561" duration="3579000" />
-      <workItem from="1779793397803" duration="334000" />
+      <workItem from="1779793397803" duration="1021000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -401,7 +403,23 @@
       <option name="project" value="LOCAL" />
       <updated>1779780433299</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="将游戏界面作为独立文件提取,方便布局">
+      <option name="closed" value="true" />
+      <created>1779793821521</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1779793821521</updated>
+    </task>
+    <task id="LOCAL-00038" summary="更名,统一格式">
+      <option name="closed" value="true" />
+      <created>1779794101729</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1779794101729</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -419,7 +437,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="将六边形边长,屏幕长宽设置为仅控制绘制的变量" />
     <MESSAGE value="更新弹珠行生成规则" />
     <MESSAGE value="更新弹珠附着点规则" />
     <MESSAGE value="更新发射台初始窗口" />
@@ -443,6 +460,8 @@
     <MESSAGE value="添加掉落动画" />
     <MESSAGE value="优化代码" />
     <MESSAGE value="优化下落动画" />
-    <option name="LAST_COMMIT_MESSAGE" value="优化下落动画" />
+    <MESSAGE value="将游戏界面作为独立文件提取,方便布局" />
+    <MESSAGE value="更名,统一格式" />
+    <option name="LAST_COMMIT_MESSAGE" value="更名,统一格式" />
   </component>
 </project>
