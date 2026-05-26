@@ -138,7 +138,50 @@ public class Marbles {
     }
 
     private boolean isMarbleActive(Marble m) {
-        return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling();
+        return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone();
+    }
+
+    // 检测所有弹珠的edgeAttachment是否全为0，如果是则触发无附着单独动画
+    public void checkAllEdgeAttachments(int screenWidth) {
+        if (marbles == null) return;
+
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                if (!isMarbleActive(m)) continue;
+
+                int[][] ea = m.getEdgeAttachment();
+                boolean allZero = true;
+                if (ea != null) {
+                    for (int i = 0; i < ea.length; i++) {
+                        if (ea[i][0] != 0 || ea[i][1] != 0) {
+                            allZero = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (allZero) {
+                    // 找到触发边：从当前列和相邻列判断边缘位置
+                    int triggerEdge = 0;
+                    double xSpacing = side * SQRT3;
+                    double baseX = m.getCenterX() - m.getCol() * xSpacing;
+                    double refBaseX = 0;
+
+                    // 根据列的奇偶性确定边缘方向
+                    if (m.getCol() % 2 == 0) {
+                        triggerEdge = 4; // 左上方边缘
+                    } else {
+                        triggerEdge = 1; // 右下方边缘
+                    }
+
+                    // 触发无附着动画，该弹珠不再受网格控制且不触发deadline碰撞
+                    m.startAlone(triggerEdge, 0);
+                    marbles[r][c] = null; // 从网格中移除
+                }
+            }
+        }
     }
 
     public Marble[] getRow(int row) {

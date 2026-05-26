@@ -23,6 +23,12 @@ public class Marble {
     private double fallVy = 0;
     private double fallAy = 1500; // 重力加速度
 
+    // 单独动画状态（无附着时触发：先斜向上滑再快速下落）
+    private boolean alone = false;
+    private double aloneSlideVx = 0; // 斜向滑动的水平速度
+    private double aloneSlideVy = 0; // 斜向滑动的垂直速度
+    private double aloneDelay = 0;
+
     // 主体色系
     private static final Color[] BASE_COLOR = {
             null,
@@ -86,10 +92,27 @@ public class Marble {
     public void startFalling(double delay) {
         this.falling = true;
         this.popping = false;
+        this.alone = false;
         this.popDelay = delay;
         // 初始赋予一个轻微向上的速度，配合重力实现先上抛再下落的视觉效果
-        this.fallVy = -150 - (random.nextDouble() * 80); 
+        this.fallVy = -150 - (random.nextDouble() * 80);
     }
+
+    // 开始触发无附着单独动画：先沿边缘斜向上滑动，再快速下落（不触发deadline碰撞）
+    public void startAlone(int triggerEdge, double delay) {
+        this.alone = true;
+        this.falling = false;
+        this.popping = false;
+        this.popDelay = delay;
+        // 根据触发边计算斜向滑动方向（边缘0-5对应六边形的六个边）
+        // 斜向下的角度：边缘0=右上方, 1=右下方, 2=下方, 3=左下方, 4=左上方, 5=上方
+        double angle = triggerEdge * Math.PI / 3.0;
+        double slideSpeed = 120 + random.nextDouble() * 60;
+        this.aloneSlideVx = Math.cos(angle) * slideSpeed;
+        this.aloneSlideVy = -Math.abs(Math.sin(angle) * slideSpeed); // 确保向上
+    }
+
+    public boolean isAlone() { return alone; }
     
     public boolean isPopping() { return popping; }
     public boolean isFalling() { return falling; }
@@ -106,7 +129,29 @@ public class Marble {
                     dead = true;
                 }
             }
-        } 
+        }
+        // 更新无附着单独动画：先斜向滑出再快速下落（不触发deadline）
+        else if (alone) {
+            if (popDelay > 0) {
+                popDelay -= dt;
+            } else {
+                // 阶段1：斜向滑动（约0.3秒）
+                if (aloneDelay < 0.3) {
+                    cx += aloneSlideVx * dt;
+                    cy += aloneSlideVy * dt;
+                    aloneDelay += dt;
+                    verticesDirty = true;
+                }
+                // 阶段2：快速下落（之后一直执行）
+                else {
+                    cy += (400 + random.nextDouble() * 100) * dt;
+                    verticesDirty = true;
+                    if (cy > 1500) {
+                        dead = true;
+                    }
+                }
+            }
+        }
         // 更新掉落动画
         else if (falling) {
             if (popDelay > 0) {
@@ -227,9 +272,11 @@ public class Marble {
         // 重置动画状态
         this.popping = false;
         this.falling = false;
+        this.alone = false;
         this.dead = false;
         this.popDelay = 0;
         this.popProgress = 0;
         this.fallVy = 0;
+        this.aloneDelay = 0;
     }
 }

@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加掉落动画">
-      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化代码" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -112,7 +110,7 @@
       <workItem from="1779697011646" duration="3256000" />
       <workItem from="1779708556511" duration="1102000" />
       <workItem from="1779763989436" duration="2154000" />
-      <workItem from="1779778283561" duration="1359000" />
+      <workItem from="1779778283561" duration="1892000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -386,7 +384,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779779201937</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="优化代码">
+      <option name="closed" value="true" />
+      <created>1779779707053</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1779779707053</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -423,10 +429,10 @@
     <MESSAGE value="合并UI,优化代码" />
     <MESSAGE value="修复碰撞bug" />
     <MESSAGE value="添加消除动画" />
-    <MESSAGE value="优化代码" />
     <MESSAGE value="添加素材" />
     <MESSAGE value="调整游戏界面大小" />
     <MESSAGE value="添加掉落动画" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加掉落动画" />
+    <MESSAGE value="优化代码" />
+    <option name="LAST_COMMIT_MESSAGE" value="优化代码" />
   </component>
 </project>
