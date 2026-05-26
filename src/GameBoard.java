@@ -17,6 +17,8 @@ public class GameBoard {
     private static final double SQRT3 = Math.sqrt(3);
     private static final int MIN_GROUP_SIZE = 3;
     private static final double SCALE = 1.25;
+    private static final double NEIGHBOR_DIST_RATIO = 1.1;
+    private static final double FLOATING_DIST_RATIO = 1.2;
 
     // 基于 side 的固定缩放比例(使发射台等UI元素在不同尺寸下保持比例)
     private double uiScale = 1.0;
@@ -69,6 +71,10 @@ public class GameBoard {
     private int rowCount;
     private Marble[][] marbles;
     private Random random = new Random();
+
+    // 预计算的邻域距离阈值(避免在dfs递归中重复计算)
+    private double neighborThresholdSq;
+    private double floatingThresholdSq;
 
     // 发射台状态(基于 side 和比例计算)
     private Point2D.Double cannon;
@@ -241,7 +247,6 @@ public class GameBoard {
             this.verticesDirty = true;
         }
 
-        public void recalculateVerticesIfDirty() {}
         public void setSide(double side) { this.side = side; }
         public double getCenterX() { return cx; }
         public double getCenterY() { return cy; }
@@ -462,6 +467,10 @@ public class GameBoard {
         this.ySpacing = side * 1.5;
         this.xSpacing = side * SQRT3;
 
+        // 预计算邻域距离阈值
+        this.neighborThresholdSq = (side * SQRT3 * NEIGHBOR_DIST_RATIO) * (side * SQRT3 * NEIGHBOR_DIST_RATIO);
+        this.floatingThresholdSq = (side * SQRT3 * FLOATING_DIST_RATIO) * (side * SQRT3 * FLOATING_DIST_RATIO);
+
         // 计算UI缩放因子,使弹珠在不同尺寸下保持比例
         // 使用标准尺寸(483)作为参考,计算缩放比例
         this.uiScaleFactor = gameWidth / 483.0;
@@ -552,7 +561,6 @@ public class GameBoard {
                         hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
                     }
                     hex.update(dt);
-                    hex.recalculateVerticesIfDirty();
 
                     if (hex.isDead()) {
                         marbles[r][c] = null;
@@ -815,9 +823,6 @@ public class GameBoard {
         visited[r][c] = true;
         res.add(current);
 
-        // thresholdSq 在 checkConnectedFromLaunch 中已计算,这里直接使用类成员
-        double thresholdSq = side * SQRT3 * 1.1 * side * SQRT3 * 1.1;
-
         for (int dr = -1; dr <= 1; dr++) {
             int nr = r + dr;
             if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
@@ -828,7 +833,7 @@ public class GameBoard {
                         if (isMarbleActive(neighbor) && neighbor.getColorType() == targetColor) {
                             double dx = current.getCenterX() - neighbor.getCenterX();
                             double dy = current.getCenterY() - neighbor.getCenterY();
-                            if (dx * dx + dy * dy <= thresholdSq) {
+                            if (dx * dx + dy * dy <= neighborThresholdSq) {
                                 dfs(nr, nc, targetColor, visited, res);
                             }
                         }
@@ -942,8 +947,6 @@ public class GameBoard {
 
         visited[r][c] = true;
 
-        double thresholdSq = (side * SQRT3 * 1.2) * (side * SQRT3 * 1.2);
-
         for (int dr = -2; dr <= 2; dr++) {
             int nr = r + dr;
             if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
@@ -954,7 +957,7 @@ public class GameBoard {
                         if (isMarbleActive(neighbor)) {
                             double dx = current.getCenterX() - neighbor.getCenterX();
                             double dy = current.getCenterY() - neighbor.getCenterY();
-                            if (dx * dx + dy * dy <= thresholdSq) {
+                            if (dx * dx + dy * dy <= floatingThresholdSq) {
                                 dfsFloating(nr, nc, visited);
                             }
                         }

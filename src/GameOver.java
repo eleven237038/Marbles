@@ -166,18 +166,12 @@ public class GameOver extends JPanel implements MouseListener {
     @Override public void mouseEntered(MouseEvent e) {}
     @Override public void mouseExited(MouseEvent e) {}
 
-    /**
-     * 加载按钮图片
-     */
     public static BufferedImage loadButtonImage(String path) {
         try {
-            File f = new File(path);
-            if (f.exists()) {
-                return ImageIO.read(f);
-            }
+            return ImageIO.read(new File(path));
         } catch (IOException e) {
             System.out.println("警告：找不到图片 " + path);
+            return null;
         }
-        return null;
     }
 }
