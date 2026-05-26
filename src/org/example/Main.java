@@ -27,10 +27,18 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private Random random = new Random();
     private StartMenu startMenu; // 保存菜单引用用于销毁 Timer
     private GameState gameState = GameState.MENU;
-    
+    private boolean gameEnding = false;
+
+    private boolean gameWin = false;
+    private double endOverlayAlpha = 0;
+    private double endTextAlpha = 0;
+    private double panelY = -300;
+    private double targetPanelY = 140;
+    private boolean endAnimationFinished = false;
+    private Rectangle actionButton;
+    private int maxLevel = 3;
 
     private int score = 0;
-
     private int currentLevel = 1;
 
     private BufferedImage restartButtonImg;
@@ -185,6 +193,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         menuButton = new Rectangle(390, 540, 300, 90);
 
         nextButton = new Rectangle(390, 420, 300, 90);
+        actionButton = new Rectangle(160, 260, 160, 55);
     }
 
     private void initMarbleGrid() {
@@ -208,37 +217,88 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     @Override
     public void update(double dt) {
 
-        if (frozen || gamePaused) return;
-
-        // 新增
-        if(gameState == GameState.WIN ||
-           gameState == GameState.LOSE) {
-
+        // 暂停
+        if(gamePaused) return;
+        // =========================
+        // 结束动画更新（最高优先级）
+        // =========================
+        if(gameEnding) {
+            updateEndAnimation(dt);
             return;
         }
-
-        if (hexGrid != null) hexGrid.update(dt);
-
-        if (launchMarble != null) launchMarble.update(dt);
-
+        // =========================
+        // 正常游戏更新
+        // =========================
+        if (hexGrid != null) {
+            hexGrid.update(dt);
+        }
+        if (launchMarble != null) {
+            launchMarble.update(dt);
+        }
         checkCollisions();
-
         collisionWithDeadline();
-
+        // =========================
+        // 胜负检测
+        // =========================
         if(gameState == GameState.PLAYING) {
-
+            // 失败
             if(hexGrid.reachedDeadline(deadline)) {
-
-                gameState = GameState.LOSE;
+                triggerEndAnimation(false);
+                return;
             }
-
+            // 胜利
             if(hexGrid.isEmpty()) {
-
-                gameState = GameState.WIN;
+                triggerEndAnimation(true);
+                return;
             }
         }
     }
+    private void triggerEndAnimation(boolean win) {
+        if(gameEnding) return;
+        gameEnding = true;
+        gameWin = win;
+        gameState = win ?
+                GameState.WIN :
+                GameState.LOSE;
+    }
+    private void updateEndAnimation(double dt) {
 
+        // 背景渐暗
+        if(endOverlayAlpha < 0.75) {
+
+            endOverlayAlpha += dt * 1.2;
+
+            if(endOverlayAlpha > 0.75) {
+
+                endOverlayAlpha = 0.75;
+            }
+        }
+
+        // 文字渐显
+        if(endTextAlpha < 1.0) {
+
+            endTextAlpha += dt * 1.8;
+
+            if(endTextAlpha > 1.0) {
+
+                endTextAlpha = 1.0;
+            }
+        }
+
+        // 面板下落
+        if(endTextAlpha >= 1.0 &&
+           panelY < targetPanelY) {
+
+            panelY += 420 * dt;
+
+            if(panelY > targetPanelY) {
+
+                panelY = targetPanelY;
+
+                endAnimationFinished = true;
+            }
+        }
+    }
     private void checkCollisions() {
         if (launchMarble == null || !launchMarble.isLaunched() || hexGrid == null) return;
 
@@ -346,15 +406,6 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
         // 最后绘制暂停按钮，确保在最上层
         drawPauseButton(g2);
-        if(gameState == GameState.WIN) {
-
-            drawWinScreen();
-        }
-
-        else if(gameState == GameState.LOSE) {
-
-            drawLoseScreen();
-        }
         changeColor(white);
 
         drawBoldText(
@@ -363,121 +414,208 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
                 "Score : " + score,
                 "Arial",
                 32);
+        if(gameEnding) drawEndOverlay();
     }
-    private void drawLoseScreen() {
+    private void drawEndOverlay() {
 
-        // 半透明背景
-        mGraphics.setComposite(
+        Graphics2D g = mGraphics;
+
+        // 背景渐暗
+        g.setComposite(
                 AlphaComposite.getInstance(
                         AlphaComposite.SRC_OVER,
-                        0.75f));
+                        (float)endOverlayAlpha));
 
-        changeColor(0,0,0);
+        g.setColor(Color.black);
 
-        drawSolidRectangle(
-                0,
-                0,
-                width(),
-                height());
+        g.fillRect(0,0,width(),height());
 
-        mGraphics.setComposite(
+        // 标题渐显
+        g.setComposite(
                 AlphaComposite.getInstance(
                         AlphaComposite.SRC_OVER,
-                        1f));
+                        (float)endTextAlpha));
 
-        // 标题
-        changeColor(red);
+        String title =
+                gameWin ? "YOU WIN" : "GAME OVER";
 
-        drawBoldText(
-                width()/2 - 180,
-                220,
-                "GAME OVER",
-                "Arial",
-                64);
+        g.setFont(new Font("Arial",
+                Font.BOLD,
+                54));
 
-        // 分数
-        changeColor(white);
+        FontMetrics fm = g.getFontMetrics();
 
-        drawBoldText(
-                width()/2 - 100,
-                320,
+        int tx = (width() - fm.stringWidth(title)) / 2;
+
+        g.setColor(
+                gameWin ?
+                        new Color(255,220,80)
+                        :
+                        new Color(255,90,90));
+
+        g.drawString(title, tx, 100);
+
+        // 面板
+        drawEndPanel(g);
+    }
+    private void drawEndPanel(Graphics2D g) {
+
+        int panelX = 90;
+
+        int panelWidth = 300;
+
+        int panelHeight = 220;
+
+        // 面板阴影
+        g.setColor(new Color(0,0,0,100));
+
+        g.fillRoundRect(
+                panelX + 8,
+                (int)panelY + 8,
+                panelWidth,
+                panelHeight,
+                30,
+                30);
+
+        // 主面板
+        GradientPaint gp =
+                new GradientPaint(
+                        panelX,
+                        (int)panelY,
+                        new Color(45,45,55),
+
+                        panelX,
+                        (int)panelY + panelHeight,
+                        new Color(20,20,30));
+
+        g.setPaint(gp);
+
+        g.fillRoundRect(
+                panelX,
+                (int)panelY,
+                panelWidth,
+                panelHeight,
+                30,
+                30);
+
+        // 边框
+        g.setColor(new Color(255,255,255,60));
+
+        g.drawRoundRect(
+                panelX,
+                (int)panelY,
+                panelWidth,
+                panelHeight,
+                30,
+                30);
+
+        // Score
+        g.setColor(Color.white);
+
+        g.setFont(new Font("Arial",
+                Font.BOLD,
+                32));
+
+        g.drawString(
                 "Score : " + score,
-                "Arial",
-                42);
+                panelX + 65,
+                (int)panelY + 80);
 
-        // restart按钮
-        drawImage(
-                restartButtonImg,
-                restartButton.x,
-                restartButton.y,
-                restartButton.width,
-                restartButton.height);
+        // 按钮
+        actionButton.setBounds(
+                panelX + 70,
+                (int)panelY + 130,
+                160,
+                55);
 
-        // menu按钮
-        drawImage(
-                menuButtonImg,
-                menuButton.x,
-                menuButton.y,
-                menuButton.width,
-                menuButton.height);
+        drawActionButton(g);
     }
-    private void drawWinScreen() {
+    private void drawActionButton(Graphics2D g) {
 
-        // 半透明背景
-        mGraphics.setComposite(
-                AlphaComposite.getInstance(
-                        AlphaComposite.SRC_OVER,
-                        0.75f));
+        boolean hover =
+                actionButton.contains(mouseX, mouseY);
 
-        changeColor(0,0,0);
+        GradientPaint gp =
+                hover ?
 
-        drawSolidRectangle(
-                0,
-                0,
-                width(),
-                height());
+                new GradientPaint(
+                        actionButton.x,
+                        actionButton.y,
+                        new Color(255,180,70),
 
-        mGraphics.setComposite(
-                AlphaComposite.getInstance(
-                        AlphaComposite.SRC_OVER,
-                        1f));
+                        actionButton.x,
+                        actionButton.y +
+                                actionButton.height,
+                        new Color(255,120,40))
 
-        // 标题
-        changeColor(yellow);
+                :
 
-        drawBoldText(
-                width()/2 - 240,
-                220,
-                "LEVEL COMPLETE!",
-                "Arial",
-                60);
+                new GradientPaint(
+                        actionButton.x,
+                        actionButton.y,
+                        new Color(90,90,110),
 
-        // 分数
-        changeColor(white);
+                        actionButton.x,
+                        actionButton.y +
+                                actionButton.height,
+                        new Color(50,50,70));
 
-        drawBoldText(
-                width()/2 - 100,
-                320,
-                "Score : " + score,
-                "Arial",
-                42);
+        g.setPaint(gp);
 
-        // next按钮
-        drawImage(
-                nextButtonImg,
-                nextButton.x,
-                nextButton.y,
-                nextButton.width,
-                nextButton.height);
+        g.fillRoundRect(
+                actionButton.x,
+                actionButton.y,
+                actionButton.width,
+                actionButton.height,
+                20,
+                20);
 
-        // menu按钮
-        drawImage(
-                menuButtonImg,
-                menuButton.x,
-                menuButton.y,
-                menuButton.width,
-                menuButton.height);
+        g.setColor(Color.white);
+
+        g.drawRoundRect(
+                actionButton.x,
+                actionButton.y,
+                actionButton.width,
+                actionButton.height,
+                20,
+                20);
+
+        String text;
+
+        if(gameWin) {
+
+            text =
+                    currentLevel >= maxLevel ?
+
+                            "MAIN MENU"
+
+                            :
+
+                            "NEXT LEVEL";
+        }
+
+        else {
+
+            text = "RESTART";
+        }
+
+        g.setFont(new Font("Arial",
+                Font.BOLD,
+                24));
+
+        FontMetrics fm = g.getFontMetrics();
+
+        int tx =
+                actionButton.x +
+                        (actionButton.width -
+                                fm.stringWidth(text)) / 2;
+
+        int ty =
+                actionButton.y + 35;
+
+        g.drawString(text, tx, ty);
     }
+
 
     // 图片完全占据按钮，无任何内边距
     private void drawPauseButton(Graphics2D g2) {
@@ -664,14 +802,44 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
                 returnToMenu();
             }
         }
+        if(gameEnding &&
+        		   endAnimationFinished) {
+
+        		    if(actionButton.contains(e.getPoint())) {
+
+        		        if(gameWin) {
+
+        		            if(currentLevel >= maxLevel) {
+
+        		                returnToMenu();
+        		            }
+
+        		            else {
+
+        		                nextLevel();
+        		            }
+        		        }
+
+        		        else {
+
+        		            restartGame();
+        		        }
+        		    }
+        		}
     }
     private void restartGame() {
 
-        score = 0;
+        resetEndAnimation();
 
-        gameState = GameState.PLAYING;
+        init();
+    }
+    private void nextLevel() {
 
-        initLevel(currentLevel);
+        currentLevel++;
+
+        resetEndAnimation();
+
+        init();
     }
     private void loadNextLevel() {
 
@@ -681,6 +849,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
 
         initLevel(currentLevel);
     }
+    
     private void initLevel(int level) {
 
         hexGrid = new Marbles();
@@ -720,13 +889,19 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     }
     private void returnToMenu() {
 
+        resetEndAnimation();
+
+        cardLayout.show(mainPanel, "menu");
+
         gameState = GameState.MENU;
-
-        // 重置游戏
-        currentLevel = 1;
-
-        score = 0;
-
-        initLevel(currentLevel);
+    }
+    private void resetEndAnimation() {
+        frozen = false;
+        gameEnding = false;
+        endOverlayAlpha = 0;
+        endTextAlpha = 0;
+        panelY = -300;
+        endAnimationFinished = false;
+        gameState = GameState.PLAYING;
     }
 }
