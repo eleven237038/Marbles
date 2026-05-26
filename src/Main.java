@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.*;
@@ -11,6 +13,7 @@ import java.io.IOException;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.LinearGradientPaint;
 import java.util.Random;
+import java.util.prefs.Preferences;
 
 public class Main extends GameEngine implements StartScreen.StartScreenListener {
     private Marbles hexGrid;
@@ -31,10 +34,13 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
 
     // 暂停按钮相关
     private BufferedImage pauseIcon;
-    private Rectangle pauseButtonBounds;
-    private boolean pauseHover = false;
-    private boolean pausePressed = false;
     private boolean gamePaused = false;
+
+    // 计分相关
+    private int currentScore = 0;
+    private int highScore = 0;
+    private ScoreBoard scoreBoard;
+    private CustomGlassPane glassPane;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -76,6 +82,11 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
 
             game.cardLayout = cardLayout;
             game.mainPanel = mainPanel;
+
+            // 初始化自定义玻璃面板和计分板
+            game.glassPane = game.new CustomGlassPane();
+            frame.setGlassPane(game.glassPane);
+            game.glassPane.setVisible(false);
         });
     }
 
@@ -109,24 +120,21 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
                         }
                     }
                 });
-
-        // 加载pause.png精灵图
-        try {
-            File pauseFile = new File("resources/pause.png");
-            if (pauseFile.exists()) {
-                pauseIcon = ImageIO.read(pauseFile);
-            }
-        } catch (IOException e) {
-            pauseIcon = null;
-        }
-
-        // 先初始化按钮对象，位置在init中动态设置
-        pauseButtonBounds = new Rectangle(30, 0, 60, 60);
+        // 加载最高分
+        highScore = loadHighScore();
     }
 
     @Override
     public void onStartGame() {
         cardLayout.show(mainPanel, "game");
+
+        // 重置分数
+        currentScore = 0;
+
+        if (glassPane != null) {
+            glassPane.setVisible(true);
+            glassPane.updateScores(currentScore, highScore);
+        }
 
         if (!gameStarted) {
             gameStarted = true;
@@ -139,17 +147,21 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
         }
     }
 
-    // 安全退出接口
-    @Override
-    public void onExitGame() {
-        System.exit(0);
-    }
-
     @Override
     public void init() {
         initMarbleGrid();
-        // 此时 deadline 已经初始化好了，正确对齐位置
-        pauseButtonBounds.y = (int) deadline + 20;
+
+        // 设置得分监听器
+        hexGrid.setScoreListener((marble, points) -> {
+            currentScore += points;
+            if (currentScore > highScore) {
+                highScore = currentScore;
+                saveHighScore(highScore);
+            }
+            if (glassPane != null) {
+                glassPane.updateScores(currentScore, highScore);
+            }
+        });
     }
 
     private void initMarbleGrid() {
@@ -283,52 +295,6 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
             launchPad.drawCannon(g2, mouseX, mouseY);
         }
         if (launchMarble != null) launchMarble.draw(g2);
-
-        // 最后绘制暂停按钮，确保在最上层
-        drawPauseButton(g2);
-    }
-
-    // 图片完全占据按钮，无任何内边距
-    private void drawPauseButton(Graphics2D g2) {
-        int x = pauseButtonBounds.x;
-        int y = pauseButtonBounds.y;
-        int w = pauseButtonBounds.width;
-        int h = pauseButtonBounds.height;
-
-        // 绘制按钮背景
-        RoundRectangle2D bg = new RoundRectangle2D.Double(x, y, w, h, 15, 15);
-
-        if (pausePressed) {
-            Color c1 = new Color(50, 140, 255, 200);
-            Color c2 = new Color(30, 110, 255, 200);
-            LinearGradientPaint grad = new LinearGradientPaint(x, y, x, y + h,
-                    new float[]{0, 1}, new Color[]{c1, c2});
-            g2.setPaint(grad);
-        } else if (pauseHover) {
-            Color c1 = new Color(100, 190, 255, 180);
-            Color c2 = new Color(50, 140, 255, 180);
-            LinearGradientPaint grad = new LinearGradientPaint(x, y, x, y + h,
-                    new float[]{0, 1}, new Color[]{c1, c2});
-            g2.setPaint(grad);
-        } else {
-            g2.setColor(new Color(255, 255, 255, 180));
-        }
-        g2.fill(bg);
-
-        // 蓝色边框
-        g2.setStroke(new BasicStroke(2f));
-        g2.setColor(new Color(70, 150, 255, 200));
-        g2.draw(bg);
-
-        // 绘制pause.png精灵图：完全填满按钮
-        if (pauseIcon != null) {
-            g2.drawImage(pauseIcon, x, y, w, h, null);
-        } else {
-            // 备用：蓝色暂停符号
-            g2.setColor(new Color(70, 150, 255));
-            g2.fillRect(x + 18, y + 15, 8, 30);
-            g2.fillRect(x + 34, y + 15, 8, 30);
-        }
     }
 
     public void openPauseMenu() {
@@ -407,26 +373,13 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
         mainPanel.add(btnPanel, BorderLayout.CENTER);
         pauseDialog.setContentPane(mainPanel);
         pauseDialog.setVisible(true);
-
-        pausePressed = false;
         mPanel.repaint();
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        // 暂停按钮的UI状态需要在拦截前处理
         mouseX = e.getX();
         mouseY = e.getY();
-
-        boolean oldHover = pauseHover;
-        pauseHover = pauseButtonBounds.contains(e.getPoint());
-        if (pauseHover) {
-            mPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        } else {
-            mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-        }
-        if (oldHover != pauseHover)
-            mPanel.repaint();
 
         // 完成视觉更新后，再做游戏逻辑的拦截
         if (frozen || gamePaused) return;
@@ -435,14 +388,6 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
     @Override
     public void mousePressed(MouseEvent e) {
         if (frozen) return;
-
-        if (pauseButtonBounds.contains(e.getPoint())) {
-            pausePressed = true;
-            mPanel.repaint();
-            openPauseMenu();
-            return;
-        }
-
         if (gamePaused) return;
         if (launchMarble != null && !launchMarble.isLaunched()) {
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
@@ -452,8 +397,6 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        pausePressed = false;
-        mPanel.repaint();
     }
 
     @Override
@@ -464,6 +407,135 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
             launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x,
                     mouseY > 0 ? mouseY : launchPad.cannon.y - 100);
+        }
+    }
+
+    // ==================== 得分相关 ====================
+    private int loadHighScore() {
+        return Preferences.userNodeForPackage(Main.class).getInt("highScore", 0);
+    }
+
+    private void saveHighScore(int score) {
+        Preferences.userNodeForPackage(Main.class).putInt("highScore", score);
+    }
+
+    // ==================== 自定义玻璃面板 ====================
+    class CustomGlassPane extends JComponent {
+        private Rectangle pauseButtonRect;
+        private boolean pauseHover = false, pausePressed = false;
+
+        public CustomGlassPane() {
+            setOpaque(false);
+            setFocusable(false);
+            setLayout(null);
+
+            // 添加计分板
+            scoreBoard = new ScoreBoard();
+            add(scoreBoard);
+
+            // 鼠标事件处理
+            MouseAdapter mouseAdapter = new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    if (pauseButtonRect != null && pauseButtonRect.contains(e.getPoint())) {
+                        pausePressed = true;
+                        repaint();
+                        openPauseMenu();
+                        pausePressed = false;
+                        Point mp = getMousePosition();
+                        pauseHover = (mp != null && pauseButtonRect.contains(mp));
+                        repaint();
+                    }
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    pauseHover = false;
+                    repaint();
+                }
+            };
+            addMouseListener(mouseAdapter);
+
+            addMouseMotionListener(new MouseMotionAdapter() {
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    boolean newHover = pauseButtonRect != null && pauseButtonRect.contains(e.getPoint());
+                    if (pauseHover != newHover) {
+                        pauseHover = newHover;
+                        repaint();
+                        setCursor(pauseHover ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+                    }
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int w = getWidth();
+            int h = getHeight();
+            if (w == 0 || h == 0) return;
+
+            // 暂停按钮（左下角）
+            int btnSize = 55;
+            int btnX = 85;
+            int btnY = h - btnSize - 15;
+            pauseButtonRect = new Rectangle(btnX, btnY, btnSize, btnSize);
+
+            if (pausePressed) {
+                Color c1 = new Color(50, 140, 255, 200);
+                Color c2 = new Color(30, 110, 255, 200);
+                LinearGradientPaint grad = new LinearGradientPaint(btnX, btnY, btnX, btnY+btnSize, new float[]{0,1}, new Color[]{c1,c2});
+                g2d.setPaint(grad);
+                g2d.fillRoundRect(btnX, btnY, btnSize, btnSize, 12, 12);
+            } else if (pauseHover) {
+                Color c1 = new Color(100, 190, 255, 200);
+                Color c2 = new Color(50, 140, 255, 200);
+                LinearGradientPaint grad = new LinearGradientPaint(btnX, btnY, btnX, btnY+btnSize, new float[]{0,1}, new Color[]{c1,c2});
+                g2d.setPaint(grad);
+                g2d.fillRoundRect(btnX, btnY, btnSize, btnSize, 12, 12);
+            } else {
+                g2d.setColor(new Color(255, 255, 255, 200));
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.drawRoundRect(btnX, btnY, btnSize, btnSize, 12, 12);
+            }
+
+            if (pauseIcon != null) {
+                g2d.drawImage(pauseIcon, btnX, btnY, btnSize, btnSize, null);
+            } else {
+                g2d.setColor(new Color(70, 150, 255));
+                g2d.fillRect(btnX+16, btnY+14, 7, 27);
+                g2d.fillRect(btnX+32, btnY+14, 7, 27);
+            }
+        }
+
+        @Override
+        public boolean contains(int x, int y) {
+            return pauseButtonRect != null && pauseButtonRect.contains(x, y);
+        }
+
+        public void updateScores(int score, int high) {
+            if (scoreBoard != null) {
+                scoreBoard.updateScore(score);
+                scoreBoard.updateHighScore(high);
+            }
+        }
+
+        public void resetScore() {
+            if (scoreBoard != null) {
+                scoreBoard.updateScore(0);
+            }
+        }
+
+        public void stopScoreBoardAnimation() {
+            if (scoreBoard != null) scoreBoard.stopAnimation();
+        }
+
+        public void resetHoverState() {
+            pauseHover = false;
+            pausePressed = false;
+            repaint();
         }
     }
 }

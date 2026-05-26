@@ -2,11 +2,12 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.BiConsumer;
 
 public class Marbles {
     private static final double SQRT3 = Math.sqrt(3);
     private static final int MIN_GROUP_SIZE = 3;
-    
+
     private int rowCount;
     private Marble[][] marbles;
     private double ySpacing;
@@ -17,6 +18,9 @@ public class Marbles {
     private int maxRowCount;
     private double side;
 
+    // 得分监听器
+    private BiConsumer<Marble, Integer> scoreListener;
+
     public Marbles() {
         this.marbles = null;
         this.rowCount = 0;
@@ -25,6 +29,10 @@ public class Marbles {
         this.accumulatedY = 0;
         // 统一设定大小，避免在其他类硬编码导致不一致
         this.side = 24.22;
+    }
+
+    public void setScoreListener(BiConsumer<Marble, Integer> listener) {
+        this.scoreListener = listener;
     }
 
     public double getSide() { return side; }
@@ -326,16 +334,20 @@ public class Marbles {
             Marble launchM = marbles[launchRow][launchCol];
             double originX = launchM != null ? launchM.getCenterX() : 0;
             double originY = launchM != null ? launchM.getCenterY() : 0;
-            
+
             for (Marble m : connectedGroup) {
+                if (!m.isScored() && scoreListener != null) {
+                    scoreListener.accept(m, 10);
+                    m.setScored(true);
+                }
                 // 计算每个弹珠到发射点的物理距离，以产生由近及远的递进式延迟
                 double dist = 0;
                 if (launchM != null) {
                     dist = Math.sqrt(Math.pow(m.getCenterX() - originX, 2) + Math.pow(m.getCenterY() - originY, 2));
                 }
-                
+
                 // 距离除以传播速度常数得到延迟(单位为秒)
-                double delay = dist / 600.0; 
+                double delay = dist / 600.0;
                 m.startPop(delay);
             }
 
@@ -397,6 +409,10 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (isMarbleActive(m) && !visited[r][c]) {
+                    if (!m.isScored() && scoreListener != null) {
+                        scoreListener.accept(m, 10);
+                        m.setScored(true);
+                    }
                     // 加入极小随机延迟以达到错落掉落视觉感
                     m.startFalling(random.nextDouble() * 0.1);
                 }

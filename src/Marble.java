@@ -22,6 +22,7 @@ public class Marble {
     // 掉落物理参数
     private double fallVy = 0;
     private double fallAy = 1500; // 重力加速度
+    private static final double FALL_DEATH_Y = 1500;  // 掉落死亡阈值
 
     // 单独动画状态（无附着时触发：先斜向上滑再快速下落）
     private boolean alone = false;
@@ -60,6 +61,7 @@ public class Marble {
     private int col;
     private int[][] edgeAttachment;
     private boolean markedForRemove = false;
+    private boolean scored = false;
 
     public Marble() {
         this.cx = 0;
@@ -146,7 +148,7 @@ public class Marble {
                 else {
                     cy += (400 + random.nextDouble() * 100) * dt;
                     verticesDirty = true;
-                    if (cy > 1500) {
+                    if (cy > FALL_DEATH_Y) {
                         dead = true;
                     }
                 }
@@ -161,7 +163,7 @@ public class Marble {
                 fallVy += fallAy * dt;
                 verticesDirty = true;
                 // 当掉出屏幕可视范围时标记死亡
-                if (cy > 1500) {
+                if (cy > FALL_DEATH_Y) {
                     dead = true;
                 }
             }
@@ -189,6 +191,8 @@ public class Marble {
 
     public void markForRemove(boolean b) { markedForRemove = b; }
     public boolean isMarkedForRemove() { return markedForRemove; }
+    public boolean isScored() { return scored; }
+    public void setScored(boolean scored) { this.scored = scored; }
 
     public void draw(Graphics2D g) {
         // 如果未初始化或动画已经播放完成完全消失，则不绘制
@@ -278,5 +282,6 @@ public class Marble {
         this.popProgress = 0;
         this.fallVy = 0;
         this.aloneDelay = 0;
+        this.scored = false;
     }
 }
