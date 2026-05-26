@@ -137,6 +137,10 @@ public class Marbles {
         return marbles != null ? marbles.length : 0;
     }
 
+    private boolean isMarbleActive(Marble m) {
+        return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling();
+    }
+
     public Marble[] getRow(int row) {
         if (marbles != null && row >= 0 && row < marbles.length) {
             return marbles[row];
@@ -154,7 +158,7 @@ public class Marbles {
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] != null) {
                 for (Marble m : marbles[r]) {
-                    if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling()) {
+                    if (isMarbleActive(m)) {
                         ref = m;
                         break;
                     }
@@ -190,9 +194,7 @@ public class Marbles {
         // 检测目标网格是否被占用
         boolean isOccupied = false;
         if (targetRow < marbles.length && marbles[targetRow] != null && targetCol < marbles[targetRow].length) {
-            if (marbles[targetRow][targetCol] != null && marbles[targetRow][targetCol].isInitialized() && !marbles[targetRow][targetCol].isPopping() && !marbles[targetRow][targetCol].isFalling()) {
-                isOccupied = true;
-            }
+            isOccupied = isMarbleActive(marbles[targetRow][targetCol]);
         }
 
         // 如果计算出的完美位置被占用，启用邻域搜索
@@ -210,9 +212,7 @@ public class Marbles {
                 for (int c = Math.max(0, targetCol - 2); c <= targetCol + 2; c++) {
                     boolean occ = false;
                     if (r < marbles.length && marbles[r] != null && c < marbles[r].length) {
-                        if (marbles[r][c] != null && marbles[r][c].isInitialized() && !marbles[r][c].isPopping() && !marbles[r][c].isFalling()) {
-                            occ = true;
-                        }
+                        occ = isMarbleActive(marbles[r][c]);
                     }
                     if (!occ) {
                         double cellX = rBaseX + c * xSpacing;
@@ -312,7 +312,7 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 // 忽略已经消除或已经在掉落的弹珠
-                if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling()) {
+                if (isMarbleActive(m)) {
                     if (m.getCenterY() < minY) {
                         minY = m.getCenterY();
                     }
@@ -333,8 +333,7 @@ public class Marbles {
             if (marbles[r] == null) continue;
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
-                if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling()) {
-                    // 包括容错空间，确保高低交错的最高行都能算作天花板
+                if (isMarbleActive(m)) {
                     if (m.getCenterY() <= minY + side * 1.5) {
                         ceilingMarbles.add(m);
                     }
@@ -354,7 +353,7 @@ public class Marbles {
             if (marbles[r] == null) continue;
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
-                if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !visited[r][c]) {
+                if (isMarbleActive(m) && !visited[r][c]) {
                     // 加入极小随机延迟以达到错落掉落视觉感
                     m.startFalling(random.nextDouble() * 0.1);
                 }
@@ -382,7 +381,7 @@ public class Marbles {
                     int nc = c + dc;
                     if (nc >= 0 && nc < marbles[nr].length) {
                         Marble neighbor = marbles[nr][nc];
-                        if (neighbor != null && neighbor.isInitialized() && !neighbor.isPopping() && !neighbor.isFalling()) {
+                        if (isMarbleActive(neighbor)) {
                             double dx = current.getCenterX() - neighbor.getCenterX();
                             double dy = current.getCenterY() - neighbor.getCenterY();
                             if (dx * dx + dy * dy <= thresholdSq) {
@@ -418,7 +417,7 @@ public class Marbles {
                     int nc = c + dc;
                     if (nc >= 0 && nc < marbles[nr].length) {
                         Marble neighbor = marbles[nr][nc];
-                        if (neighbor != null && neighbor.isInitialized() && !neighbor.isPopping() && !neighbor.isFalling() && neighbor.getColorType() == targetColor) {
+                        if (isMarbleActive(neighbor) && neighbor.getColorType() == targetColor) {
                             double dx = current.getCenterX() - neighbor.getCenterX();
                             double dy = current.getCenterY() - neighbor.getCenterY();
                             if (dx * dx + dy * dy <= thresholdSq) {
