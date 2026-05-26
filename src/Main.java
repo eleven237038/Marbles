@@ -42,9 +42,6 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
     private ScoreBoard scoreBoard;
     private CustomGlassPane glassPane;
 
-    // GameOver相关
-    private JDialog gameOverDialog;
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("弹珠游戏");
@@ -302,80 +299,16 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
 
     public void openPauseMenu() {
         gamePaused = true;
+        if (glassPane != null) {
+            glassPane.showOverlay(1, false);
+        }
+    }
 
-        JDialog pauseDialog = new JDialog(SwingUtilities.getWindowAncestor(mPanel), "Pause Menu", Dialog.ModalityType.APPLICATION_MODAL);
-        pauseDialog.setSize(350, 380);
-        pauseDialog.setLocationRelativeTo(mPanel);
-        pauseDialog.setResizable(false);
-        pauseDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-
-        // 点击右上角X关闭后继续游戏
-        pauseDialog.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                gamePaused = false;
-                mPanel.repaint();
-            }
-        });
-
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 20));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
-        mainPanel.setBackground(new Color(240, 248, 255));
-
-        JLabel title = new JLabel("PAUSED", SwingConstants.CENTER);
-        title.setFont(new Font("Arial Black", Font.BOLD, 28));
-        title.setForeground(new Color(70, 150, 255));
-        mainPanel.add(title, BorderLayout.NORTH);
-
-        JPanel btnPanel = new JPanel(new GridLayout(4, 1, 0, 20));
-        btnPanel.setBackground(new Color(240, 248, 255));
-
-        // 1. Resume
-        JButton btnResume = StartScreen.createStyledButtonStatic("Resume", true, "begin.png");
-        btnResume.addActionListener(e -> {
-            gamePaused = false;
-            pauseDialog.dispose();
-        });
-
-        // 2. How to play
-        JButton btnHelp = StartScreen.createStyledButtonStatic("How to play", true, "help.png");
-        btnHelp.addActionListener(e -> {
-            JOptionPane.showMessageDialog(pauseDialog,
-                    "游戏玩法：\n1. 点击/空格发射弹珠\n2. 3个同色相连即消除\n3. 不要让弹珠碰到底部红线",
-                    "How to play", JOptionPane.INFORMATION_MESSAGE);
-        });
-
-        // 3. Sound on/off
-        JButton btnSound = StartScreen.createStyledButtonStatic(StartScreen.isSoundOnStatic ? "Sound on" : "Sound off", true, "sound.png");
-        btnSound.addActionListener(e -> {
-            StartScreen.isSoundOnStatic = !StartScreen.isSoundOnStatic;
-            btnSound.setText(StartScreen.isSoundOnStatic ? "Sound on" : "Sound off");
-        });
-
-        // 4. Quit：完全重置游戏并返回主菜单
-        JButton btnQuit = StartScreen.createStyledButtonStatic("Quit", true, "exit.png");
-        btnQuit.addActionListener(e -> {
-            gamePaused = false;
-            frozen = false;
-            gameStarted = false;
-            // 清空游戏对象，释放资源
-            hexGrid = null;
-            launchMarble = null;
-            // 恢复默认光标
-            mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-            pauseDialog.dispose();
-            // 切换到主菜单
-            cardLayout.show(this.mainPanel, "menu");
-        });
-
-        btnPanel.add(btnResume);
-        btnPanel.add(btnHelp);
-        btnPanel.add(btnSound);
-        btnPanel.add(btnQuit);
-
-        mainPanel.add(btnPanel, BorderLayout.CENTER);
-        pauseDialog.setContentPane(mainPanel);
-        pauseDialog.setVisible(true);
+    public void closePauseMenu() {
+        gamePaused = false;
+        if (glassPane != null) {
+            glassPane.hideOverlay();
+        }
         mPanel.repaint();
     }
 
@@ -384,54 +317,12 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
         frozen = true;
         gamePaused = true;
 
-        gameOverDialog = new JDialog(SwingUtilities.getWindowAncestor(mPanel), "Game Over", Dialog.ModalityType.APPLICATION_MODAL);
-        gameOverDialog.setSize(750, 650);
-        gameOverDialog.setLocationRelativeTo(mPanel);
-        gameOverDialog.setResizable(false);
-        gameOverDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-
-        GameOver gameOverPanel = new GameOver(
-                win,
-                currentScore,
-                GameOver.loadButtonImage("resources/again.png"),
-                GameOver.loadButtonImage("resources/exit.png"),
-                GameOver.loadButtonImage("resources/next.png"),
-                this
-        );
-        gameOverPanel.setPreferredSize(new Dimension(750, 650));
-
-        gameOverDialog.setContentPane(gameOverPanel);
-        gameOverDialog.setVisible(true);
-        mPanel.repaint();
-    }
-
-    @Override
-    public void onRestart() {
-        if (gameOverDialog != null) {
-            gameOverDialog.dispose();
-            gameOverDialog = null;
-        }
-        // 重置游戏
-        frozen = false;
-        gamePaused = false;
-        currentScore = 0;
-
         if (glassPane != null) {
-            glassPane.updateScores(currentScore, highScore);
+            glassPane.showOverlay(2, win);
         }
-
-        // 重新初始化游戏
-        init();
-        mPanel.repaint();
     }
 
-    @Override
-    public void onBackToMenu() {
-        if (gameOverDialog != null) {
-            gameOverDialog.dispose();
-            gameOverDialog = null;
-        }
-        // 完全重置游戏并返回主菜单
+    private void returnToMenu() {
         frozen = false;
         gamePaused = false;
         gameStarted = false;
@@ -445,6 +336,33 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
 
         // 切换到主菜单
         cardLayout.show(mainPanel, "menu");
+    }
+
+    @Override
+    public void onBackToMenu() {
+        if (glassPane != null) {
+            glassPane.hideOverlay();
+        }
+        returnToMenu();
+    }
+
+    @Override
+    public void onRestart() {
+        if (glassPane != null) {
+            glassPane.hideOverlay();
+        }
+        // 重置游戏
+        frozen = false;
+        gamePaused = false;
+        currentScore = 0;
+
+        if (glassPane != null) {
+            glassPane.updateScores(currentScore, highScore);
+        }
+
+        // 重新初始化游戏
+        init();
+        mPanel.repaint();
     }
 
     @Override
@@ -501,6 +419,10 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
         private Rectangle pauseButtonRect;
         private boolean pauseHover = false, pausePressed = false;
 
+        // 覆盖层模式: 0=无, 1=暂停菜单, 2=游戏结束
+        private int overlayMode = 0;
+        private boolean isGameOverWin = false;
+
         public CustomGlassPane() {
             setOpaque(false);
             setFocusable(false);
@@ -514,7 +436,7 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
             MouseAdapter mouseAdapter = new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    if (pauseButtonRect != null && pauseButtonRect.contains(e.getPoint())) {
+                    if (overlayMode == 0 && pauseButtonRect != null && pauseButtonRect.contains(e.getPoint())) {
                         pausePressed = true;
                         repaint();
                         openPauseMenu();
@@ -522,6 +444,9 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
                         Point mp = getMousePosition();
                         pauseHover = (mp != null && pauseButtonRect.contains(mp));
                         repaint();
+                    } else if (overlayMode != 0) {
+                        // 处理覆盖层按钮点击
+                        handleOverlayClick(e.getPoint());
                     }
                 }
                 @Override
@@ -535,14 +460,59 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
             addMouseMotionListener(new MouseMotionAdapter() {
                 @Override
                 public void mouseMoved(MouseEvent e) {
-                    boolean newHover = pauseButtonRect != null && pauseButtonRect.contains(e.getPoint());
-                    if (pauseHover != newHover) {
-                        pauseHover = newHover;
-                        repaint();
-                        setCursor(pauseHover ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+                    if (overlayMode == 0) {
+                        boolean newHover = pauseButtonRect != null && pauseButtonRect.contains(e.getPoint());
+                        if (pauseHover != newHover) {
+                            pauseHover = newHover;
+                            repaint();
+                            setCursor(pauseHover ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+                        }
+                    } else {
+                        // 覆盖层模式下检测按钮悬停
+                        updateOverlayHover(e.getPoint());
                     }
                 }
             });
+        }
+
+        private void handleOverlayClick(Point p) {
+            if (overlayMode == 1) {
+                // 暂停菜单
+                if (lastResumeBtn != null && lastResumeBtn.contains(p)) {
+                    closePauseMenu();
+                } else if (lastHelpBtn != null && lastHelpBtn.contains(p)) {
+                    JOptionPane.showMessageDialog(mPanel,
+                            "游戏玩法：\n1. 点击/空格发射弹珠\n2. 3个同色相连即消除\n3. 不要让弹珠碰到底部红线",
+                            "How to play", JOptionPane.INFORMATION_MESSAGE);
+                } else if (lastQuitBtn != null && lastQuitBtn.contains(p)) {
+                    closePauseMenu();
+                    returnToMenu();
+                }
+            } else if (overlayMode == 2) {
+                // 游戏结束
+                if (!isGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(p)) {
+                    onRestart();
+                } else if (lastMenuBtn != null && lastMenuBtn.contains(p)) {
+                    onBackToMenu();
+                }
+            }
+        }
+
+        private void updateOverlayHover(Point p) {
+            repaint();
+        }
+
+        public void showOverlay(int mode, boolean win) {
+            overlayMode = mode;
+            isGameOverWin = win;
+            setVisible(true);
+            repaint();
+        }
+
+        public void hideOverlay() {
+            overlayMode = 0;
+            setVisible(false);
+            repaint();
         }
 
         @Override
@@ -554,42 +524,181 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
             int h = getHeight();
             if (w == 0 || h == 0) return;
 
-            // 暂停按钮（左下角）
-            int btnSize = 55;
-            int btnX = 85;
-            int btnY = h - btnSize - 15;
-            pauseButtonRect = new Rectangle(btnX, btnY, btnSize, btnSize);
+            // 绘制暂停按钮（仅在非覆盖层模式时）
+            if (overlayMode == 0) {
+                int btnSize = 55;
+                int btnX = 85;
+                int btnY = h - btnSize - 15;
+                pauseButtonRect = new Rectangle(btnX, btnY, btnSize, btnSize);
 
-            if (pausePressed) {
-                Color c1 = new Color(50, 140, 255, 200);
-                Color c2 = new Color(30, 110, 255, 200);
-                LinearGradientPaint grad = new LinearGradientPaint(btnX, btnY, btnX, btnY+btnSize, new float[]{0,1}, new Color[]{c1,c2});
-                g2d.setPaint(grad);
-                g2d.fillRoundRect(btnX, btnY, btnSize, btnSize, 12, 12);
-            } else if (pauseHover) {
-                Color c1 = new Color(100, 190, 255, 200);
-                Color c2 = new Color(50, 140, 255, 200);
-                LinearGradientPaint grad = new LinearGradientPaint(btnX, btnY, btnX, btnY+btnSize, new float[]{0,1}, new Color[]{c1,c2});
-                g2d.setPaint(grad);
-                g2d.fillRoundRect(btnX, btnY, btnSize, btnSize, 12, 12);
-            } else {
-                g2d.setColor(new Color(255, 255, 255, 200));
-                g2d.setStroke(new BasicStroke(2f));
-                g2d.drawRoundRect(btnX, btnY, btnSize, btnSize, 12, 12);
-            }
+                if (pausePressed) {
+                    Color c1 = new Color(50, 140, 255, 200);
+                    Color c2 = new Color(30, 110, 255, 200);
+                    LinearGradientPaint grad = new LinearGradientPaint(btnX, btnY, btnX, btnY+btnSize, new float[]{0,1}, new Color[]{c1,c2});
+                    g2d.setPaint(grad);
+                    g2d.fillRoundRect(btnX, btnY, btnSize, btnSize, 12, 12);
+                } else if (pauseHover) {
+                    Color c1 = new Color(100, 190, 255, 200);
+                    Color c2 = new Color(50, 140, 255, 200);
+                    LinearGradientPaint grad = new LinearGradientPaint(btnX, btnY, btnX, btnY+btnSize, new float[]{0,1}, new Color[]{c1,c2});
+                    g2d.setPaint(grad);
+                    g2d.fillRoundRect(btnX, btnY, btnSize, btnSize, 12, 12);
+                } else {
+                    g2d.setColor(new Color(255, 255, 255, 200));
+                    g2d.setStroke(new BasicStroke(2f));
+                    g2d.drawRoundRect(btnX, btnY, btnSize, btnSize, 12, 12);
+                }
 
-            if (pauseIcon != null) {
-                g2d.drawImage(pauseIcon, btnX, btnY, btnSize, btnSize, null);
+                if (pauseIcon != null) {
+                    g2d.drawImage(pauseIcon, btnX, btnY, btnSize, btnSize, null);
+                } else {
+                    g2d.setColor(new Color(70, 150, 255));
+                    g2d.fillRect(btnX+16, btnY+14, 7, 27);
+                    g2d.fillRect(btnX+32, btnY+14, 7, 27);
+                }
             } else {
-                g2d.setColor(new Color(70, 150, 255));
-                g2d.fillRect(btnX+16, btnY+14, 7, 27);
-                g2d.fillRect(btnX+32, btnY+14, 7, 27);
+                // 绘制覆盖层内容
+                drawOverlayContent(g2d, w, h);
             }
         }
 
+        private void drawOverlayContent(Graphics2D g2d, int w, int h) {
+            // 半透明背景
+            g2d.setColor(new Color(0, 0, 0, 180));
+            g2d.fillRect(0, 0, w, h);
+
+            int centerX = w / 2;
+            int centerY = h / 2;
+
+            if (overlayMode == 1) {
+                // 暂停菜单
+                drawPauseMenuOverlay(g2d, centerX, centerY);
+            } else if (overlayMode == 2) {
+                // 游戏结束
+                drawGameOverOverlay(g2d, centerX, centerY);
+            }
+        }
+
+        private void drawPauseMenuOverlay(Graphics2D g2d, int cx, int cy) {
+            // 标题
+            g2d.setFont(new Font("Arial Black", Font.BOLD, 36));
+            g2d.setColor(new Color(70, 150, 255));
+            String title = "PAUSED";
+            FontMetrics fm = g2d.getFontMetrics();
+            g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 100);
+
+            // 按钮区域
+            int btnWidth = 200;
+            int btnHeight = 50;
+            int btnSpacing = 15;
+            int startY = cy - 50;
+
+            // Resume按钮
+            Rectangle resumeBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
+            drawOverlayButton(g2d, resumeBtn, "Resume", new Color(70, 150, 255));
+
+            // How to play按钮
+            Rectangle helpBtn = new Rectangle(cx - btnWidth / 2, startY + btnHeight + btnSpacing, btnWidth, btnHeight);
+            drawOverlayButton(g2d, helpBtn, "How to play", new Color(100, 190, 255));
+
+            // Quit按钮
+            Rectangle quitBtn = new Rectangle(cx - btnWidth / 2, startY + 2 * (btnHeight + btnSpacing), btnWidth, btnHeight);
+            drawOverlayButton(g2d, quitBtn, "Quit", new Color(200, 60, 60));
+
+            // 保存按钮引用用于点击检测
+            lastResumeBtn = resumeBtn;
+            lastHelpBtn = helpBtn;
+            lastQuitBtn = quitBtn;
+        }
+
+        private void drawGameOverOverlay(Graphics2D g2d, int cx, int cy) {
+            // 标题
+            g2d.setFont(new Font("Arial", Font.BOLD, 48));
+            if (isGameOverWin) {
+                g2d.setColor(new Color(255, 220, 80));
+                String title = "LEVEL COMPLETE!";
+                FontMetrics fm = g2d.getFontMetrics();
+                g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 120);
+            } else {
+                g2d.setColor(new Color(255, 80, 80));
+                String title = "GAME OVER";
+                FontMetrics fm = g2d.getFontMetrics();
+                g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 120);
+            }
+
+            // 分数
+            g2d.setFont(new Font("Arial", Font.BOLD, 28));
+            g2d.setColor(Color.WHITE);
+            String scoreText = "Score: " + currentScore;
+            FontMetrics fm = g2d.getFontMetrics();
+            g2d.drawString(scoreText, cx - fm.stringWidth(scoreText) / 2, cy - 60);
+
+            // 按钮区域
+            int btnWidth = 200;
+            int btnHeight = 50;
+            int btnSpacing = 15;
+            int startY = cy - 20;
+
+            if (!isGameOverWin) {
+                // Restart按钮
+                Rectangle restartBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
+                drawOverlayButton(g2d, restartBtn, "Restart", new Color(70, 150, 255));
+                lastRestartBtn = restartBtn;
+            }
+
+            // Main Menu按钮
+            Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + (isGameOverWin ? 0 : btnHeight + btnSpacing), btnWidth, btnHeight);
+            drawOverlayButton(g2d, menuBtn, "Main Menu", new Color(100, 190, 255));
+            lastMenuBtn = menuBtn;
+        }
+
+        private void drawOverlayButton(Graphics2D g2d, Rectangle rect, String text, Color baseColor) {
+            // 按钮背景
+            LinearGradientPaint grad = new LinearGradientPaint(
+                rect.x, rect.y, rect.x, rect.y + rect.height,
+                new float[]{0, 1},
+                new Color[]{baseColor, baseColor.darker()}
+            );
+            g2d.setPaint(grad);
+            g2d.fillRoundRect(rect.x, rect.y, rect.width, rect.height, 15, 15);
+
+            // 按钮文字
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.BOLD, 18));
+            FontMetrics fm = g2d.getFontMetrics();
+            int textX = rect.x + (rect.width - fm.stringWidth(text)) / 2;
+            int textY = rect.y + (rect.height + fm.getAscent() - fm.getDescent()) / 2;
+            g2d.drawString(text, textX, textY);
+        }
+
+        // 覆盖层按钮引用
+        private Rectangle lastResumeBtn = null;
+        private Rectangle lastHelpBtn = null;
+        private Rectangle lastQuitBtn = null;
+        private Rectangle lastRestartBtn = null;
+        private Rectangle lastMenuBtn = null;
+
+        public Rectangle getLastResumeBtn() { return lastResumeBtn; }
+        public Rectangle getLastHelpBtn() { return lastHelpBtn; }
+        public Rectangle getLastQuitBtn() { return lastQuitBtn; }
+        public Rectangle getLastRestartBtn() { return lastRestartBtn; }
+        public Rectangle getLastMenuBtn() { return lastMenuBtn; }
+
         @Override
         public boolean contains(int x, int y) {
-            return pauseButtonRect != null && pauseButtonRect.contains(x, y);
+            if (overlayMode == 0) {
+                return pauseButtonRect != null && pauseButtonRect.contains(x, y);
+            }
+            // 检查覆盖层按钮点击
+            if (overlayMode == 1) {
+                if (lastResumeBtn != null && lastResumeBtn.contains(x, y)) return true;
+                if (lastHelpBtn != null && lastHelpBtn.contains(x, y)) return true;
+                if (lastQuitBtn != null && lastQuitBtn.contains(x, y)) return true;
+            } else if (overlayMode == 2) {
+                if (!isGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(x, y)) return true;
+                if (lastMenuBtn != null && lastMenuBtn.contains(x, y)) return true;
+            }
+            return false;
         }
 
         public void updateScores(int score, int high) {
