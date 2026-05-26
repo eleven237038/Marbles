@@ -1,122 +1,205 @@
-package org.example;
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.util.Random;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-
-// 弹珠类
 public class Marble {
+    private double cx, cy;
+    private double side;
+    private boolean initialized;
+    private boolean verticesDirty;
+    public static final int RED = 1;
+    public static final int BLUE = 2;
+    public static final int YELLOW = 3;
+    public static final int PURPLE = 4;
+
+    // 动画状态相关
+    private boolean popping = false;
+    private boolean dead = false;
+    private double popDelay = 0;
+    private double popProgress = 0;
+
+    // 主体色系
+    private static final Color[] BASE_COLOR = {
+            null,
+            new Color(220, 30, 30),
+            new Color(20, 80, 220),
+            new Color(240, 200, 20),
+            new Color(160, 30, 200)
+    };
+    // 亮部高光底色
+    private static final Color[] BRIGHT_COLOR = {
+            null,
+            new Color(255, 130, 130),
+            new Color(110, 190, 255),
+            new Color(255, 250, 180),
+            new Color(220, 130, 255)
+    };
+    // 暗部加深色
+    private static final Color[] DARK_COLOR = {
+            null,
+            new Color(120, 10, 10),
+            new Color(10, 40, 120),
+            new Color(160, 120, 0),
+            new Color(90, 10, 120)
+    };
+
+    private static final Random random = new Random();
+    private int colorType;
     private int row;
     private int col;
-    private MarbleColor color;
-    private double x;
-    private double y;
-    private double vx;
-    private double vy;
-    private boolean falling;
-    private boolean fromShooter;
+    private int[][] edgeAttachment;
+    private boolean markedForRemove = false;
 
-    private boolean sliding;
-    private double slideStartX;
-    private double slideStartY;
-    private double slideTargetX;
-    private double slideTargetY;
-    private long slideStartTime;
-    private static final long SLIDE_DURATION = 400;
+    public Marble() {
+        this.cx = 0;
+        this.cy = 0;
+        this.side = 24.22;
+        this.initialized = false;
+        this.colorType = random.nextInt(4) + 1;
+        this.row = 0;
+        this.col = 0;
+        this.edgeAttachment = new int[6][2];
+        this.verticesDirty = false;
+    }
 
-    public Marble(int row, int col, MarbleColor color) {
+    public void init(double cx, double cy, int row, int col) {
+        this.cx = cx;
+        this.cy = cy;
         this.row = row;
         this.col = col;
-        this.color = color;
-        this.x = 0;
-        this.y = 0;
-        this.vx = 0;
-        this.vy = 0;
-        this.falling = false;
-        this.fromShooter = false;
-        this.sliding = false;
+        this.initialized = true;
     }
 
-    public void setPosition(double x, double y) {
-        this.x = x;
-        this.y = y;
+    // 开始触发消除动画并设置延迟时间
+    public void startPop(double delay) {
+        this.popping = true;
+        this.popDelay = delay;
+        this.popProgress = 0;
     }
+    
+    public boolean isPopping() { return popping; }
+    public boolean isDead() { return dead; }
 
-    public void setVelocity(double vx, double vy) {
-        this.vx = vx;
-        this.vy = vy;
-    }
-
-    public void startFalling() {
-        this.falling = true;
-        this.vy = 0;
-    }
-
-    public void markFromShooter() {
-        this.fromShooter = true;
-    }
-
-    public boolean isFromShooter() {
-        return fromShooter;
-    }
-
-    public void update() {
-        if (falling) {
-            vy += 0.5;
-            y += vy;
-        }
-        if (sliding) {
-            long elapsed = System.currentTimeMillis() - slideStartTime;
-            if (elapsed >= SLIDE_DURATION) {
-                x = slideTargetX;
-                y = slideTargetY;
-                sliding = false;
+    public void update(double dt) {
+        // 更新弹出动画
+        if (popping) {
+            if (popDelay > 0) {
+                popDelay -= dt;
             } else {
-                double t = (double) elapsed / SLIDE_DURATION;
-                double ease = 1 - (1 - t) * (1 - t);
-                x = slideStartX + (slideTargetX - slideStartX) * ease;
-                y = slideStartY + (slideTargetY - slideStartY) * ease;
+                popProgress += dt * 6.0; // 动画速度，约 0.16 秒播放完成
+                if (popProgress >= 1.0) {
+                    dead = true;
+                }
             }
         }
     }
 
-    public void startSliding(double targetX, double targetY, long startTime) {
-        this.sliding = true;
-        this.slideStartX = x;
-        this.slideStartY = y;
-        this.slideTargetX = targetX;
-        this.slideTargetY = targetY;
-        this.slideStartTime = startTime;
+    public void setCenter(double cx, double cy) {
+        this.cx = cx;
+        this.cy = cy;
+        this.verticesDirty = true;
     }
 
-    public boolean isSliding() {
-        return sliding;
-    }
-
-    public void render(Graphics2D g, double scrollOffsetY) {
-        int radius = (int) GameConfig.MARBLE_RADIUS;
-        double drawY = y + scrollOffsetY;
-        g.setColor(color.getColor());
-        g.fillOval((int) (x - radius), (int) (drawY - radius), radius * 2, radius * 2);
-        g.setColor(new Color(255, 255, 255, 100));
-        g.fillOval((int) (x - radius + 2), (int) (drawY - radius + 2), radius, radius);
-    }
-
-    public void render(Graphics2D g) {
-        int radius = (int) GameConfig.MARBLE_RADIUS;
-        g.setColor(color.getColor());
-        g.fillOval((int) (x - radius), (int) (y - radius), radius * 2, radius * 2);
-        g.setColor(new Color(255, 255, 255, 100));
-        g.fillOval((int) (x - radius + 2), (int) (y - radius + 2), radius, radius);
-    }
-
+    public void recalculateVerticesIfDirty() {}
+    public void setSide(double side) { this.side = side; }
+    public double getCenterX() { return cx; }
+    public double getCenterY() { return cy; }
+    public double getSide() { return side; }
+    public boolean isInitialized() { return initialized; }
+    public int getColorType() { return colorType; }
+    // 新增：用于在碰撞后接收发射弹珠的颜色
+    public void setColorType(int colorType) { this.colorType = colorType; }
     public int getRow() { return row; }
-    public void setRow(int row) { this.row = row; }
     public int getCol() { return col; }
-    public void setCol(int col) { this.col = col; }
-    public MarbleColor getColor() { return color; }
-    public double getX() { return x; }
-    public double getY() { return y; }
-    public double getVx() { return vx; }
-    public double getVy() { return vy; }
-    public boolean isFalling() { return falling; }
+    public int[][] getEdgeAttachment() { return edgeAttachment; }
+    public void setEdgeAttachment(int[][] edgeAttachment) { this.edgeAttachment = edgeAttachment; }
+
+    public void markForRemove(boolean b) { markedForRemove = b; }
+    public boolean isMarkedForRemove() { return markedForRemove; }
+
+    public void draw(Graphics2D g) {
+        // 如果未初始化或动画已经播放完成完全消失，则不绘制
+        if (!initialized || dead) return;
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        double scale = 1.0;
+        float alpha = 1.0f;
+        
+        // 当处于正在爆裂的状态，并且延迟时间已到，开始放大且透明化
+        if (popping && popDelay <= 0) {
+            scale = 1.0 + popProgress * 0.4; // 最大膨胀 1.4 倍
+            alpha = 1.0f - (float)popProgress;
+            if (alpha < 0f) alpha = 0f;
+            if (alpha > 1f) alpha = 1f;
+        }
+
+        Composite originalComposite = null;
+        if (alpha < 1.0f) {
+            originalComposite = g.getComposite();
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+        }
+
+        // 精准半径：结合动画放大倍数
+        double radius = side * 0.866 * scale;
+        double x = cx - radius;
+        double y = cy - radius;
+        double diameter = radius * 2;
+
+        Color base = BASE_COLOR[colorType];
+        Color bright = BRIGHT_COLOR[colorType];
+        Color dark = DARK_COLOR[colorType];
+
+        // 阴影
+        g.setColor(new Color(0,0,0,40));
+        g.fillOval((int)(x + 2 * scale), (int)(y + 2 * scale), (int)diameter, (int)diameter);
+
+        // 球体渐变
+        Point2D center = new Point2D.Double(cx, cy);
+        float[] stop = {0f, 0.6f, 1f};
+        Color[] gradColor = {bright, base, dark};
+        RadialGradientPaint ballGrad = new RadialGradientPaint(center, (float)radius, stop, gradColor);
+        g.setPaint(ballGrad);
+        g.fillOval((int)x, (int)y, (int)diameter, (int)diameter);
+
+        // 双层精致边框
+        g.setStroke(new BasicStroke(1.8f * (float)scale));
+        g.setColor(new Color(0,0,0,70));
+        g.drawOval((int)x, (int)y, (int)diameter, (int)diameter);
+
+        g.setStroke(new BasicStroke(0.8f * (float)scale));
+        g.setColor(new Color(255,255,255,50));
+        g.drawOval((int)(x + 1 * scale), (int)(y + 1 * scale), (int)(diameter - 2 * scale), (int)(diameter - 2 * scale));
+
+        // 主高光
+        g.setColor(new Color(255,255,255,200));
+        double highlightR = radius * 0.32;
+        g.fillOval((int)(cx - radius * 0.48), (int)(cy - radius * 0.48), (int)highlightR, (int)highlightR);
+
+        // 玻璃反光点
+        g.setColor(new Color(255,255,255,120));
+        int reflect1Size = Math.max(1, (int)(4 * scale));
+        int reflect2Size = Math.max(1, (int)(3 * scale));
+        g.fillOval((int)(cx + radius * 0.25), (int)(cy - radius * 0.2), reflect1Size, reflect1Size);
+        g.fillOval((int)(cx - radius * 0.2), (int)(cy + radius * 0.3), reflect2Size, reflect2Size);
+
+        // 还原画布透明度
+        if (alpha < 1.0f) {
+            g.setComposite(originalComposite);
+        }
+    }
+
+    public void reset() {
+        this.cx = 0;
+        this.cy = 0;
+        this.side = 24.22;
+        this.initialized = false;
+        
+        // 重置动画状态
+        this.popping = false;
+        this.dead = false;
+        this.popDelay = 0;
+        this.popProgress = 0;
+    }
 }

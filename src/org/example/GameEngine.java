@@ -1,587 +1,983 @@
-package org.example;
-
-import java.awt.Canvas;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.util.Set;
-
-/**
- * 弹珠游戏引擎 - 泡泡龙类型游戏
- */
-public class GameEngine extends Canvas implements KeyListener, MouseMotionListener, MouseListener, Runnable {
-
-    // 游戏状态枚举
-    public enum GameState {
-        MENU,
-        PLAYING,
-        PAUSED,
-        GAME_OVER
-    }
-
-    // 游戏对象
-    private MarbleGrid grid;
-    private Shooter shooter;
-    private Marble flyingMarble;
-
-    // 游戏状态
-    private GameState state = GameState.MENU;
-    private int score = 0;
-    private int highScore = 0;
-    private boolean gameRunning = false;
-    private Thread gameThread;
-    private BufferedImage buffer;
-    private double mouseX, mouseY;
-
-    // 下降机制参数 - 每发射1个球下降1/5行
-    private int shootCount = 0;
-    private static final int SHOOTS_PER_ROW = 5;  // 每5次发射下降一行
-    private double targetScrollOffset = 0;      // 目标滚动偏移
-    private double currentScrollOffset = 0;     // 当前滚动偏移（动画用）
-    private static final double SCROLL_ANIM_DURATION = 300;  // 滚动动画持续时间(ms)
-    private long scrollAnimStartTime = 0;       // 滚动动画开始时间
-    private boolean isScrollAnimating = false;  // 是否正在播放滚动动画
-    private double rowHeight;                   // 单行高度像素
-
-    // 构造函数
-    public GameEngine() {
-        // 保持9:16比例（手机屏幕比例）
-        setPreferredSize(new Dimension(GameConfig.SCENE_WIDTH, GameConfig.SCENE_HEIGHT));
-        setMinimumSize(new Dimension(GameConfig.SCENE_WIDTH, GameConfig.SCENE_HEIGHT));
-        setMaximumSize(new Dimension(GameConfig.SCENE_WIDTH, GameConfig.SCENE_HEIGHT));
-
-        grid = new MarbleGrid(GameConfig.GRID_ROWS, GameConfig.GRID_COLS);
-        shooter = new Shooter();
-
-        state = GameState.MENU;
-        score = 0;
-        highScore = 0;
-        gameRunning = false;
-
-        setFocusable(true);
-        addKeyListener(this);
-        addMouseMotionListener(this);
-        addMouseListener(this);
-
-        buffer = new BufferedImage(GameConfig.SCENE_WIDTH, GameConfig.SCENE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
-    }
-
-    public void start() {
-        renderMenu(buffer.createGraphics());
-        repaint();
-    }
-
-    public void startGame() {
-        grid = new MarbleGrid(GameConfig.GRID_ROWS, GameConfig.GRID_COLS);
-        grid.initialize();
-        shooter = new Shooter();
-        flyingMarble = null;
-        score = 0;
-        shootCount = 0;
-        rowHeight = GameConfig.HEX_SIZE * 1.5;
-        targetScrollOffset = 0;
-        currentScrollOffset = 0;
-        isScrollAnimating = false;
-        state = GameState.PLAYING;
-        gameRunning = true;
-
-        if (gameThread == null || !gameThread.isAlive()) {
-            gameThread = new Thread(this);
-            gameThread.start();
-        }
-    }
-
-    public void restartGame() {
-        startGame();
-    }
-
-    @Override
-    public void run() {
-        Thread thisThread = Thread.currentThread();
-        while (gameRunning) {
-            try {
-                Thread.sleep(GameConfig.BASE_GAME_SPEED_MS);
-            } catch (InterruptedException e) {
-                break;
-            }
-            if (gameThread != thisThread) break;
-            if (state == GameState.PLAYING) {
-                update();
-                render();
-            }
-        }
-    }
-
-    public void update() {
-        if (state != GameState.PLAYING) return;
-
-        // 更新瞄准角度（基于鼠标位置）
-        shooter.aim(mouseX, mouseY);
-
-        // 处理滚动动画
-        if (isScrollAnimating) {
-            long elapsed = System.currentTimeMillis() - scrollAnimStartTime;
-            if (elapsed >= SCROLL_ANIM_DURATION) {
-                // 动画完成
-                currentScrollOffset = targetScrollOffset;
-                isScrollAnimating = false;
-            } else {
-                // 使用easeOutQuad缓动
-                double t = elapsed / SCROLL_ANIM_DURATION;
-                double ease = 1 - (1 - t) * (1 - t);
-                currentScrollOffset += (targetScrollOffset - currentScrollOffset) * ease * 0.15;
-            }
-        }
-
-        // 更新网格的像素滚动偏移
-        grid.setScrollOffsetY(currentScrollOffset);
-
-        // 更新飞行弹珠
-        if (flyingMarble != null) {
-            double newX = flyingMarble.getX() + flyingMarble.getVx();
-            double newY = flyingMarble.getY() + flyingMarble.getVy();
-
-            // 左右墙壁反弹
-            if (newX <= GameConfig.MARBLE_RADIUS) {
-                newX = GameConfig.MARBLE_RADIUS;
-                flyingMarble.setVelocity(-flyingMarble.getVx(), flyingMarble.getVy());
-            } else if (newX >= GameConfig.SCENE_WIDTH - GameConfig.MARBLE_RADIUS) {
-                newX = GameConfig.SCENE_WIDTH - GameConfig.MARBLE_RADIUS;
-                flyingMarble.setVelocity(-flyingMarble.getVx(), flyingMarble.getVy());
-            }
-
-            flyingMarble.setPosition(newX, newY);
-
-            // 检测碰撞
-            checkCollision();
-
-            // 边界检测 - 弹珠到达顶部
-            if (newY <= GameConfig.GRID_OFFSET_Y + GameConfig.MARBLE_RADIUS) {
-                attachMarble();
-            }
-        }
-
-        // 更新坠落的弹珠
-        Set<Marble> allMarbles = grid.getAllMarbles();
-        for (Marble m : allMarbles) {
-            if (m.isFalling() || m.isSliding()) {
-                m.update();
-                if (m.getY() > GameConfig.SCENE_HEIGHT + GameConfig.MARBLE_RADIUS) {
-                    grid.removeMarble(m.getRow(), m.getCol());
-                    score += 10;
-                }
-            }
-        }
-
-        // 检测游戏结束 - 弹珠到达第21行
-        for (int col = 0; col < GameConfig.GRID_COLS; col++) {
-            Marble m = grid.getMarble(GameConfig.GRID_ROWS - 1, col);
-            if (m != null && !m.isFalling() && !m.isSliding()) {
-                state = GameState.GAME_OVER;
-                if (score > highScore) highScore = score;
-                render();
-                return;
-            }
-        }
-    }
-
-    private void checkCollision() {
-        if (flyingMarble == null) return;
-
-        double marbleRadius = GameConfig.MARBLE_RADIUS;
-        for (int row = 0; row < GameConfig.GRID_ROWS; row++) {
-            for (int col = 0; col < GameConfig.GRID_COLS; col++) {
-                Marble marble = grid.getMarble(row, col);
-                if (marble != null) {
-                    double[] pos = grid.getHexCenterWithScroll(row, col);
-                    double dx = flyingMarble.getX() - pos[0];
-                    double dy = flyingMarble.getY() - pos[1];
-                    double distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < marbleRadius * 2) {
-                        attachMarble();
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    private void attachMarble() {
-        if (flyingMarble == null) return;
-
-        // 找到最近的空位（使用滚动后的位置）
-        int bestRow = 0, bestCol = 0;
-        double minDist = Double.MAX_VALUE;
-
-        for (int row = 0; row < GameConfig.GRID_ROWS; row++) {
-            for (int col = 0; col < GameConfig.GRID_COLS; col++) {
-                if (grid.getMarble(row, col) == null) {
-                    double[] pos = grid.getHexCenterWithScroll(row, col);
-                    double dx = flyingMarble.getX() - pos[0];
-                    double dy = flyingMarble.getY() - pos[1];
-                    double dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < minDist) {
-                        minDist = dist;
-                        bestRow = row;
-                        bestCol = col;
-                    }
-                }
-            }
-        }
-
-        // 添加弹珠
-        grid.addMarble(bestRow, bestCol, flyingMarble.getColor());
-
-        // 获取刚添加的弹珠
-        Marble attached = grid.getMarble(bestRow, bestCol);
-
-        // 检查3个或以上相同颜色弹珠相邻连接
-        if (attached != null) {
-            Set<Marble> connected = grid.findConnected(attached);
-            if (connected.size() >= 3) {
-                grid.removeMarbles(connected);
-                score += connected.size() * 10;
-                // 消除后检查孤立弹珠（悬空掉落）
-                checkFloatingMarbles();
-            }
-        }
-
-        flyingMarble = null;
-        shooter.clearFlyingMarble();
-
-        // 每发射1个球下降1/5行（五分之一行）
-        shootCount++;
-        double descentPerShot = rowHeight / SHOOTS_PER_ROW;
-        targetScrollOffset += descentPerShot;
-
-        // 启动滚动动画
-        if (!isScrollAnimating) {
-            isScrollAnimating = true;
-            scrollAnimStartTime = System.currentTimeMillis();
-        }
-
-        // 检查是否需要生成新行
-        checkAndGenerateNewRow();
-
-        // 满5次发射后重置计数
-        if (shootCount >= SHOOTS_PER_ROW) {
-            shootCount = 0;
-        }
-    }
-
-    /**
-     * 检查是否需要生成新行（当弹珠滚动到顶部时）
-     */
-    private void checkAndGenerateNewRow() {
-        // 如果滚动偏移超过一行高度，生成新行并重置偏移
-        if (targetScrollOffset >= rowHeight) {
-            targetScrollOffset -= rowHeight;
-            currentScrollOffset = targetScrollOffset;
-            // 将所有弹珠向下移动一行（在网格内）
-            shiftMarblesDown();
-        }
-    }
-
-    /**
-     * 将所有弹珠向下移动一行（保持弹珠引用不变）
-     */
-    private void shiftMarblesDown() {
-        // 从底部第二行开始，将弹珠向下移动一行
-        for (int row = GameConfig.GRID_ROWS - 2; row >= 0; row--) {
-            for (int col = 0; col < GameConfig.GRID_COLS; col++) {
-                Marble marble = grid.getMarble(row, col);
-                if (marble != null) {
-                    // 移除原位置的弹珠
-                    grid.removeMarble(row, col);
-                    // 在新位置放置同一个弹珠对象
-                    grid.placeMarble(row + 1, col, marble);
-                }
-            }
-        }
-        // 在顶部生成新行
-        for (int col = 0; col < GameConfig.GRID_COLS; col++) {
-            MarbleColor randomColor = MarbleColor.values()[(int)(Math.random() * 4)];
-            grid.addMarble(0, col, randomColor);
-        }
-    }
-
-    /**
-     * 获取当前像素级滚动偏移
-     */
-    public double getPixelScrollOffset() {
-        return currentScrollOffset;
-    }
-
-    /**
-     * 检查孤立弹珠（不与顶部相连的弹珠），使其坠落并计分
-     */
-    private void checkFloatingMarbles() {
-        Set<Marble> connected = grid.findAllConnectedFromTop();
-        Set<Marble> allMarbles = grid.getAllMarbles();
-        // 找出孤立的弹珠
-        for (Marble m : allMarbles) {
-            if (!connected.contains(m)) {
-                m.startFalling();
-            }
-        }
-    }
-
-    @Override
-    public void paint(Graphics g) {
-        if (buffer != null) {
-            g.drawImage(buffer, 0, 0, this);
-        }
-    }
-
-    @Override
-    public void update(Graphics g) {
-        paint(g);
-    }
-
-    public void render() {
-        Graphics2D g = buffer.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // 背景色
-        g.setColor(new Color(30, 30, 50));
-        g.fillRect(0, 0, GameConfig.SCENE_WIDTH, GameConfig.SCENE_HEIGHT);
-
-        switch (state) {
-            case MENU -> renderMenu(g);
-            case PLAYING, PAUSED -> {
-                renderGame(g);
-                if (state == GameState.PAUSED) renderPaused(g);
-            }
-            case GAME_OVER -> {
-                renderGame(g);
-                renderGameOver(g);
-            }
-        }
-
-        g.dispose();
-
-        Graphics screen = getGraphics();
-        if (screen != null) {
-            screen.drawImage(buffer, 0, 0, null);
-            screen.dispose();
-        }
-    }
-
-    private void renderMenu(Graphics2D g) {
-        g.setColor(Color.CYAN);
-        g.setFont(new Font("Arial", Font.BOLD, 42));
-        String title = "MARBLE GAME";
-        g.drawString(title, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(title)) / 2, 180);
-
-        g.setColor(Color.YELLOW);
-        g.setFont(new Font("Arial", Font.PLAIN, 18));
-        String subtitle = "Bubble Shooter";
-        g.drawString(subtitle, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(subtitle)) / 2, 220);
-
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 22));
-        String start = "Click to Start";
-        g.drawString(start, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(start)) / 2, 320);
-
-        g.setColor(Color.GRAY);
-        g.setFont(new Font("Arial", Font.PLAIN, 12));
-        g.drawString("High Score: " + highScore, GameConfig.SCENE_WIDTH / 2 - 40, 370);
-
-        g.drawString("SPACE to shoot | Match 3+ colors", GameConfig.SCENE_WIDTH / 2 - 90, 420);
-        g.drawString("Every 5 shots - marbles push down!", GameConfig.SCENE_WIDTH / 2 - 100, 450);
-    }
-
-    private void renderGame(Graphics2D g) {
-        // 网格区域背景
-        g.setColor(new Color(20, 20, 40));
-        g.fillRect(0, GameConfig.GRID_OFFSET_Y, GameConfig.SCENE_WIDTH,
-                   GameConfig.SCENE_HEIGHT - GameConfig.GRID_OFFSET_Y);
-
-        // 绘制危险线（弹珠触底判定线）
-        g.setColor(new Color(255, 50, 50, 100));
-        int dangerY = (int)(GameConfig.SHOOTER_Y - 40);
-        g.drawLine(0, dangerY, GameConfig.SCENE_WIDTH, dangerY);
-
-        // 绘制蜂窝状六边形网格背景（边边相连）
-        grid.renderHoneycombBackground(g);
-
-        // 绘制弹珠网格
-        grid.render(g);
-
-        // 绘制飞行弹珠
-        if (flyingMarble != null) {
-            flyingMarble.render(g);
-        }
-
-        // 绘制发射器（炮台）
-        shooter.render(g);
-
-        // 绘制HUD
-        renderHUD(g);
-    }
-
-    private void renderHUD(Graphics2D g) {
-        // 顶部状态栏
-        g.setColor(new Color(15, 15, 30));
-        g.fillRect(0, 0, GameConfig.SCENE_WIDTH, GameConfig.GRID_OFFSET_Y);
-
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 14));
-        g.drawString("Score: " + score, 10, 18);
-
-        g.setColor(Color.CYAN);
-        g.drawString("Best: " + highScore, GameConfig.SCENE_WIDTH - 70, 18);
-
-        g.setColor(Color.YELLOW);
-        g.setFont(new Font("Arial", Font.PLAIN, 10));
-        g.drawString("SPACE-Shoot", GameConfig.SCENE_WIDTH / 2 - 35, 18);
-
-        // 发射计数指示器
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.PLAIN, 9));
-        String shotsLeft = SHOOTS_PER_ROW - shootCount + "";
-        g.drawString("[" + shotsLeft + "]", GameConfig.SCENE_WIDTH / 2 + 40, 18);
-    }
-
-    private void renderPaused(Graphics2D g) {
-        g.setColor(new Color(0, 0, 0, 150));
-        g.fillRect(0, 0, GameConfig.SCENE_WIDTH, GameConfig.SCENE_HEIGHT);
-        g.setColor(Color.YELLOW);
-        g.setFont(new Font("Arial", Font.BOLD, 42));
-        String text = "PAUSED";
-        g.drawString(text, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(text)) / 2,
-                     GameConfig.SCENE_HEIGHT / 2);
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.PLAIN, 16));
-        String resume = "Press P to Resume";
-        g.drawString(resume, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(resume)) / 2,
-                     GameConfig.SCENE_HEIGHT / 2 + 45);
-    }
-
-    private void renderGameOver(Graphics2D g) {
-        g.setColor(new Color(0, 0, 0, 220));
-        g.fillRect(0, 0, GameConfig.SCENE_WIDTH, GameConfig.SCENE_HEIGHT);
-        g.setColor(Color.RED);
-        g.setFont(new Font("Arial", Font.BOLD, 42));
-        String go = "GAME OVER";
-        g.drawString(go, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(go)) / 2, 180);
-
-        g.setColor(Color.YELLOW);
-        g.setFont(new Font("Arial", Font.BOLD, 24));
-        String scoreStr = "Score: " + score;
-        g.drawString(scoreStr, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(scoreStr)) / 2, 240);
-
-        if (score >= highScore && score > 0) {
-            g.setColor(Color.GREEN);
-            g.setFont(new Font("Arial", Font.BOLD, 18));
-            String newBest = "NEW HIGH SCORE!";
-            g.drawString(newBest, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(newBest)) / 2, 285);
-        }
-
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.PLAIN, 16));
-        String restart = "Click to Play Again";
-        g.drawString(restart, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(restart)) / 2, 360);
-
-        g.setColor(Color.CYAN);
-        String menu = "ESC - Menu";
-        g.drawString(menu, (GameConfig.SCENE_WIDTH - g.getFontMetrics().stringWidth(menu)) / 2, 400);
-    }
-
-    // 键盘事件
-    @Override
-    public void keyPressed(KeyEvent e) {
-        int keyCode = e.getKeyCode();
-        switch (state) {
-            case MENU -> {
-                if (keyCode == KeyEvent.VK_ESCAPE) System.exit(0);
-            }
-            case PLAYING -> {
-                if (keyCode == KeyEvent.VK_SPACE) {
-                    // 空格发射弹珠
-                    if (flyingMarble == null && !shooter.hasFlyingMarble()) {
-                        flyingMarble = shooter.shoot();
-                    }
-                } else if (keyCode == KeyEvent.VK_P) {
-                    state = GameState.PAUSED;
-                    render();
-                } else if (keyCode == KeyEvent.VK_ESCAPE) {
-                    state = GameState.MENU;
-                    gameRunning = false;
-                    render();
-                }
-            }
-            case PAUSED -> {
-                if (keyCode == KeyEvent.VK_P) {
-                    state = GameState.PLAYING;
-                    render();
-                } else if (keyCode == KeyEvent.VK_ESCAPE) {
-                    state = GameState.MENU;
-                    gameRunning = false;
-                    render();
-                }
-            }
-            case GAME_OVER -> {
-                if (keyCode == KeyEvent.VK_ESCAPE) {
-                    state = GameState.MENU;
-                    render();
-                }
-            }
-        }
-    }
-
-    // 鼠标事件 - 全窗口范围
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        mouseX = e.getX();
-        mouseY = e.getY();
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        if (state == GameState.MENU) {
-            startGame();
-        } else if (state == GameState.GAME_OVER) {
-            restartGame();
-        } else if (state == GameState.PLAYING) {
-            // 左键单击发射弹珠
-            if (e.getButton() == MouseEvent.BUTTON1 && flyingMarble == null && !shooter.hasFlyingMarble()) {
-                flyingMarble = shooter.shoot();
-            }
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {}
-    @Override
-    public void keyTyped(KeyEvent e) {}
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        mouseX = e.getX();
-        mouseY = e.getY();
-    }
-    @Override
-    public void mouseEntered(MouseEvent e) {}
-    @Override
-    public void mouseExited(MouseEvent e) {}
-    @Override
-    public void mousePressed(MouseEvent e) {}
-    @Override
-    public void mouseReleased(MouseEvent e) {}
-
-    public void stopGame() {
-        gameRunning = false;
-        if (gameThread != null) {
-            gameThread.interrupt();
-        }
-    }
+import java.awt.*;
+import java.awt.geom.*;
+
+import javax.swing.*;
+
+import java.awt.event.*;
+import java.awt.image.*;
+import java.io.*;
+
+import java.util.Stack;
+import java.util.Random;
+
+import javax.imageio.*;
+import javax.sound.sampled.*;
+
+public abstract class GameEngine implements KeyListener, MouseListener, MouseMotionListener {
+	//-------------------------------------------------------
+	// Game Engine Frame and Panel
+	//-------------------------------------------------------
+	JFrame mFrame;
+	GamePanel mPanel;
+	int mWidth, mHeight;
+	Graphics2D mGraphics;
+	boolean initialised = false;
+
+	//-------------------------------------------------------
+	// Time-Related functions
+	//-------------------------------------------------------
+
+	// Returns the time in milliseconds
+	public long getTime() {
+		// Get the current time from the system
+		return System.currentTimeMillis();
+	}
+
+	// Waits for ms milliseconds
+	public void sleep(double ms) {
+		try {
+			// Sleep
+			Thread.sleep((long)ms);
+		} catch(Exception e) {
+			// Do Nothing
+		}
+	}
+	
+	//-------------------------------------------------------
+	// Functions to control the framerate
+	//-------------------------------------------------------
+	// Two variables to keep track of how much time has passed between frames
+	long time = 0, oldTime = 0;
+
+	// Returns the time passed since this function was last called.
+	public long measureTime() {
+		time = getTime();
+		if(oldTime == 0) {
+			oldTime = time;
+		}
+		long passed = time - oldTime;
+		oldTime = time;
+		return passed;
+	}
+
+	//-------------------------------------------------------
+	// Functions for setting up the window
+	//-------------------------------------------------------
+	// Function to create the window and display it
+	public void setupWindow(int width, int height) {
+		mFrame = new JFrame();
+		mPanel = new GamePanel();
+
+		mWidth = width;
+		mHeight = height;
+
+		mFrame.setSize(width, height);
+		mFrame.setLocation(200,200);
+		mFrame.setTitle("Window");
+		mFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		mFrame.add(mPanel);
+		mFrame.setVisible(true);
+
+		mPanel.setDoubleBuffered(true);
+		mPanel.addMouseListener(this);
+		mPanel.addMouseMotionListener(this);
+
+		// Register a key event dispatcher to get a turn in handling all
+		// key events, independent of which component currently has the focus
+		KeyboardFocusManager.getCurrentKeyboardFocusManager()
+				.addKeyEventDispatcher(new KeyEventDispatcher() {
+					@Override
+					public boolean dispatchKeyEvent(KeyEvent e) {
+						switch (e.getID()) {
+						case KeyEvent.KEY_PRESSED:
+							GameEngine.this.keyPressed(e);
+							return false;
+						case KeyEvent.KEY_RELEASED:
+							GameEngine.this.keyReleased(e);
+							return false;
+						case KeyEvent.KEY_TYPED:
+							GameEngine.this.keyTyped(e);
+							return false;
+						default:
+							return false; // do not consume the event
+						}
+					}
+				});
+
+		// Resize the window (insets are just the boarders that the Operating System puts on the board)
+		Insets insets = mFrame.getInsets();
+		mFrame.setSize(width + insets.left + insets.right, height + insets.top + insets.bottom);
+	}
+
+	public void setWindowSize(final int width, final int height) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				// Resize the window (insets are just the boarders that the Operating System puts on the board)
+				Insets insets = mFrame.getInsets();
+				mWidth = width;
+				mHeight = height;
+				mFrame.setSize(width + insets.left + insets.right, height + insets.top + insets.bottom);
+				mPanel.setSize(width, height);
+			}
+		});
+	}
+
+	// Return the width of the window
+	public int width() {
+		return mWidth;
+	}
+
+	// Return the height of the window
+	public int height() {
+		return mHeight;
+	}
+
+	//-------------------------------------------------------
+	// Main Game function
+	//-------------------------------------------------------
+
+	// GameEngine Constructor
+	public GameEngine() {
+		// Create graphics transform stack
+		mTransforms = new Stack<AffineTransform>();
+
+		// Set default width, height
+		mWidth = 500;
+		mHeight = 500;
+
+	}
+
+	// Create Game Function
+	public static void createGame(GameEngine game, int framerate) {
+		// Initialise Game
+		game.init();
+
+		// Start the Game
+		game.gameLoop(framerate);
+	}
+
+	public static void createGame(GameEngine game) {
+		// Call CreateGame
+		createGame(game, 30);
+	}
+
+	// Game Timer
+	protected class GameTimer extends Timer {
+		private static final long serialVersionUID = 1L;
+		private int framerate;
+		
+		protected GameTimer(int framerate, ActionListener listener) {
+			super(1000/framerate, listener);
+			this.framerate = framerate;
+		}
+		
+		protected void setFramerate(int framerate) {
+			if (framerate < 1) framerate = 1;
+			this.framerate = framerate;
+
+			int delay = 1000 / framerate;
+			setInitialDelay(0);
+			setDelay(delay);
+		}
+		
+		protected int getFramerate() {
+			return framerate;
+		}
+	}
+	
+	// Main Loop of the game. Runs continuously
+	// and calls all the updates of the game and
+	// tells the game to display a new frame.
+	GameTimer timer = new GameTimer(30, new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// Determine the time step
+			double passedTime = measureTime();
+			double dt = passedTime / 1000.;
+
+			// Update the Game
+			update(dt);
+
+			// Tell the Game to draw
+			mPanel.repaint();
+		}
+	});
+
+	// The GameEngine main Panel
+	protected class GamePanel extends JPanel {
+		private static final long serialVersionUID = 1L;
+
+		// This gets called any time the Operating System
+		// tells the program to paint itself
+		public void paintComponent(Graphics graphics) {
+			// Get the graphics object
+			mGraphics = (Graphics2D)graphics;
+
+			// Reset all transforms
+			mTransforms.clear();
+			mTransforms.push(mGraphics.getTransform());
+
+			// Rendering settings
+			mGraphics.setRenderingHints(new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON));
+
+			// Paint the game
+			if (initialised) {
+				GameEngine.this.paintComponent();
+			}
+		}
+	}
+
+	// Initialises and starts the game loop with the given framerate.
+	public void gameLoop(int framerate) {
+		initialised = true; // assume init has been called or won't be called
+
+		timer.setFramerate(framerate);
+		timer.setRepeats(true);
+
+		// Main loop runs until program is closed
+		timer.start();
+	}
+
+	//-------------------------------------------------------
+	// Initialise function
+	//-------------------------------------------------------
+	public void init() {}
+
+	//-------------------------------------------------------
+	// Update function
+	//-------------------------------------------------------
+	public abstract void update(double dt);
+
+	//-------------------------------------------------------
+	// Paint function
+	//-------------------------------------------------------
+	public abstract void paintComponent();
+
+	//-------------------------------------------------------
+	// Keyboard functions
+	//-------------------------------------------------------
+
+	// Called whenever a key is pressed
+	public void keyPressed(KeyEvent event) {}
+
+	// Called whenever a key is released
+	public void keyReleased(KeyEvent event) {}
+	
+	// Called whenever a key is pressed and immediately released
+	public void keyTyped(KeyEvent event) {}
+	
+	//-------------------------------------------------------
+	// Mouse functions
+	//-------------------------------------------------------
+	
+	// Called whenever a mouse button is clicked
+	// (pressed and released in the same position)
+	public void mouseClicked(MouseEvent event) {}
+
+	// Called whenever a mouse button is pressed
+	public void mousePressed(MouseEvent event) {}
+
+	// Called whenever a mouse button is released
+	public void mouseReleased(MouseEvent event) {}
+
+	// Called whenever the mouse cursor enters the game panel
+	public void mouseEntered(MouseEvent event) {}
+
+	// Called whenever the mouse cursor leaves the game panel
+	public void mouseExited(MouseEvent event) {}
+
+	// Called whenever the mouse is moved
+	public void mouseMoved(MouseEvent event) {}
+
+	// Called whenever the mouse is moved with the mouse button held down
+	public void mouseDragged(MouseEvent event) {}
+
+	//-------------------------------------------------------
+	// Graphics Functions
+	//-------------------------------------------------------
+
+	// My Definition of some colors
+	Color black = Color.BLACK;
+	Color orange = Color.ORANGE;
+	Color pink = Color.PINK;
+	Color red = Color.RED;
+	Color purple = new Color(128, 0, 128);
+	Color blue = Color.BLUE;
+	Color green = Color.GREEN;
+	Color yellow = Color.YELLOW;
+	Color white = Color.WHITE;
+
+	// Changes the background Color to the color c
+	public void changeBackgroundColor(Color c) {
+		// Set background colour
+		mGraphics.setBackground(c);
+	}
+
+	// Changes the background Color to the color (red,green,blue)
+	public void changeBackgroundColor(int red, int green, int blue) {
+		// Clamp values
+		if(red < 0)   {red = 0;}
+		if(red > 255) {red = 255;}
+		
+		if(green < 0)   {green = 0;}
+		if(green > 255) {green = 255;}
+
+		if(blue < 0)   {blue = 0;}
+		if(blue > 255) {blue = 255;}
+
+		// Set background colour
+		mGraphics.setBackground(new Color(red,green,blue));
+	}
+
+	// Clears the background, makes the whole window whatever the background color is
+	public void clearBackground(int width, int height) {
+		// Clear background
+		mGraphics.clearRect(0, 0, width, height);
+	}
+
+	// Changes the drawing Color to the color c
+	public void changeColor(Color c) {
+		// Set colour
+		mGraphics.setColor(c);
+	}
+
+	// Changes the drawing Color to the color (red,green,blue)
+	public void changeColor(int red, int green, int blue) {
+		// Clamp values
+		if(red < 0)   {red = 0;}
+		if(red > 255) {red = 255;}
+		
+		if(green < 0)   {green = 0;}
+		if(green > 255) {green = 255;}
+
+		if(blue < 0)   {blue = 0;}
+		if(blue > 255) {blue = 255;}
+
+		// Set colour
+		mGraphics.setColor(new Color(red,green,blue));
+	}
+
+	// Draws a line from (x1,y2) to (x2,y2)
+	void drawLine(double x1, double y1, double x2, double y2) {
+		// Draw a Line
+		mGraphics.draw(new Line2D.Double(x1, y1, x2, y2));
+	}
+
+	// Draws a line from (x1,y2) to (x2,y2) with width l
+	void drawLine(double x1, double y1, double x2, double y2, double l) {
+		// Set the stroke
+		mGraphics.setStroke(new BasicStroke((float)l));
+
+		// Draw a Line
+		mGraphics.draw(new Line2D.Double(x1, y1, x2, y2));
+
+		// Reset the stroke
+		mGraphics.setStroke(new BasicStroke(1.0f));
+	}
+
+	// This function draws a rectangle at (x,y) with width and height (w,h)
+	void drawRectangle(double x, double y, double w, double h) {
+		// Draw a Rectangle
+		mGraphics.draw(new Rectangle2D.Double(x, y, w, h));
+	}
+
+	// This function draws a rectangle at (x,y) with width and height (w,h)
+	// with a line of width l
+	void drawRectangle(double x, double y, double w, double h, double l) {
+		// Set the stroke
+		mGraphics.setStroke(new BasicStroke((float)l));
+
+		// Draw a Rectangle
+		mGraphics.draw(new Rectangle2D.Double(x, y, w, h));
+
+		// Reset the stroke
+		mGraphics.setStroke(new BasicStroke(1.0f));
+	}
+
+	// This function fills in a rectangle at (x,y) with width and height (w,h)
+	void drawSolidRectangle(double x, double y, double w, double h) {
+		// Fill a Rectangle
+		mGraphics.fill(new Rectangle2D.Double(x, y, w, h));
+	}
+
+	// This function draws a circle at (x,y) with radius
+	void drawCircle(double x, double y, double radius) {
+		// Draw a Circle
+		mGraphics.draw(new Ellipse2D.Double(x-radius, y-radius, radius*2, radius*2));
+	}
+
+	// This function draws a circle at (x,y) with radius
+	// with a line of width l
+	void drawCircle(double x, double y, double radius, double l) {
+		// Set the stroke
+		mGraphics.setStroke(new BasicStroke((float)l));
+
+		// Draw a Circle
+		mGraphics.draw(new Ellipse2D.Double(x-radius, y-radius, radius*2, radius*2));
+
+		// Reset the stroke
+		mGraphics.setStroke(new BasicStroke(1.0f));
+	}
+
+	// This function draws a circle at (x,y) with radius
+	void drawSolidCircle(double x, double y, double radius) {
+		// Fill a Circle
+		mGraphics.fill(new Ellipse2D.Double(x-radius, y-radius, radius*2, radius*2));
+	}
+
+	// This function draws text on the screen at (x,y)
+	public void drawText(double x, double y, String s) {
+		// Draw text on the screen
+		mGraphics.setFont(new Font("Arial", Font.PLAIN, 40));
+		mGraphics.drawString(s, (int)x, (int)y);
+	}
+
+	// This function draws bold text on the screen at (x,y)
+	public void drawBoldText(double x, double y, String s) {
+		// Draw text on the screen
+		mGraphics.setFont(new Font("Arial", Font.BOLD, 40));
+		mGraphics.drawString(s, (int)x, (int)y);
+	}
+
+	// This function draws text on the screen at (x,y)
+	// with Font (font,size)
+	public void drawText(double x, double y, String s, String font, int size) {
+		// Draw text on the screen
+		mGraphics.setFont(new Font(font, Font.PLAIN, size));
+		mGraphics.drawString(s, (int)x, (int)y);
+	}
+
+	// This function draws bold text on the screen at (x,y)
+	// with Font (font,size)
+	public void drawBoldText(double x, double y, String s, String font, int size) {
+		// Draw text on the screen
+		mGraphics.setFont(new Font(font, Font.BOLD, size));
+		mGraphics.drawString(s, (int)x, (int)y);
+	}
+
+	//-------------------------------------------------------
+	// Image Functions
+	//-------------------------------------------------------
+
+	// Loads an image from file
+	public Image loadImage(String filename) {
+		try {
+			// Load Image
+			Image image = ImageIO.read(new File(filename));
+
+			// Return Image
+			return image;
+		} catch (IOException e) {
+			// Show Error Message
+			System.out.println("Error: could not load image " + filename);
+			System.exit(1);
+		}
+
+		// Return null
+		return null;
+	}
+
+	// Loads a sub-image out of an image
+	public Image subImage(Image source, int x, int y, int w, int h) {
+		// Check if image is null
+		if(source == null) {
+			// Print Error message
+			System.out.println("Error: cannot extract a subImage from a null image.\n");
+
+			// Return null
+			return null;
+		}
+
+		// Convert to a buffered image
+		BufferedImage buffered = (BufferedImage)source;
+
+		// Extract sub image
+		Image image = buffered.getSubimage(x, y, w, h);
+
+		// Return image
+		return image;
+	}
+
+	// Draws an image on the screen at position (x,y)
+	public void drawImage(Image image, double x, double y) {
+		// Check if image is null
+		if(image == null) {
+			// Print Error message
+			System.out.println("Error: cannot draw null image.\n");
+			return;
+		}
+
+		// Draw image on screen at (x,y)
+		mGraphics.drawImage(image, (int)x, (int)y, null);
+	}
+
+	// Draws an image on the screen at position (x,y)
+	public void drawImage(Image image, double x, double y, double w, double h) {
+		// Check if image is null
+		if(image == null) {
+			// Print Error message
+			System.out.println("Error: cannot draw null image.\n");
+			return;
+		}
+		// Draw image on screen at (x,y) with size (w,h)
+		mGraphics.drawImage(image, (int)x, (int)y, (int)w, (int)h, null);
+	}
+
+	//-------------------------------------------------------
+	// Transform Functions
+	//-------------------------------------------------------
+
+	// Stack of transforms
+	Stack<AffineTransform> mTransforms;
+
+	// Save the current transform
+	public void saveCurrentTransform() {
+		// Push transform onto the stack
+		mTransforms.push(mGraphics.getTransform());
+	}
+
+	// Restores the last transform
+	public void restoreLastTransform() {
+		// Set current transform to the top of the stack.
+		mGraphics.setTransform(mTransforms.peek());
+
+		// If there is more than one transform on the stack
+		if(mTransforms.size() > 1) {
+			// Pop a transform off the stack
+			mTransforms.pop();
+		}
+	}
+
+	// This function translates the drawing context by (x,y)
+	void translate(double x, double y) {
+		// Translate the drawing context
+		mGraphics.translate(x,y);
+	}
+
+	// This function rotates the drawing context by a degrees
+	void rotate(double a) {
+		// Rotate the drawing context
+		mGraphics.rotate(Math.toRadians(a));
+	}
+
+	// This function scales the drawing context by (x,y)
+	void scale(double x, double y) {
+		// Scale the drawing context
+		mGraphics.scale(x, y);
+	}
+
+	// This function shears the drawing context by (x,y)
+	void shear(double x, double y) {
+		// Shear the drawing context
+		mGraphics.shear(x, y);
+	}
+
+	//-------------------------------------------------------
+	// Sound Functions
+	//-------------------------------------------------------
+
+	// Class used to store an audio clip
+	public class AudioClip {
+		// Format
+		AudioFormat mFormat;
+
+		// Audio Data
+		byte[] mData;
+
+		// Buffer Length
+		long mLength;
+
+		// Loop Clip
+		Clip mLoopClip;
+
+		public Clip getLoopClip() {
+			// return mLoopClip
+			return mLoopClip;
+		}
+
+		public void setLoopClip(Clip clip) {
+			// Set mLoopClip to clip
+			mLoopClip = clip;
+		}
+
+		public AudioFormat getAudioFormat() {
+			// Return mFormat
+			return mFormat;
+		}
+
+		public byte[] getData() {
+			// Return mData
+			return mData;
+		}
+
+		public long getBufferSize() {
+			// Return mLength
+			return mLength;
+		}
+
+		public AudioClip(AudioInputStream stream) {
+			// Get Format
+			mFormat = stream.getFormat();
+
+			// Get length (in Frames)
+			mLength = stream.getFrameLength() * mFormat.getFrameSize();
+
+			// Allocate Buffer Data
+			mData = new byte[(int)mLength];
+
+			try {
+				// Read data
+				stream.read(mData);
+			} catch(Exception exception) {
+				// Print Error
+				System.out.println("Error reading Audio File\n");
+
+				// Exit
+				System.exit(1);
+			}
+
+			// Set LoopClip to null
+			mLoopClip = null;
+		}
+	}
+
+	// Loads the AudioClip stored in the file specified by filename
+	public AudioClip loadAudio(String filename) {
+		try {
+			// Open File
+			File file = new File(filename);
+
+			// Open Audio Input Stream
+			AudioInputStream audio = AudioSystem.getAudioInputStream(file);
+
+			// Create Audio Clip
+			AudioClip clip = new AudioClip(audio);
+
+			// Return Audio Clip
+			return clip;
+		} catch(Exception e) {
+			// Catch Exception
+			System.out.println("Error: cannot open Audio File " + filename + "\n");
+		}
+
+		// Return Null
+		return null;
+	}
+
+	// Plays an AudioClip
+	public void playAudio(AudioClip audioClip) {
+		// Check audioClip for null
+		if(audioClip == null) {
+			// Print error message
+			System.out.println("Error: audioClip is null\n");
+
+			// Return
+			return;
+		}
+
+		try {
+			// Create a Clip
+			Clip clip = AudioSystem.getClip();
+
+			// Load data
+			clip.open(audioClip.getAudioFormat(), audioClip.getData(), 0, (int)audioClip.getBufferSize());
+
+			// Play Clip
+			clip.start();
+		} catch(Exception exception) {
+			// Display Error Message
+			System.out.println("Error playing Audio Clip\n");
+		}
+	}
+
+	// Plays an AudioClip with a volume in decibels
+	public void playAudio(AudioClip audioClip, float volume) {
+		// Check audioClip for null
+		if(audioClip == null) {
+			// Print error message
+			System.out.println("Error: audioClip is null\n");
+
+			// Return
+			return;
+		}
+
+		try {
+			// Create a Clip
+			Clip clip = AudioSystem.getClip();
+
+			// Load data
+			clip.open(audioClip.getAudioFormat(), audioClip.getData(), 0, (int)audioClip.getBufferSize());
+
+			// Create Controls
+			FloatControl control = (FloatControl)clip.getControl(FloatControl.Type.MASTER_GAIN);
+
+			// Set Volume
+			control.setValue(volume);
+
+			// Play Clip
+			clip.start();
+		} catch(Exception exception) {
+			// Display Error Message
+			System.out.println("Error: could not play Audio Clip\n");
+		}
+	}
+
+	// Starts playing an AudioClip on loop
+	public void startAudioLoop(AudioClip audioClip) {
+		// Check audioClip for null
+		if(audioClip == null) {
+			// Print error message
+			System.out.println("Error: audioClip is null\n");
+
+			// Return
+			return;
+		}
+
+		// Get Loop Clip
+		Clip clip = audioClip.getLoopClip();
+
+		// Create Loop Clip if necessary
+		if(clip == null) {
+			try {
+				// Create a Clip
+				clip = AudioSystem.getClip();
+
+				// Load data
+				clip.open(audioClip.getAudioFormat(), audioClip.getData(), 0, (int)audioClip.getBufferSize());
+
+				// Set Clip to Loop
+				clip.loop(Clip.LOOP_CONTINUOUSLY);
+
+				// Set Loop Clip
+				audioClip.setLoopClip(clip);
+			} catch(Exception exception) {
+				// Display Error Message
+				System.out.println("Error: could not play Audio Clip\n");
+			}
+		}
+
+		// Set Frame Position to 0
+		clip.setFramePosition(0);
+
+		// Start Audio Clip playing
+		clip.start();
+	}
+
+	// Starts playing an AudioClip on loop with a volume in decibels
+	public void startAudioLoop(AudioClip audioClip, float volume) {
+		// Check audioClip for null
+		if(audioClip == null) {
+			// Print error message
+			System.out.println("Error: audioClip is null\n");
+
+			// Return
+			return;
+		}
+
+		// Get Loop Clip
+		Clip clip = audioClip.getLoopClip();
+
+		// Create Loop Clip if necessary
+		if(clip == null) {
+			try {
+				// Create a Clip
+				clip = AudioSystem.getClip();
+
+				// Load data
+				clip.open(audioClip.getAudioFormat(), audioClip.getData(), 0, (int)audioClip.getBufferSize());
+
+				// Create Controls
+				FloatControl control = (FloatControl)clip.getControl(FloatControl.Type.MASTER_GAIN);
+
+				// Set Volume
+				control.setValue(volume);
+
+				// Set Clip to Loop
+				clip.loop(Clip.LOOP_CONTINUOUSLY);
+
+				// Set Loop Clip
+				audioClip.setLoopClip(clip);
+			} catch(Exception exception) {
+				// Display Error Message
+				System.out.println("Error: could not play Audio Clip\n");
+			}
+		}
+
+		// Set Frame Position to 0
+		clip.setFramePosition(0);
+
+		// Start Audio Clip playing
+		clip.start();
+	}
+
+	// Stops an AudioClip playing
+	public void stopAudioLoop(AudioClip audioClip) {
+		// Get Loop Clip
+		Clip clip = audioClip.getLoopClip();
+
+		// Check clip is not null
+		if(clip != null){
+			// Stop Clip playing
+			clip.stop();
+		}
+	}
+
+	//-------------------------------------------------------
+	// Maths Functions
+	//-------------------------------------------------------
+	Random mRandom = null;
+
+	// Function that returns a random integer between 0 and max
+	public int rand(int max) {
+		// Check if mRandom Exists
+		if(mRandom == null) {
+			// Create a new Random Object
+			mRandom = new Random();
+		}
+
+		// Generate a random number
+		double d = mRandom.nextDouble();
+		
+		// Convert to an integer in range [0, max) and return
+		return (int)(d*max);
+	}
+
+	// Function that gives you a random number between 0 and max
+	public float rand(float max) {
+		// Check if mRandom Exists
+		if(mRandom == null) {
+			// Create a new Random Object
+			mRandom = new Random();
+		}
+
+		// Generate a random number
+		float d = mRandom.nextFloat();
+		
+		// Convert to range [0, max) and return
+		return d*max;
+	}
+
+	// Function that gives you a random number between 0 and max
+	public double rand(double max) {
+		// Check if mRandom Exists
+		if(mRandom == null) {
+			// Create a new Random Object
+			mRandom = new Random();
+		}
+
+		// Generate a random number
+		double value = mRandom.nextDouble();
+		
+		// Convert to range [0, max) and return
+		return value*max;
+	}
+
+	// Returns the largest integer that is less than or equal
+	// to the argument value.
+	public int floor(double value) {
+		// Calculate and return floor
+		return (int)Math.floor(value);
+	}
+
+	// Returns the smallest integer that is greater than or equal
+	// to the argument value.
+	public int ceil(double value){
+		// Calculate and return ceil
+		return (int)Math.ceil(value);
+	}
+
+	// Rounds the argument value to the closest integer.
+	public int round(double value) {
+		// Calculate and return round
+		return (int)Math.round(value);
+	}
+
+	// Returns the square root of the parameter
+	public double sqrt(double value) {
+		// Calculate and return the sqrt
+		return Math.sqrt(value);
+	}
+
+	// Returns the length of a vector
+	public double length(double x, double y) {
+		// Calculate and return the sqrt
+		return Math.sqrt(x*x + y*y);
+	}
+
+	// Returns the distance between two points (x1,y1) and (x2,y2)
+	public double distance(double x1, double y1, double x2, double y2) {
+		// Calculate and return the distance
+		return Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+	}
+
+	// Converts an angle in radians to degrees
+	public double toDegrees(double radians) {
+		// Calculate and return the degrees
+		return Math.toDegrees(radians);
+	}
+
+	// Converts an angle in degrees to radians
+	public double toRadians(double degrees) {
+		// Calculate and return the radians
+		return Math.toRadians(degrees);
+	}
+
+	// Returns the absolute value of the parameter
+	public int abs(int value) {
+		// Calculate and return abs
+		return Math.abs(value);
+	}
+
+	// Returns the absolute value of the parameter
+	public float abs(float value) {
+		// Calculate and return abs
+		return Math.abs(value);
+	}
+
+	// Returns the absolute value of the parameter
+	public double abs(double value) {
+		// Calculate and return abs
+		return Math.abs(value);
+	}
+
+	// Returns the cos of value
+	public double cos(double value) {
+		// Calculate and return cos
+		return Math.cos(Math.toRadians(value));
+	}
+
+	// Returns the acos of value
+	public double acos(double value) {
+		// Calculate and return acos
+		return Math.toDegrees(Math.acos(value));
+	}
+
+	// Returns the sin of value
+	public double sin(double value) {
+		// Calculate and return sin
+		return Math.sin(Math.toRadians(value));
+	}
+
+	// Returns the asin of value
+	public double asin(double value) {
+		// Calculate and return asin
+		return Math.toDegrees(Math.asin(value));
+	}
+
+	// Returns the tan of value
+	public double tan(double value) {
+		// Calculate and return tan
+		return Math.tan(Math.toRadians(value));
+	}
+	// Returns the atan of value
+	public double atan(double value) {
+		// Calculate and return atan
+		return Math.toDegrees(Math.atan(value));
+	}
+	// Returns the atan2 of value
+	public double atan2(double x, double y) {
+		// Calculate and return atan2
+		return Math.toDegrees(Math.atan2(x,y));
+	}
 }

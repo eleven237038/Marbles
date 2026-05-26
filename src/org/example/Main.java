@@ -1,24 +1,732 @@
-package org.example;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import javax.swing.*;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+import java.awt.geom.RoundRectangle2D;
+import java.awt.LinearGradientPaint;
+import java.util.Random;
 
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 
-// 游戏主入口
-public class Main {
+public class Main extends GameEngine implements StartMenu.StartMenuListener {
+    private Marbles hexGrid;
+    private LaunchPad launchPad;
+    private LaunchMarble launchMarble;
+    private double mouseX = 0;
+    private double mouseY = 0;
+    private CardLayout cardLayout;
+    private JPanel mainPanel;
+    private boolean gameStarted = false;
+    private boolean frozen = false;
+    private double deadline;
+    private Random random = new Random();
+    private StartMenu startMenu; // 保存菜单引用用于销毁 Timer
+    private GameState gameState = GameState.MENU;
+    
+
+    private int score = 0;
+
+    private int currentLevel = 1;
+
+    private BufferedImage restartButtonImg;
+    private BufferedImage menuButtonImg;
+    private BufferedImage nextButtonImg;
+
+    private Rectangle restartButton;
+    private Rectangle menuButton;
+    private Rectangle nextButton;
+    // 窗口尺寸
+    private static final int WINDOW_WIDTH = 1080;
+
+    // 暂停按钮相关
+    private BufferedImage pauseIcon;
+    private Rectangle pauseButtonBounds;
+    private boolean pauseHover = false;
+    private boolean pausePressed = false;
+    private boolean gamePaused = false;
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Marble Game - Bubble Shooter");
+            JFrame frame = new JFrame("弹珠游戏");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-            GameEngine game = new GameEngine();
-            frame.add(game);
-
-            frame.pack();
             frame.setResizable(false);
+
+            CardLayout cardLayout = new CardLayout();
+            JPanel mainPanel = new JPanel(cardLayout);
+
+            Main game = new Main(frame);
+
+            StartMenu startMenu = new StartMenu(game);
+            game.startMenu = startMenu;
+
+            // 创建居中容器
+            JPanel gameContainer = new JPanel(new GridBagLayout());
+            gameContainer.setOpaque(false);
+            gameContainer.add(game.mPanel, new GridBagConstraints());
+
+            // 开始界面直接填充窗口
+            mainPanel.add(startMenu, "menu");
+            mainPanel.add(gameContainer, "game");
+
+            frame.setContentPane(mainPanel);
+            frame.pack();
+
+            // 设置窗口为游戏界面宽度的两倍，高度适应游戏界面
+            Insets insets = frame.getInsets();
+            int targetWidth = game.mWidth * 2;
+            int targetHeight = game.mHeight + insets.top + insets.bottom;
+            frame.setSize(targetWidth, targetHeight);
+
+            // 开始界面填充整个窗口（在窗口大小设置之后）
+            startMenu.setPreferredSize(new Dimension(frame.getWidth(), frame.getHeight()));
+
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            game.start();
+            game.cardLayout = cardLayout;
+            game.mainPanel = mainPanel;
         });
+    }
+
+    public Main(JFrame frame) {
+        mFrame = frame;
+        mPanel = new GamePanel();
+        mWidth = 483;
+        mHeight = 483; // 游戏界面保持原有尺寸
+
+        mPanel.setDoubleBuffered(true);
+        mPanel.addMouseListener(this);
+        mPanel.addMouseMotionListener(this);
+        mPanel.setPreferredSize(new Dimension(mWidth, mHeight));
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .addKeyEventDispatcher(new KeyEventDispatcher() {
+                    @Override
+                    public boolean dispatchKeyEvent(KeyEvent e) {
+                        switch (e.getID()) {
+                            case KeyEvent.KEY_PRESSED:
+                                Main.this.keyPressed(e);
+                                return false;
+                            case KeyEvent.KEY_RELEASED:
+                                Main.this.keyReleased(e);
+                                return false;
+                            case KeyEvent.KEY_TYPED:
+                                Main.this.keyTyped(e);
+                                return false;
+                            default:
+                                return false;
+                        }
+                    }
+                });
+
+        // 加载pause.png精灵图
+        try {
+            File pauseFile = new File("resources/pause.png");
+            if (pauseFile.exists()) {
+                pauseIcon = ImageIO.read(pauseFile);
+            }
+        } catch (IOException e) {
+            pauseIcon = null;
+        }
+
+        // 先初始化按钮对象，位置在init中动态设置
+        pauseButtonBounds = new Rectangle(30, 0, 60, 60);
+    }
+
+    @Override
+    public void onStartGame() {
+        cardLayout.show(mainPanel, "game");
+        gameState = GameState.PLAYING;
+        if (!gameStarted) {
+            gameStarted = true;
+            // 销毁菜单里的后台 Timer
+            if (startMenu != null) {
+                startMenu.stopAnimation();
+            }
+            init();
+            gameLoop(60);
+        }
+    }
+
+    // 安全退出接口
+    @Override
+    public void onExitGame() {
+        System.exit(0);
+    }
+
+    @Override
+    public void init() {
+        initMarbleGrid();
+        // 此时 deadline 已经初始化好了，正确对齐位置
+        pauseButtonBounds.y = (int) deadline + 20;
+        try {
+
+            restartButtonImg =
+                    ImageIO.read(new File("assets/restart.png"));
+
+            menuButtonImg =
+                    ImageIO.read(new File("assets/menu.png"));
+
+            nextButtonImg =
+                    ImageIO.read(new File("assets/next.png"));
+
+        }
+        catch(IOException e) {
+
+            e.printStackTrace();
+        }
+        restartButton = new Rectangle(390, 420, 300, 90);
+
+        menuButton = new Rectangle(390, 540, 300, 90);
+
+        nextButton = new Rectangle(390, 420, 300, 90);
+    }
+
+    private void initMarbleGrid() {
+        hexGrid = new Marbles();
+        launchPad = new LaunchPad(hexGrid.getSide(), 18);
+        hexGrid.setMaxRowCount(18);
+        hexGrid.initRow(mWidth, mHeight);
+        launchPad.setCannonPosition(mWidth, mHeight);
+        deadline = launchPad.getTopY();
+
+        // 初始化：生成第一个当前弹珠和第一个下一个弹珠
+        launchMarble = new LaunchMarble();
+        launchMarble.setScreenSize(mWidth, mHeight);
+        // 使用精确的 double 位置初始化
+        launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
+
+        // 生成第一个下一个弹珠颜色
+        launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
+    }
+
+    @Override
+    public void update(double dt) {
+
+        if (frozen || gamePaused) return;
+
+        // 新增
+        if(gameState == GameState.WIN ||
+           gameState == GameState.LOSE) {
+
+            return;
+        }
+
+        if (hexGrid != null) hexGrid.update(dt);
+
+        if (launchMarble != null) launchMarble.update(dt);
+
+        checkCollisions();
+
+        collisionWithDeadline();
+
+        if(gameState == GameState.PLAYING) {
+
+            if(hexGrid.reachedDeadline(deadline)) {
+
+                gameState = GameState.LOSE;
+            }
+
+            if(hexGrid.isEmpty()) {
+
+                gameState = GameState.WIN;
+            }
+        }
+    }
+
+    private void checkCollisions() {
+        if (launchMarble == null || !launchMarble.isLaunched() || hexGrid == null) return;
+
+        double radius = hexGrid.getSide() * 0.866;
+        double collisionDist = radius * 2 - 2;
+
+        double prevX = launchMarble.getPrevCenterX();
+        double prevY = launchMarble.getPrevCenterY();
+        double currX = launchMarble.getCenterX();
+        double currY = launchMarble.getCenterY();
+
+        double dx = currX - prevX;
+        double dy = currY - prevY;
+
+        // 加大碰撞检测分步密度，减少穿模
+        int steps = (int) Math.ceil(Math.sqrt(dx * dx + dy * dy) / (radius * 0.25));
+        if (steps < 1) steps = 1;
+
+        boolean collided = false;
+
+        for (int i = 1; i <= steps; i++) {
+            double checkX = prevX + dx * i / steps;
+            double checkY = prevY + dy * i / steps;
+
+            // 触顶判断改为真正的 radius 而不是 radius * 2
+            if (checkY <= radius) {
+                collided = true;
+                launchMarble.setCenter(checkX, checkY);
+                break;
+            }
+
+            for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
+                Marble[] row = hexGrid.getRow(r);
+                if (row == null) continue;
+                for (Marble m : row) {
+                    // 忽略正在播放消除动画的弹珠
+                    if (m != null && m.isInitialized() && !m.isPopping()) {
+                        double dX = checkX - m.getCenterX();
+                        double dY = checkY - m.getCenterY();
+                        double distSq = dX * dX + dY * dY;
+                        if (distSq <= collisionDist * collisionDist) {
+                            collided = true;
+                            launchMarble.setCenter(checkX, checkY);
+                            break;
+                        }
+                    }
+                }
+                if (collided) break;
+            }
+            if (collided) break;
+        }
+
+        if (collided) {
+            hexGrid.attachMarble(launchMarble, mWidth);
+
+            // 在 init 时提前赋予下一次正确的颜色类型
+            int nextColor = launchPad.getNextMarbleColorType();
+            launchMarble = new LaunchMarble();
+            launchMarble.setScreenSize(mWidth, mHeight);
+            launchMarble.setColorType(nextColor);
+            launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
+
+            // 随机生成新的下一个弹珠颜色，更新预览区
+            launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
+        }
+    }
+
+    private void collisionWithDeadline() {
+        if (hexGrid == null) return;
+        double radius = hexGrid.getSide() * 0.866;
+        for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
+            Marble[] row = hexGrid.getRow(r);
+            if (row == null) continue;
+            for (int c = 0; c < row.length; c++) {
+                Marble marble = row[c];
+                // 忽略正在播放消除动画的弹珠，防止动画越界触发失败
+                if (marble != null && marble.isInitialized() && !marble.isPopping() && marble.getCenterY() + radius >= deadline) {
+                    frozen = true;
+                    return;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void paintComponent() {
+        // 绘制与主界面相同的渐变背景
+        Graphics2D g2 = (Graphics2D) mGraphics;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        LinearGradientPaint bg = new LinearGradientPaint(
+                0, 0, 0, mHeight,
+                new float[]{0, 1},
+                new Color[]{new Color(230, 245, 255), new Color(190, 225, 255)}
+        );
+        g2.setPaint(bg);
+        g2.fillRect(0, 0, mWidth, mHeight);
+
+        if (hexGrid != null) hexGrid.draw(g2);
+        if (launchPad != null) {
+            launchPad.drawLaunchPad(g2, mWidth, mHeight);
+            launchPad.drawCannon(g2, mouseX, mouseY);
+        }
+        if (launchMarble != null) launchMarble.draw(g2);
+
+        // 最后绘制暂停按钮，确保在最上层
+        drawPauseButton(g2);
+        if(gameState == GameState.WIN) {
+
+            drawWinScreen();
+        }
+
+        else if(gameState == GameState.LOSE) {
+
+            drawLoseScreen();
+        }
+        changeColor(white);
+
+        drawBoldText(
+                40,
+                60,
+                "Score : " + score,
+                "Arial",
+                32);
+    }
+    private void drawLoseScreen() {
+
+        // 半透明背景
+        mGraphics.setComposite(
+                AlphaComposite.getInstance(
+                        AlphaComposite.SRC_OVER,
+                        0.75f));
+
+        changeColor(0,0,0);
+
+        drawSolidRectangle(
+                0,
+                0,
+                width(),
+                height());
+
+        mGraphics.setComposite(
+                AlphaComposite.getInstance(
+                        AlphaComposite.SRC_OVER,
+                        1f));
+
+        // 标题
+        changeColor(red);
+
+        drawBoldText(
+                width()/2 - 180,
+                220,
+                "GAME OVER",
+                "Arial",
+                64);
+
+        // 分数
+        changeColor(white);
+
+        drawBoldText(
+                width()/2 - 100,
+                320,
+                "Score : " + score,
+                "Arial",
+                42);
+
+        // restart按钮
+        drawImage(
+                restartButtonImg,
+                restartButton.x,
+                restartButton.y,
+                restartButton.width,
+                restartButton.height);
+
+        // menu按钮
+        drawImage(
+                menuButtonImg,
+                menuButton.x,
+                menuButton.y,
+                menuButton.width,
+                menuButton.height);
+    }
+    private void drawWinScreen() {
+
+        // 半透明背景
+        mGraphics.setComposite(
+                AlphaComposite.getInstance(
+                        AlphaComposite.SRC_OVER,
+                        0.75f));
+
+        changeColor(0,0,0);
+
+        drawSolidRectangle(
+                0,
+                0,
+                width(),
+                height());
+
+        mGraphics.setComposite(
+                AlphaComposite.getInstance(
+                        AlphaComposite.SRC_OVER,
+                        1f));
+
+        // 标题
+        changeColor(yellow);
+
+        drawBoldText(
+                width()/2 - 240,
+                220,
+                "LEVEL COMPLETE!",
+                "Arial",
+                60);
+
+        // 分数
+        changeColor(white);
+
+        drawBoldText(
+                width()/2 - 100,
+                320,
+                "Score : " + score,
+                "Arial",
+                42);
+
+        // next按钮
+        drawImage(
+                nextButtonImg,
+                nextButton.x,
+                nextButton.y,
+                nextButton.width,
+                nextButton.height);
+
+        // menu按钮
+        drawImage(
+                menuButtonImg,
+                menuButton.x,
+                menuButton.y,
+                menuButton.width,
+                menuButton.height);
+    }
+
+    // 图片完全占据按钮，无任何内边距
+    private void drawPauseButton(Graphics2D g2) {
+        int x = pauseButtonBounds.x;
+        int y = pauseButtonBounds.y;
+        int w = pauseButtonBounds.width;
+        int h = pauseButtonBounds.height;
+
+        // 绘制按钮背景
+        RoundRectangle2D bg = new RoundRectangle2D.Double(x, y, w, h, 15, 15);
+
+        if (pausePressed) {
+            Color c1 = new Color(50, 140, 255, 200);
+            Color c2 = new Color(30, 110, 255, 200);
+            LinearGradientPaint grad = new LinearGradientPaint(x, y, x, y + h,
+                    new float[]{0, 1}, new Color[]{c1, c2});
+            g2.setPaint(grad);
+        } else if (pauseHover) {
+            Color c1 = new Color(100, 190, 255, 180);
+            Color c2 = new Color(50, 140, 255, 180);
+            LinearGradientPaint grad = new LinearGradientPaint(x, y, x, y + h,
+                    new float[]{0, 1}, new Color[]{c1, c2});
+            g2.setPaint(grad);
+        } else {
+            g2.setColor(new Color(255, 255, 255, 180));
+        }
+        g2.fill(bg);
+
+        // 蓝色边框
+        g2.setStroke(new BasicStroke(2f));
+        g2.setColor(new Color(70, 150, 255, 200));
+        g2.draw(bg);
+
+        // 绘制pause.png精灵图：完全填满按钮
+        if (pauseIcon != null) {
+            g2.drawImage(pauseIcon, x, y, w, h, null);
+        } else {
+            // 备用：蓝色暂停符号
+            g2.setColor(new Color(70, 150, 255));
+            g2.fillRect(x + 18, y + 15, 8, 30);
+            g2.fillRect(x + 34, y + 15, 8, 30);
+        }
+    }
+
+    public void openPauseMenu() {
+        gamePaused = true;
+
+        JDialog pauseDialog = new JDialog(SwingUtilities.getWindowAncestor(mPanel), "Pause Menu", Dialog.ModalityType.APPLICATION_MODAL);
+        pauseDialog.setSize(350, 380);
+        pauseDialog.setLocationRelativeTo(mPanel);
+        pauseDialog.setResizable(false);
+        pauseDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        // 点击右上角X关闭后继续游戏
+        pauseDialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                gamePaused = false;
+                mPanel.repaint();
+            }
+        });
+
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 20));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+        mainPanel.setBackground(new Color(240, 248, 255));
+
+        JLabel title = new JLabel("PAUSED", SwingConstants.CENTER);
+        title.setFont(new Font("Arial Black", Font.BOLD, 28));
+        title.setForeground(new Color(70, 150, 255));
+        mainPanel.add(title, BorderLayout.NORTH);
+
+        JPanel btnPanel = new JPanel(new GridLayout(4, 1, 0, 20));
+        btnPanel.setBackground(new Color(240, 248, 255));
+
+        // 1. Resume
+        JButton btnResume = StartMenu.createStyledButtonStatic("Resume", true, "begin.png");
+        btnResume.addActionListener(e -> {
+            gamePaused = false;
+            pauseDialog.dispose();
+        });
+
+        // 2. How to play
+        JButton btnHelp = StartMenu.createStyledButtonStatic("How to play", true, "help.png");
+        btnHelp.addActionListener(e -> {
+            JOptionPane.showMessageDialog(pauseDialog,
+                    "游戏玩法：\n1. 点击/空格发射弹珠\n2. 3个同色相连即消除\n3. 不要让弹珠碰到底部红线",
+                    "How to play", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        // 3. Sound on/off
+        JButton btnSound = StartMenu.createStyledButtonStatic(StartMenu.isSoundOnStatic ? "Sound on" : "Sound off", true, "sound.png");
+        btnSound.addActionListener(e -> {
+            StartMenu.isSoundOnStatic = !StartMenu.isSoundOnStatic;
+            btnSound.setText(StartMenu.isSoundOnStatic ? "Sound on" : "Sound off");
+        });
+
+        // 4. Quit：完全重置游戏并返回主菜单
+        JButton btnQuit = StartMenu.createStyledButtonStatic("Quit", true, "exit.png");
+        btnQuit.addActionListener(e -> {
+            gamePaused = false;
+            frozen = false;
+            gameStarted = false;
+            // 清空游戏对象，释放资源
+            hexGrid = null;
+            launchMarble = null;
+            // 恢复默认光标
+            mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            pauseDialog.dispose();
+            // 切换到主菜单
+            cardLayout.show(this.mainPanel, "menu");
+        });
+
+        btnPanel.add(btnResume);
+        btnPanel.add(btnHelp);
+        btnPanel.add(btnSound);
+        btnPanel.add(btnQuit);
+
+        mainPanel.add(btnPanel, BorderLayout.CENTER);
+        pauseDialog.setContentPane(mainPanel);
+        pauseDialog.setVisible(true);
+
+        pausePressed = false;
+        mPanel.repaint();
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        // 暂停按钮的UI状态需要在拦截前处理
+        mouseX = e.getX();
+        mouseY = e.getY();
+
+        boolean oldHover = pauseHover;
+        pauseHover = pauseButtonBounds.contains(e.getPoint());
+        if (pauseHover) {
+            mPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        } else {
+            mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        }
+        if (oldHover != pauseHover)
+            mPanel.repaint();
+
+        // 完成视觉更新后，再做游戏逻辑的拦截
+        if (frozen || gamePaused) return;
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        if (frozen) return;
+
+        if (pauseButtonBounds.contains(e.getPoint())) {
+            pausePressed = true;
+            mPanel.repaint();
+            openPauseMenu();
+            return;
+        }
+
+        if (gamePaused) return;
+        if (launchMarble != null && !launchMarble.isLaunched()) {
+            launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
+            launchMarble.launch(e.getX(), e.getY());
+        }
+        if(gameState == GameState.LOSE) {
+
+            if(restartButton.contains(e.getPoint())) {
+
+                restartGame();
+            }
+
+            if(menuButton.contains(e.getPoint())) {
+
+                returnToMenu();
+            }
+        }
+
+        if(gameState == GameState.WIN) {
+
+            if(nextButton.contains(e.getPoint())) {
+
+                loadNextLevel();
+            }
+
+            if(menuButton.contains(e.getPoint())) {
+
+                returnToMenu();
+            }
+        }
+    }
+    private void restartGame() {
+
+        score = 0;
+
+        gameState = GameState.PLAYING;
+
+        initLevel(currentLevel);
+    }
+    private void loadNextLevel() {
+
+        currentLevel++;
+
+        gameState = GameState.PLAYING;
+
+        initLevel(currentLevel);
+    }
+    private void initLevel(int level) {
+
+        hexGrid = new Marbles();
+
+        // 后续可根据level增加难度
+
+        if(level == 1) {
+
+            // easy
+        }
+
+        else if(level == 2) {
+
+            // medium
+        }
+
+        else {
+
+            // hard
+        }
+    }
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        pausePressed = false;
+        mPanel.repaint();
+    }
+
+    @Override
+    public void keyPressed(KeyEvent event) {
+        if (frozen || gamePaused) return;
+        // 保持精确 double
+        if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null && !launchMarble.isLaunched()) {
+            launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
+            launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x,
+                    mouseY > 0 ? mouseY : launchPad.cannon.y - 100);
+        }
+    }
+    private void returnToMenu() {
+
+        gameState = GameState.MENU;
+
+        // 重置游戏
+        currentLevel = 1;
+
+        score = 0;
+
+        initLevel(currentLevel);
     }
 }
