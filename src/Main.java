@@ -15,7 +15,7 @@ import java.awt.LinearGradientPaint;
 import java.util.Random;
 import java.util.prefs.Preferences;
 
-public class Main extends GameEngine implements StartScreen.StartScreenListener {
+public class Main extends GameEngine implements StartScreen.StartScreenListener, GameOver.GameOverListener {
     private Marbles hexGrid;
     private LaunchPad launchPad;
     private LaunchMarble launchMarble;
@@ -41,6 +41,9 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
     private int highScore = 0;
     private ScoreBoard scoreBoard;
     private CustomGlassPane glassPane;
+
+    // GameOver相关
+    private JDialog gameOverDialog;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -268,7 +271,7 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
                 Marble marble = row[c];
                 // 忽略正在播放消除或掉落动画的弹珠，防止掉落期间触发判定
                 if (marble != null && marble.isInitialized() && !marble.isPopping() && !marble.isFalling() && marble.getCenterY() + radius >= deadline) {
-                    frozen = true;
+                    openGameOverMenu(false);
                     return;
                 }
             }
@@ -374,6 +377,80 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
         pauseDialog.setContentPane(mainPanel);
         pauseDialog.setVisible(true);
         mPanel.repaint();
+    }
+
+    // ==================== GameOver 界面 ====================
+    private void openGameOverMenu(boolean win) {
+        frozen = true;
+        gamePaused = true;
+
+        gameOverDialog = new JDialog(SwingUtilities.getWindowAncestor(mPanel), "Game Over", Dialog.ModalityType.APPLICATION_MODAL);
+        gameOverDialog.setSize(750, 650);
+        gameOverDialog.setLocationRelativeTo(mPanel);
+        gameOverDialog.setResizable(false);
+        gameOverDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        GameOver gameOverPanel = new GameOver(
+                win,
+                currentScore,
+                GameOver.loadButtonImage("resources/again.png"),
+                GameOver.loadButtonImage("resources/exit.png"),
+                GameOver.loadButtonImage("resources/next.png"),
+                this
+        );
+        gameOverPanel.setPreferredSize(new Dimension(750, 650));
+
+        gameOverDialog.setContentPane(gameOverPanel);
+        gameOverDialog.setVisible(true);
+        mPanel.repaint();
+    }
+
+    @Override
+    public void onRestart() {
+        if (gameOverDialog != null) {
+            gameOverDialog.dispose();
+            gameOverDialog = null;
+        }
+        // 重置游戏
+        frozen = false;
+        gamePaused = false;
+        currentScore = 0;
+
+        if (glassPane != null) {
+            glassPane.updateScores(currentScore, highScore);
+        }
+
+        // 重新初始化游戏
+        init();
+        mPanel.repaint();
+    }
+
+    @Override
+    public void onBackToMenu() {
+        if (gameOverDialog != null) {
+            gameOverDialog.dispose();
+            gameOverDialog = null;
+        }
+        // 完全重置游戏并返回主菜单
+        frozen = false;
+        gamePaused = false;
+        gameStarted = false;
+
+        // 清空游戏对象，释放资源
+        hexGrid = null;
+        launchMarble = null;
+
+        // 恢复默认光标
+        mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+
+        // 切换到主菜单
+        cardLayout.show(mainPanel, "menu");
+    }
+
+    @Override
+    public void onNextLevel() {
+        // 目前没有关卡系统，和Restart一样
+        onRestart();
     }
 
     @Override
