@@ -130,7 +130,7 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener 
 
             // 暂停按钮（左下角）
             int btnSize = 55;
-            int btnX = 15;
+            int btnX = 85;
             int btnY = h - btnSize - 15;
             pauseButtonRect = new Rectangle(btnX, btnY, btnSize, btnSize);
 

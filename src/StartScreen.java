@@ -23,7 +23,6 @@ public class StartScreen extends JPanel {
     private final ArrayList<Marble> decorMarbles = new ArrayList<>();
     private boolean startHover = false;
     private boolean settingHover = false;
-    private boolean exitHover = false;
     private boolean startPressed = false;
     private boolean settingPressed = false;
     public static boolean isSoundOnStatic = true;
@@ -58,18 +57,13 @@ public class StartScreen extends JPanel {
     private final int BTN_HEIGHT = 80;
     private int startX, startY;
     private int settingX, settingY;
-    private int exitX, exitY;
     private final int SETTING_SIZE = 60;
-    private final int SHUTDOWN_SIZE = 50;
-    private final int SHUTDOWN_FRAME_WIDTH = 188;
-    private final int SHUTDOWN_FRAME_HEIGHT = 1894;
 
     private int fallOffset = -300;
     private final Timer animationTimer = new Timer();
     private BufferedImage settingsIcon;
     private BufferedImage helpIcon;
     private BufferedImage soundIcon;
-    private BufferedImage shutdownIcon;
 
     public StartScreen(StartScreenListener listener) {
         this.listener = listener;
@@ -80,19 +74,15 @@ public class StartScreen extends JPanel {
             File settingsFile = new File("resources/settings.png");
             File helpFile = new File("resources/help.png");
             File soundFile = new File("resources/sound.png");
-            File shutdownFile = new File("resources/shut-down.png");
 
             if (settingsFile.exists()) settingsIcon = ImageIO.read(settingsFile);
             if (helpFile.exists()) helpIcon = ImageIO.read(helpFile);
             if (soundFile.exists()) soundIcon = ImageIO.read(soundFile);
-            if (shutdownFile.exists()) shutdownIcon = ImageIO.read(shutdownFile);
-            else System.out.println("警告：找不到resources/shut-down.png");
         } catch (IOException e) {
             System.out.println("警告：找不到resources文件夹中的图标文件");
             settingsIcon = null;
             helpIcon = null;
             soundIcon = null;
-            shutdownIcon = null;
         }
 
         initDecorMarbles();
@@ -112,9 +102,6 @@ public class StartScreen extends JPanel {
                 }
                 if (settingPressed) {
                     openSettings();
-                }
-                if (new Rectangle(exitX, exitY, SHUTDOWN_SIZE, SHUTDOWN_SIZE).contains(mx, my)) {
-                    listener.onExitGame();
                 }
             }
 
@@ -144,7 +131,6 @@ public class StartScreen extends JPanel {
             public void mouseExited(MouseEvent e) {
                 startHover = false;
                 settingHover = false;
-                exitHover = false;
                 setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 repaint();
             }
@@ -157,19 +143,17 @@ public class StartScreen extends JPanel {
     private void updateHoverState(int mx, int my) {
         boolean oldStartHover = startHover;
         boolean oldSettingHover = settingHover;
-        boolean oldExitHover = exitHover;
 
         startHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
         settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
-        exitHover = new Rectangle(exitX, exitY, SHUTDOWN_SIZE, SHUTDOWN_SIZE).contains(mx, my);
 
-        if (startHover || settingHover || exitHover) {
+        if (startHover || settingHover) {
             setCursor(new Cursor(Cursor.HAND_CURSOR));
         } else {
             setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         }
 
-        if (oldStartHover != startHover || oldSettingHover != settingHover || oldExitHover != exitHover) {
+        if (oldStartHover != startHover || oldSettingHover != settingHover) {
             repaint();
         }
     }
@@ -212,23 +196,18 @@ public class StartScreen extends JPanel {
         int w = getWidth();
         int h = getHeight();
 
-        // 整体下降10像素
         int yOffset = 10;
 
         startX = w / 2 - BTN_WIDTH / 2;
-        startY = h / 2 - BTN_HEIGHT / 2 + 50 + yOffset; // 向下移动开始按钮
+        startY = h / 2 - BTN_HEIGHT / 2 + 50 + yOffset;
 
         settingX = 30;
         settingY = h - SETTING_SIZE - 30;
 
-        exitX = w - SHUTDOWN_SIZE - 30;
-        exitY = h - SHUTDOWN_SIZE - 30;
-
         drawBackground(g2d, w, h);
-        drawLuxuryTitle(g2d, w, h, fallOffset + yOffset); // 标题下降10像素
-        drawCompactMarbles(g2d, w, h, fallOffset + yOffset); // 装饰弹珠下降10像素
+        drawLuxuryTitle(g2d, w, h, fallOffset + yOffset);
+        drawCompactMarbles(g2d, w, h, fallOffset + yOffset);
         drawStartButton(g2d);
-        ShutDownButton(g2d);
         drawStandardGearButton(g2d, h);
     }
 
@@ -322,39 +301,6 @@ public class StartScreen extends JPanel {
         int[] xP = {x - 18, x + 18, x - 18};
         int[] yP = {y - 18, y, y + 18};
         g2d.fillPolygon(xP, yP, 3);
-    }
-
-    private void ShutDownButton(Graphics2D g2d) {
-        if (shutdownIcon != null) {
-            int frameIndex = 0;
-            if (exitHover) {
-                frameIndex = 1;
-            }
-            int frameX = frameIndex * SHUTDOWN_FRAME_WIDTH;
-            g2d.drawImage(shutdownIcon,
-                    exitX, exitY, exitX + SHUTDOWN_SIZE, exitY + SHUTDOWN_SIZE,
-                    frameX, 0, frameX + SHUTDOWN_FRAME_WIDTH, SHUTDOWN_FRAME_HEIGHT,
-                    null);
-        } else {
-            RoundRectangle2D btn = new RoundRectangle2D.Double(exitX, exitY, SHUTDOWN_SIZE, SHUTDOWN_SIZE, 15, 15);
-            Color c1 = exitHover ? new Color(255, 100, 100) : new Color(200, 60, 60);
-            Color c2 = exitHover ? new Color(180, 40, 40) : new Color(150, 30, 30);
-            LinearGradientPaint btnGrad = new LinearGradientPaint(exitX, exitY, exitX, exitY + SHUTDOWN_SIZE,
-                    new float[]{0, 1}, new Color[]{c1, c2});
-            g2d.setPaint(btnGrad);
-            g2d.fill(btn);
-
-            g2d.setStroke(new BasicStroke(2.5f));
-            g2d.setColor(Color.WHITE);
-            g2d.draw(btn);
-
-            int cx = exitX + SHUTDOWN_SIZE / 2;
-            int cy = exitY + SHUTDOWN_SIZE / 2;
-            int len = 15;
-            g2d.setStroke(new BasicStroke(3f));
-            g2d.drawLine(cx - len, cy - len, cx + len, cy + len);
-            g2d.drawLine(cx + len, cy - len, cx - len, cy + len);
-        }
     }
 
     private void drawStandardGearButton(Graphics2D g2d, int h) {
