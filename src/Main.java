@@ -55,12 +55,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             gameContainer.setOpaque(false);
             gameContainer.add(game.mPanel, new GridBagConstraints());
 
-            // 菜单也使用相同的居中容器
-            JPanel menuContainer = new JPanel(new GridBagLayout());
-            menuContainer.setOpaque(false);
-            menuContainer.add(startMenu, new GridBagConstraints());
-
-            mainPanel.add(menuContainer, "menu");
+            // 开始界面直接填充窗口
+            mainPanel.add(startMenu, "menu");
             mainPanel.add(gameContainer, "game");
 
             frame.setContentPane(mainPanel);
@@ -71,6 +67,9 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             int targetWidth = game.mWidth * 2;
             int targetHeight = game.mHeight + insets.top + insets.bottom;
             frame.setSize(targetWidth, targetHeight);
+
+            // 开始界面填充整个窗口（在窗口大小设置之后）
+            startMenu.setPreferredSize(new Dimension(frame.getWidth(), frame.getHeight()));
 
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
