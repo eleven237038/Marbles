@@ -26,6 +26,9 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
     private Random random = new Random();
     private StartMenu startMenu; // 保存菜单引用用于销毁 Timer
 
+    // 窗口尺寸
+    private static final int WINDOW_WIDTH = 1080;
+
     // 暂停按钮相关
     private BufferedImage pauseIcon;
     private Rectangle pauseButtonBounds;
@@ -47,11 +50,28 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             StartMenu startMenu = new StartMenu(game);
             game.startMenu = startMenu;
 
-            mainPanel.add(startMenu, "menu");
-            mainPanel.add(game.mPanel, "game");
+            // 创建居中容器
+            JPanel gameContainer = new JPanel(new GridBagLayout());
+            gameContainer.setOpaque(false);
+            gameContainer.add(game.mPanel, new GridBagConstraints());
+
+            // 菜单也使用相同的居中容器
+            JPanel menuContainer = new JPanel(new GridBagLayout());
+            menuContainer.setOpaque(false);
+            menuContainer.add(startMenu, new GridBagConstraints());
+
+            mainPanel.add(menuContainer, "menu");
+            mainPanel.add(gameContainer, "game");
 
             frame.setContentPane(mainPanel);
             frame.pack();
+
+            // 设置窗口为游戏界面宽度的两倍，高度适应游戏界面
+            Insets insets = frame.getInsets();
+            int targetWidth = game.mWidth * 2;
+            int targetHeight = game.mHeight + insets.top + insets.bottom;
+            frame.setSize(targetWidth, targetHeight);
+
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
@@ -64,7 +84,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         mFrame = frame;
         mPanel = new GamePanel();
         mWidth = 483;
-        mHeight = 483; // 修改屏幕为正方形
+        mHeight = 483; // 游戏界面保持原有尺寸
 
         mPanel.setDoubleBuffered(true);
         mPanel.addMouseListener(this);
@@ -90,9 +110,6 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
                         }
                     }
                 });
-
-        Insets insets = mFrame.getInsets();
-        mFrame.setSize(mWidth + insets.left + insets.right, mHeight + insets.top + insets.bottom);
 
         // 加载pause.png精灵图
         try {
