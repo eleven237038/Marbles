@@ -8,15 +8,13 @@ public class LaunchPad {
     private double topY;
 
     private static final double SCALE = 1.25;
+    private static final double BASE_RATIO_W = 1.0 / 5.0; // 宽度为屏幕宽度的1/5
+    private static final double BASE_RATIO_H = 0.45; // 高度为宽度的0.45倍
 
-    private static final int BASE_WIDTH = (int)(80 * SCALE);
-    private static final int BASE_HEIGHT = (int)(45 * SCALE);
-    private static final int TURRET_WIDTH = (int)(60 * SCALE);
-    private static final int TURRET_HEIGHT = (int)(40 * SCALE);
     private static final double BARREL_LEN = 45 * SCALE;
 
     private static final int AMMO_SLOT_SIZE = (int)(16 * SCALE);
-    private static final int AMMO_OFFSET_X = (int)(30 * SCALE);
+    private static final double AMMO_OFFSET_X_RATIO = 0.375; // 相对于baseWidth的比例
 
     private static final Color BASE_COLOR_TOP = new Color(255, 180, 80);
     private static final Color BASE_COLOR_BOTTOM = new Color(255, 100, 40);
@@ -40,6 +38,8 @@ public class LaunchPad {
 
     private double side;
     private int maxRowCount;
+    private int currentBaseWidth;
+    private int currentBaseHeight;
 
     public LaunchPad(double side, int maxRowCount) {
         this.side = side;
@@ -55,9 +55,15 @@ public class LaunchPad {
     }
 
     public void setCannonPosition(int w, int h) {
-        topY = calculateTopY();
+        // 发射台宽度为屏幕宽度的1/5，高度为宽度的0.45倍
+        currentBaseWidth = (int)(w * BASE_RATIO_W);
+        currentBaseHeight = (int)(currentBaseWidth * BASE_RATIO_H);
+
         cannon.x = w / 2.0;
-        cannon.y = topY + (int)(110 * SCALE);
+        // 将发射台Y坐标调整为距离底部 1/5 处
+        cannon.y = h - (h / 5.0);
+        // 动态同步安全底线 (deadline) 的位置
+        topY = cannon.y - currentBaseHeight;
     }
 
     public double getTopY() {
@@ -98,40 +104,42 @@ public class LaunchPad {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-        int baseX = (int)(cannon.x - BASE_WIDTH/2);
-        int baseY = (int)(cannon.y - BASE_HEIGHT/2);
-        Point2D center = new Point2D.Double(cannon.x, cannon.y - BASE_HEIGHT/4);
+        int baseX = (int)(cannon.x - currentBaseWidth/2);
+        int baseY = (int)(cannon.y - currentBaseHeight/2);
+        Point2D center = new Point2D.Double(cannon.x, cannon.y - currentBaseHeight/4);
         float[] stops = {0f, 0.7f, 1f};
         Color[] baseColors = {BASE_COLOR_TOP, BASE_COLOR_BOTTOM, new Color(200, 70, 20)};
-        RadialGradientPaint baseGrad = new RadialGradientPaint(center, BASE_WIDTH/1.5f, stops, baseColors);
+        RadialGradientPaint baseGrad = new RadialGradientPaint(center, currentBaseWidth/1.5f, stops, baseColors);
         g.setPaint(baseGrad);
-        g.fillOval(baseX, baseY, BASE_WIDTH, BASE_HEIGHT);
+        g.fillOval(baseX, baseY, currentBaseWidth, currentBaseHeight);
 
         g.setColor(new Color(255, 255, 200, 120));
         g.setStroke(new BasicStroke((int)(2 * SCALE)));
-        g.drawOval(baseX + (int)(2 * SCALE), baseY + (int)(2 * SCALE), BASE_WIDTH - (int)(4 * SCALE), BASE_HEIGHT - (int)(4 * SCALE));
+        g.drawOval(baseX + (int)(2 * SCALE), baseY + (int)(2 * SCALE), currentBaseWidth - (int)(4 * SCALE), currentBaseHeight - (int)(4 * SCALE));
 
         g.setColor(new Color(255, 255, 180));
-        drawStar(g, cannon.x - BASE_WIDTH/2 - (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
-        drawStar(g, cannon.x + BASE_WIDTH/2 + (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
+        drawStar(g, cannon.x - currentBaseWidth/2 - (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
+        drawStar(g, cannon.x + currentBaseWidth/2 + (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
 
-        int turretX = (int)(cannon.x - TURRET_WIDTH/2);
-        int turretY = (int)(cannon.y - TURRET_HEIGHT/2);
+        int turretWidth = (int)(currentBaseWidth * 0.75);
+        int turretHeight = (int)(turretWidth * BASE_RATIO_H);
+        int turretX = (int)(cannon.x - turretWidth/2);
+        int turretY = (int)(cannon.y - turretHeight/2);
         Point2D turretCenter = new Point2D.Double(cannon.x, cannon.y - (int)(5 * SCALE));
-        RadialGradientPaint turretGrad = new RadialGradientPaint(turretCenter, TURRET_WIDTH/1.3f,
+        RadialGradientPaint turretGrad = new RadialGradientPaint(turretCenter, turretWidth/1.3f,
                 new float[]{0f, 0.8f, 1f},
                 new Color[]{TURRET_COLOR_TOP, TURRET_COLOR_BOTTOM, new Color(180, 80, 30)});
         g.setPaint(turretGrad);
-        g.fillRoundRect(turretX, turretY, TURRET_WIDTH, TURRET_HEIGHT, (int)(20 * SCALE), (int)(20 * SCALE));
+        g.fillRoundRect(turretX, turretY, turretWidth, turretHeight, (int)(20 * SCALE), (int)(20 * SCALE));
 
         g.setColor(new Color(255, 255, 220, 100));
-        g.fillRoundRect(turretX + (int)(5 * SCALE), turretY + (int)(2 * SCALE), TURRET_WIDTH - (int)(10 * SCALE), (int)(8 * SCALE), (int)(5 * SCALE), (int)(5 * SCALE));
+        g.fillRoundRect(turretX + (int)(5 * SCALE), turretY + (int)(2 * SCALE), turretWidth - (int)(10 * SCALE), (int)(8 * SCALE), (int)(5 * SCALE), (int)(5 * SCALE));
 
-        int eyeRadius = (int)(9 * SCALE);
-        int leftEyeX = (int)(cannon.x - 16 * SCALE);
-        int leftEyeY = (int)(cannon.y - 12 * SCALE);
-        int rightEyeX = (int)(cannon.x + 8 * SCALE);
-        int rightEyeY = (int)(cannon.y - 12 * SCALE);
+        int eyeRadius = (int)(currentBaseWidth * 0.1125);
+        int leftEyeX = (int)(cannon.x - currentBaseWidth * 0.2);
+        int leftEyeY = (int)(cannon.y - currentBaseWidth * 0.15);
+        int rightEyeX = (int)(cannon.x + currentBaseWidth * 0.1);
+        int rightEyeY = (int)(cannon.y - currentBaseWidth * 0.15);
 
         g.setColor(EYE_WHITE);
         g.fillOval(leftEyeX - eyeRadius, leftEyeY - eyeRadius/2, eyeRadius*2, eyeRadius);
@@ -150,25 +158,25 @@ public class LaunchPad {
 
         g.setColor(new Color(255, 160, 80));
         int[] earXLeft = {
-                (int)(cannon.x - 28 * SCALE),
-                (int)(cannon.x - 38 * SCALE),
-                (int)(cannon.x - 22 * SCALE)
+                (int)(cannon.x - currentBaseWidth * 0.35),
+                (int)(cannon.x - currentBaseWidth * 0.475),
+                (int)(cannon.x - currentBaseWidth * 0.275)
         };
         int[] earYLeft = {
-                (int)(cannon.y - 20 * SCALE),
-                (int)(cannon.y - 32 * SCALE),
-                (int)(cannon.y - 25 * SCALE)
+                (int)(cannon.y - currentBaseWidth * 0.25),
+                (int)(cannon.y - currentBaseWidth * 0.4),
+                (int)(cannon.y - currentBaseWidth * 0.3125)
         };
         g.fillPolygon(earXLeft, earYLeft, 3);
         int[] earXRight = {
-                (int)(cannon.x + 20 * SCALE),
-                (int)(cannon.x + 30 * SCALE),
-                (int)(cannon.x + 14 * SCALE)
+                (int)(cannon.x + currentBaseWidth * 0.25),
+                (int)(cannon.x + currentBaseWidth * 0.375),
+                (int)(cannon.x + currentBaseWidth * 0.175)
         };
         int[] earYRight = {
-                (int)(cannon.y - 20 * SCALE),
-                (int)(cannon.y - 32 * SCALE),
-                (int)(cannon.y - 25 * SCALE)
+                (int)(cannon.y - currentBaseWidth * 0.25),
+                (int)(cannon.y - currentBaseWidth * 0.4),
+                (int)(cannon.y - currentBaseWidth * 0.3125)
         };
         g.fillPolygon(earXRight, earYRight, 3);
 
@@ -199,8 +207,8 @@ public class LaunchPad {
         g.setColor(Color.WHITE);
         g.fillOval(tipX - (int)(3 * SCALE), tipY - (int)(3 * SCALE), (int)(6 * SCALE), (int)(6 * SCALE));
 
-        int slotX = (int)(cannon.x + AMMO_OFFSET_X);
-        int slotY = (int)(cannon.y - 12 * SCALE);
+        int slotX = (int)(cannon.x + currentBaseWidth * AMMO_OFFSET_X_RATIO);
+        int slotY = (int)(cannon.y - currentBaseWidth * 0.15);
         int size = AMMO_SLOT_SIZE;
 
         Point2D slotCenter = new Point2D.Double(slotX, slotY);

@@ -70,7 +70,7 @@ public class StartMenu extends JPanel {
     public StartMenu(StartMenuListener listener) {
         this.listener = listener;
         setBackground(new Color(240, 248, 255));
-        setPreferredSize(new Dimension(483, 1080));
+        setPreferredSize(new Dimension(483, 483)); // 同步修改主菜单以适配正方形屏幕
 
         try {
             settingsIcon = ImageIO.read(new File("resources/settings.png"));

@@ -64,7 +64,7 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
         mFrame = frame;
         mPanel = new GamePanel();
         mWidth = 483;
-        mHeight = 1080;
+        mHeight = 483; // 修改屏幕为正方形
 
         mPanel.setDoubleBuffered(true);
         mPanel.addMouseListener(this);
