@@ -14,9 +14,14 @@ public class Marble {
 
     // 动画状态相关
     private boolean popping = false;
+    private boolean falling = false; // 新增：掉落状态
     private boolean dead = false;
     private double popDelay = 0;
     private double popProgress = 0;
+    
+    // 掉落物理参数
+    private double fallVy = 0;
+    private double fallAy = 1500; // 重力加速度
 
     // 主体色系
     private static final Color[] BASE_COLOR = {
@@ -77,7 +82,17 @@ public class Marble {
         this.popProgress = 0;
     }
     
+    // 开始触发无附着掉落动画
+    public void startFalling(double delay) {
+        this.falling = true;
+        this.popping = false;
+        this.popDelay = delay;
+        // 初始赋予一个轻微向上的速度，配合重力实现先上抛再下落的视觉效果
+        this.fallVy = -150 - (random.nextDouble() * 80); 
+    }
+    
     public boolean isPopping() { return popping; }
+    public boolean isFalling() { return falling; }
     public boolean isDead() { return dead; }
 
     public void update(double dt) {
@@ -88,6 +103,20 @@ public class Marble {
             } else {
                 popProgress += dt * 6.0; // 动画速度，约 0.16 秒播放完成
                 if (popProgress >= 1.0) {
+                    dead = true;
+                }
+            }
+        } 
+        // 更新掉落动画
+        else if (falling) {
+            if (popDelay > 0) {
+                popDelay -= dt;
+            } else {
+                cy += fallVy * dt;
+                fallVy += fallAy * dt;
+                verticesDirty = true;
+                // 当掉出屏幕可视范围时标记死亡
+                if (cy > 1500) {
                     dead = true;
                 }
             }
@@ -107,7 +136,6 @@ public class Marble {
     public double getSide() { return side; }
     public boolean isInitialized() { return initialized; }
     public int getColorType() { return colorType; }
-    // 新增：用于在碰撞后接收发射弹珠的颜色
     public void setColorType(int colorType) { this.colorType = colorType; }
     public int getRow() { return row; }
     public int getCol() { return col; }
@@ -198,8 +226,10 @@ public class Marble {
         
         // 重置动画状态
         this.popping = false;
+        this.falling = false;
         this.dead = false;
         this.popDelay = 0;
         this.popProgress = 0;
+        this.fallVy = 0;
     }
 }

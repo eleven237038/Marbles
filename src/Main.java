@@ -214,8 +214,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
                 Marble[] row = hexGrid.getRow(r);
                 if (row == null) continue;
                 for (Marble m : row) {
-                    // 忽略正在播放消除动画的弹珠
-                    if (m != null && m.isInitialized() && !m.isPopping()) {
+                    // 忽略正在播放消除或掉落动画的弹珠
+                    if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling()) {
                         double dX = checkX - m.getCenterX();
                         double dY = checkY - m.getCenterY();
                         double distSq = dX * dX + dY * dY;
@@ -254,8 +254,8 @@ public class Main extends GameEngine implements StartMenu.StartMenuListener {
             if (row == null) continue;
             for (int c = 0; c < row.length; c++) {
                 Marble marble = row[c];
-                // 忽略正在播放消除动画的弹珠，防止动画越界触发失败
-                if (marble != null && marble.isInitialized() && !marble.isPopping() && marble.getCenterY() + radius >= deadline) {
+                // 忽略正在播放消除或掉落动画的弹珠，防止掉落期间触发判定
+                if (marble != null && marble.isInitialized() && !marble.isPopping() && !marble.isFalling() && marble.getCenterY() + radius >= deadline) {
                     frozen = true;
                     return;
                 }

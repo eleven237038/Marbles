@@ -84,7 +84,7 @@ public class Marbles {
     }
 
     public void initRow(int screenWidth, int screenHeight) {
-        StartMarbles(screenWidth, screenHeight, 8);
+        StartMarbles(screenWidth, screenHeight, 4);
     }
 
     public void update(double dt) {
@@ -98,11 +98,14 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble hex = marbles[r][c];
                 if (hex != null) {
-                    hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
+                    // 只对非掉落状态的弹珠应用向下的平移，掉落弹珠应用自己的物理引擎
+                    if (!hex.isFalling()) {
+                        hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
+                    }
                     hex.update(dt); // 处理弹珠内部可能存在的动画更新
                     hex.recalculateVerticesIfDirty();
                     
-                    // 如果弹珠消除动画播放完毕并标记死亡，从网格中移除
+                    // 如果弹珠消除动画或掉落动画播放完毕并标记死亡，从网格中移除
                     if (hex.isDead()) {
                         marbles[r][c] = null;
                     }
@@ -146,12 +149,12 @@ public class Marbles {
         double ly = launchMarble.getCenterY();
         double xSpacing = side * SQRT3;
 
-        // 1. 寻找网格中的一个参考球，用来推算当前动态网格的绝对坐标偏移
+        // 1. 寻找网格中的一个参考球，用来推算当前动态网格的绝对坐标偏移 (忽略消除和掉落中的弹珠)
         Marble ref = null;
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] != null) {
                 for (Marble m : marbles[r]) {
-                    if (m != null && m.isInitialized()) {
+                    if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling()) {
                         ref = m;
                         break;
                     }
@@ -187,7 +190,7 @@ public class Marbles {
         // 检测目标网格是否被占用
         boolean isOccupied = false;
         if (targetRow < marbles.length && marbles[targetRow] != null && targetCol < marbles[targetRow].length) {
-            if (marbles[targetRow][targetCol] != null && marbles[targetRow][targetCol].isInitialized()) {
+            if (marbles[targetRow][targetCol] != null && marbles[targetRow][targetCol].isInitialized() && !marbles[targetRow][targetCol].isPopping() && !marbles[targetRow][targetCol].isFalling()) {
                 isOccupied = true;
             }
         }
@@ -207,7 +210,7 @@ public class Marbles {
                 for (int c = Math.max(0, targetCol - 2); c <= targetCol + 2; c++) {
                     boolean occ = false;
                     if (r < marbles.length && marbles[r] != null && c < marbles[r].length) {
-                        if (marbles[r][c] != null && marbles[r][c].isInitialized()) {
+                        if (marbles[r][c] != null && marbles[r][c].isInitialized() && !marbles[r][c].isPopping() && !marbles[r][c].isFalling()) {
                             occ = true;
                         }
                     }
@@ -289,23 +292,117 @@ public class Marbles {
                 }
                 
                 // 距离除以传播速度常数得到延迟(单位为秒)
-                // 600.0 数值越大动画越快，越小越慢(递进感越强)
                 double delay = dist / 600.0; 
                 m.startPop(delay);
+            }
+
+            // 消除完成后检测是否有失去附着的悬空弹珠
+            checkFloatingMarbles();
+        }
+    }
+
+    // 检测并处理失去附着的悬空弹珠
+    private void checkFloatingMarbles() {
+        if (marbles == null) return;
+
+        // 1. 寻找当前活体弹珠的最高位置（代表主体的天花板边界）
+        double minY = Double.MAX_VALUE;
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                // 忽略已经消除或已经在掉落的弹珠
+                if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling()) {
+                    if (m.getCenterY() < minY) {
+                        minY = m.getCenterY();
+                    }
+                }
+            }
+        }
+
+        if (minY == Double.MAX_VALUE) return; // 没有活体弹珠了
+
+        // 2. 将位于最高处的一层弹珠作为附着的“根节点”
+        List<Marble> ceilingMarbles = new ArrayList<>();
+        boolean[][] visited = new boolean[marbles.length][];
+        for (int i = 0; i < marbles.length; i++) {
+            if (marbles[i] != null) visited[i] = new boolean[marbles[i].length];
+        }
+
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling()) {
+                    // 包括容错空间，确保高低交错的最高行都能算作天花板
+                    if (m.getCenterY() <= minY + side * 1.5) {
+                        ceilingMarbles.add(m);
+                    }
+                }
+            }
+        }
+
+        // 3. 从天花板节点出发，进行遍历连接测试
+        for (Marble cm : ceilingMarbles) {
+            if (!visited[cm.getRow()][cm.getCol()]) {
+                dfsFloating(cm.getRow(), cm.getCol(), visited);
+            }
+        }
+
+        // 4. 所有遍历不到的弹珠视为失去附着，开始掉落！
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !visited[r][c]) {
+                    // 加入极小随机延迟以达到错落掉落视觉感
+                    m.startFalling(random.nextDouble() * 0.1);
+                }
             }
         }
     }
 
-    // 使用网格结合绝对物理距离的方式检测连通同色。
-    // 这取代了极容易因为动态生成行偏移行号导致计算失误的固化方向矩阵匹配逻辑。
+    // 用于悬空检测的物理距离 DFS (忽略颜色匹配)
+    private void dfsFloating(int r, int c, boolean[][] visited) {
+        if (r < 0 || r >= marbles.length || marbles[r] == null || c < 0 || c >= marbles[r].length) return;
+        if (visited[r][c]) return;
+
+        Marble current = marbles[r][c];
+        if (current == null || !current.isInitialized() || current.isPopping() || current.isFalling()) return;
+
+        visited[r][c] = true;
+
+        // 物理距离判断容错系数
+        double thresholdSq = (side * SQRT3 * 1.2) * (side * SQRT3 * 1.2);
+
+        for (int dr = -2; dr <= 2; dr++) {
+            int nr = r + dr;
+            if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
+                for (int dc = -2; dc <= 2; dc++) {
+                    int nc = c + dc;
+                    if (nc >= 0 && nc < marbles[nr].length) {
+                        Marble neighbor = marbles[nr][nc];
+                        if (neighbor != null && neighbor.isInitialized() && !neighbor.isPopping() && !neighbor.isFalling()) {
+                            double dx = current.getCenterX() - neighbor.getCenterX();
+                            double dy = current.getCenterY() - neighbor.getCenterY();
+                            if (dx * dx + dy * dy <= thresholdSq) {
+                                dfsFloating(nr, nc, visited);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void dfs(int r, int c, int targetColor, boolean[][] visited, List<Marble> res) {
         if (r < 0 || r >= marbles.length) return;
         if (marbles[r] == null || c < 0 || c >= marbles[r].length) return;
         if (visited[r][c]) return;
 
         Marble current = marbles[r][c];
-        // 忽略处于动画状态（即将死亡）的弹珠
-        if (current == null || !current.isInitialized() || current.isPopping()) return;
+        // 忽略处于动画状态（即将死亡/掉落）的弹珠
+        if (current == null || !current.isInitialized() || current.isPopping() || current.isFalling()) return;
         if (current.getColorType() != targetColor) return;
 
         visited[r][c] = true;
@@ -314,16 +411,14 @@ public class Marbles {
         // 物理距离判断，容错系数取 1.1（允许 10% 左右像素偏移）
         double thresholdSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);
 
-        // 搜索相邻的行(r-1到r+1)和相关的列偏移
         for (int dr = -1; dr <= 1; dr++) {
             int nr = r + dr;
             if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
-                // 六边形网格列差一般不会超过正负 2
                 for (int dc = -2; dc <= 2; dc++) {
                     int nc = c + dc;
                     if (nc >= 0 && nc < marbles[nr].length) {
                         Marble neighbor = marbles[nr][nc];
-                        if (neighbor != null && neighbor.isInitialized() && !neighbor.isPopping() && neighbor.getColorType() == targetColor) {
+                        if (neighbor != null && neighbor.isInitialized() && !neighbor.isPopping() && !neighbor.isFalling() && neighbor.getColorType() == targetColor) {
                             double dx = current.getCenterX() - neighbor.getCenterX();
                             double dy = current.getCenterY() - neighbor.getCenterY();
                             if (dx * dx + dy * dy <= thresholdSq) {
