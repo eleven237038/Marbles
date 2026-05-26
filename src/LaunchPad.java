@@ -5,18 +5,15 @@ public class LaunchPad {
     public Point2D.Double cannon;
     private double headAngle = -Math.PI / 2;
     private int nextMarbleColor;
-    private double topY;
+    private double topY;                 // 虚线位置（死亡线）
 
     private static final double SCALE = 1.25;
+    private static final double BASE_RATIO_W = 1.0 / 5.0;
+    private static final double BASE_RATIO_H = 0.45;
 
-    private static final int BASE_WIDTH = (int)(80 * SCALE);
-    private static final int BASE_HEIGHT = (int)(45 * SCALE);
-    private static final int TURRET_WIDTH = (int)(60 * SCALE);
-    private static final int TURRET_HEIGHT = (int)(40 * SCALE);
     private static final double BARREL_LEN = 45 * SCALE;
-
     private static final int AMMO_SLOT_SIZE = (int)(16 * SCALE);
-    private static final int AMMO_OFFSET_X = (int)(30 * SCALE);
+    private static final double AMMO_OFFSET_X_RATIO = 0.375;
 
     private static final Color BASE_COLOR_TOP = new Color(255, 180, 80);
     private static final Color BASE_COLOR_BOTTOM = new Color(255, 100, 40);
@@ -40,6 +37,11 @@ public class LaunchPad {
 
     private double side;
     private int maxRowCount;
+    private int currentBaseWidth;
+    private int currentBaseHeight;
+
+    // 独立虚线位置（原位置）
+    private double fixedDeadlineY = -1;
 
     public LaunchPad(double side, int maxRowCount) {
         this.side = side;
@@ -48,17 +50,32 @@ public class LaunchPad {
         this.nextMarbleColor = 1;
     }
 
-    private double calculateTopY() {
-        return maxRowCount % 2 == 1 ?
-                3 * ((maxRowCount - 1) / 2.0 + Math.sqrt(3) / 2) * side :
-                3 * ((maxRowCount - 2) / 2.0 + Math.sqrt(3) / 2 + 0.5) * side;
+    // 设置固定的虚线位置（原位置）
+    public void setFixedDeadlineY(double y) {
+        this.fixedDeadlineY = y;
+        this.topY = y;
+    }
+
+    // 原来的虚线高度计算（用于初始化时）
+    private double calculateOriginalTopY(int h) {
+        int oldBaseHeight = (int)((h * BASE_RATIO_W) * BASE_RATIO_H);
+        double oldCannonY = h - h / 5.0;
+        return oldCannonY - oldBaseHeight;
     }
 
     public void setCannonPosition(int w, int h) {
-        topY = calculateTopY();
+        currentBaseWidth = (int)(w * BASE_RATIO_W);
+        currentBaseHeight = (int)(currentBaseWidth * BASE_RATIO_H);
         cannon.x = w / 2.0;
-        // 整体下移 40 像素 (原 +70 → +110)
-        cannon.y = topY + (int)(110 * SCALE);
+        // 发射器底座底部紧贴窗口最下方（完全显示）
+        cannon.y = h - currentBaseHeight / 2.0;
+
+        // 如果还没有设置固定虚线，则使用原来的计算方式（兼容）
+        if (fixedDeadlineY < 0) {
+            topY = cannon.y - currentBaseHeight;
+        } else {
+            topY = fixedDeadlineY;
+        }
     }
 
     public double getTopY() {
@@ -73,6 +90,7 @@ public class LaunchPad {
 
     public void drawLaunchPad(Graphics2D g, int w, int h) {
         setCannonPosition(w, h);
+        // 绘制彩虹虚线（使用当前的 topY，即固定后的原位置）
         g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 10, new float[]{10, 7}, 0));
         for (int i = 0; i < w; i += (int)(20 * SCALE)) {
             float hue = (float) (i / (float) w);
@@ -83,14 +101,13 @@ public class LaunchPad {
         g.setStroke(new BasicStroke(1));
     }
 
-    public void drawCannon(Graphics2D g, double mx, double my) {
+    public void drawCannon(Graphics2D g, double mx, double my, int screenW, int screenH) {
         double dx = mx - cannon.x;
         double dy = my - cannon.y;
         if (dy < 0) {
             headAngle = Math.atan2(dy, dx);
-            // 角度范围：-150° 到 -30°（更宽，覆盖虚线两端）
-            double maxLeft = -Math.PI * 5 / 6;   // -150°
-            double maxRight = -Math.PI / 6;      // -30°
+            double maxLeft = -Math.PI * 5 / 6;
+            double maxRight = -Math.PI / 6;
             if (headAngle < maxLeft) headAngle = maxLeft;
             if (headAngle > maxRight) headAngle = maxRight;
         } else {
@@ -100,43 +117,45 @@ public class LaunchPad {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-        // ---------- 底座 ----------
-        int baseX = (int)(cannon.x - BASE_WIDTH/2);
-        int baseY = (int)(cannon.y - BASE_HEIGHT/2);
-        Point2D center = new Point2D.Double(cannon.x, cannon.y - BASE_HEIGHT/4);
+        // 绘制底座
+        int baseX = (int)(cannon.x - currentBaseWidth/2);
+        int baseY = (int)(cannon.y - currentBaseHeight/2);
+        Point2D center = new Point2D.Double(cannon.x, cannon.y - currentBaseHeight/4);
         float[] stops = {0f, 0.7f, 1f};
         Color[] baseColors = {BASE_COLOR_TOP, BASE_COLOR_BOTTOM, new Color(200, 70, 20)};
-        RadialGradientPaint baseGrad = new RadialGradientPaint(center, BASE_WIDTH/1.5f, stops, baseColors);
+        RadialGradientPaint baseGrad = new RadialGradientPaint(center, currentBaseWidth/1.5f, stops, baseColors);
         g.setPaint(baseGrad);
-        g.fillOval(baseX, baseY, BASE_WIDTH, BASE_HEIGHT);
+        g.fillOval(baseX, baseY, currentBaseWidth, currentBaseHeight);
 
         g.setColor(new Color(255, 255, 200, 120));
         g.setStroke(new BasicStroke((int)(2 * SCALE)));
-        g.drawOval(baseX + (int)(2 * SCALE), baseY + (int)(2 * SCALE), BASE_WIDTH - (int)(4 * SCALE), BASE_HEIGHT - (int)(4 * SCALE));
+        g.drawOval(baseX + (int)(2 * SCALE), baseY + (int)(2 * SCALE), currentBaseWidth - (int)(4 * SCALE), currentBaseHeight - (int)(4 * SCALE));
 
         g.setColor(new Color(255, 255, 180));
-        drawStar(g, cannon.x - BASE_WIDTH/2 - (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
-        drawStar(g, cannon.x + BASE_WIDTH/2 + (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
+        drawStar(g, cannon.x - currentBaseWidth/2 - (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
+        drawStar(g, cannon.x + currentBaseWidth/2 + (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
 
-        // ---------- 主炮塔 ----------
-        int turretX = (int)(cannon.x - TURRET_WIDTH/2);
-        int turretY = (int)(cannon.y - TURRET_HEIGHT/2);
+        // 炮塔
+        int turretWidth = (int)(currentBaseWidth * 0.75);
+        int turretHeight = (int)(turretWidth * BASE_RATIO_H);
+        int turretX = (int)(cannon.x - turretWidth/2);
+        int turretY = (int)(cannon.y - turretHeight/2);
         Point2D turretCenter = new Point2D.Double(cannon.x, cannon.y - (int)(5 * SCALE));
-        RadialGradientPaint turretGrad = new RadialGradientPaint(turretCenter, TURRET_WIDTH/1.3f,
+        RadialGradientPaint turretGrad = new RadialGradientPaint(turretCenter, turretWidth/1.3f,
                 new float[]{0f, 0.8f, 1f},
                 new Color[]{TURRET_COLOR_TOP, TURRET_COLOR_BOTTOM, new Color(180, 80, 30)});
         g.setPaint(turretGrad);
-        g.fillRoundRect(turretX, turretY, TURRET_WIDTH, TURRET_HEIGHT, (int)(20 * SCALE), (int)(20 * SCALE));
+        g.fillRoundRect(turretX, turretY, turretWidth, turretHeight, (int)(20 * SCALE), (int)(20 * SCALE));
 
         g.setColor(new Color(255, 255, 220, 100));
-        g.fillRoundRect(turretX + (int)(5 * SCALE), turretY + (int)(2 * SCALE), TURRET_WIDTH - (int)(10 * SCALE), (int)(8 * SCALE), (int)(5 * SCALE), (int)(5 * SCALE));
+        g.fillRoundRect(turretX + (int)(5 * SCALE), turretY + (int)(2 * SCALE), turretWidth - (int)(10 * SCALE), (int)(8 * SCALE), (int)(5 * SCALE), (int)(5 * SCALE));
 
         // 眼睛
-        int eyeRadius = (int)(9 * SCALE);
-        int leftEyeX = (int)(cannon.x - 16 * SCALE);
-        int leftEyeY = (int)(cannon.y - 12 * SCALE);
-        int rightEyeX = (int)(cannon.x + 8 * SCALE);
-        int rightEyeY = (int)(cannon.y - 12 * SCALE);
+        int eyeRadius = (int)(currentBaseWidth * 0.1125);
+        int leftEyeX = (int)(cannon.x - currentBaseWidth * 0.2);
+        int leftEyeY = (int)(cannon.y - currentBaseWidth * 0.15);
+        int rightEyeX = (int)(cannon.x + currentBaseWidth * 0.1);
+        int rightEyeY = (int)(cannon.y - currentBaseWidth * 0.15);
 
         g.setColor(EYE_WHITE);
         g.fillOval(leftEyeX - eyeRadius, leftEyeY - eyeRadius/2, eyeRadius*2, eyeRadius);
@@ -153,32 +172,32 @@ public class LaunchPad {
         g.fillOval((int)(leftEyeX - 1 * SCALE + pupilOffsetX), (int)(leftEyeY - 4 * SCALE + pupilOffsetY), (int)(3 * SCALE), (int)(3 * SCALE));
         g.fillOval((int)(rightEyeX - 1 * SCALE + pupilOffsetX), (int)(rightEyeY - 4 * SCALE + pupilOffsetY), (int)(3 * SCALE), (int)(3 * SCALE));
 
-        // 猫耳
+        // 耳朵
         g.setColor(new Color(255, 160, 80));
         int[] earXLeft = {
-                (int)(cannon.x - 28 * SCALE),
-                (int)(cannon.x - 38 * SCALE),
-                (int)(cannon.x - 22 * SCALE)
+                (int)(cannon.x - currentBaseWidth * 0.35),
+                (int)(cannon.x - currentBaseWidth * 0.475),
+                (int)(cannon.x - currentBaseWidth * 0.275)
         };
         int[] earYLeft = {
-                (int)(cannon.y - 20 * SCALE),
-                (int)(cannon.y - 32 * SCALE),
-                (int)(cannon.y - 25 * SCALE)
+                (int)(cannon.y - currentBaseWidth * 0.25),
+                (int)(cannon.y - currentBaseWidth * 0.4),
+                (int)(cannon.y - currentBaseWidth * 0.3125)
         };
         g.fillPolygon(earXLeft, earYLeft, 3);
         int[] earXRight = {
-                (int)(cannon.x + 20 * SCALE),
-                (int)(cannon.x + 30 * SCALE),
-                (int)(cannon.x + 14 * SCALE)
+                (int)(cannon.x + currentBaseWidth * 0.25),
+                (int)(cannon.x + currentBaseWidth * 0.375),
+                (int)(cannon.x + currentBaseWidth * 0.175)
         };
         int[] earYRight = {
-                (int)(cannon.y - 20 * SCALE),
-                (int)(cannon.y - 32 * SCALE),
-                (int)(cannon.y - 25 * SCALE)
+                (int)(cannon.y - currentBaseWidth * 0.25),
+                (int)(cannon.y - currentBaseWidth * 0.4),
+                (int)(cannon.y - currentBaseWidth * 0.3125)
         };
         g.fillPolygon(earXRight, earYRight, 3);
 
-        // ---------- 炮管 ----------
+        // 炮管
         int barrelStartX = (int)(cannon.x + Math.cos(headAngle) * (12 * SCALE));
         int barrelStartY = (int)(cannon.y + Math.sin(headAngle) * (12 * SCALE));
         int barrelEndX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
@@ -196,6 +215,7 @@ public class LaunchPad {
         g.setColor(new Color(255, 200, 100, 60));
         g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
 
+        // 炮口
         int tipX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
         int tipY = (int)(cannon.y + Math.sin(headAngle) * BARREL_LEN);
         g.setStroke(new BasicStroke(1));
@@ -206,9 +226,9 @@ public class LaunchPad {
         g.setColor(Color.WHITE);
         g.fillOval(tipX - (int)(3 * SCALE), tipY - (int)(3 * SCALE), (int)(6 * SCALE), (int)(6 * SCALE));
 
-        // ---------- 弹药舱 ----------
-        int slotX = (int)(cannon.x + AMMO_OFFSET_X);
-        int slotY = (int)(cannon.y - 12 * SCALE);
+        // 弹药槽
+        int slotX = (int)(cannon.x + currentBaseWidth * AMMO_OFFSET_X_RATIO);
+        int slotY = (int)(cannon.y - currentBaseWidth * 0.15);
         int size = AMMO_SLOT_SIZE;
 
         Point2D slotCenter = new Point2D.Double(slotX, slotY);
@@ -235,62 +255,58 @@ public class LaunchPad {
             g.fillOval(slotX - marbleRadius/2, slotY - marbleRadius/2, marbleRadius/2, marbleRadius/2);
         }
 
-        // 漂浮小星星
         long time = System.currentTimeMillis();
         float angle1 = (time % 1000) / 1000f * (float)Math.PI * 2;
         drawStar(g, slotX + (int)(Math.cos(angle1) * 10 * SCALE), slotY + (int)(Math.sin(angle1) * 10 * SCALE), (int)(2 * SCALE));
         drawStar(g, slotX - (int)(Math.cos(angle1+2) * 8 * SCALE), slotY + (int)(Math.sin(angle1+1.5) * 8 * SCALE), (int)(2 * SCALE));
 
-        // ---------- 瞄准辅助线：动态长度，恰好到达虚线（topY） ----------
-        // 计算从炮塔 (cannon.x, cannon.y) 沿角度方向到 y = topY 所需的距离
-        // 公式: distance = (cannon.y - topY) / (-sin(headAngle))
-        double dyToLine = cannon.y - topY;
-        double sinTheta = Math.sin(headAngle);
-        double distanceToLine = dyToLine / (-sinTheta);
-        // 防止负数或过大
-        if (distanceToLine < 0) distanceToLine = dyToLine;
-        int lineEndX = (int)(cannon.x + Math.cos(headAngle) * distanceToLine);
-        int lineEndY = (int)(cannon.y + Math.sin(headAngle) * distanceToLine);
-        // 确保终点 y 坐标严格为 topY（避免浮点误差）
-        lineEndY = (int) topY;
+        // ========== 瞄准线限制在虚线上（使用 topY） ==========
+        double dirX = Math.cos(headAngle);
+        double dirY = Math.sin(headAngle);
+        double t = (topY - cannon.y) / dirY;  // dirY 为负，t 为正
+        if (t > 0) {
+            double endX = cannon.x + dirX * t;
+            double endY = topY;
+            // 裁剪到屏幕左右边界内
+            if (endX < 0) endX = 0;
+            if (endX > screenW) endX = screenW;
 
-        g.setColor(new Color(255, 100, 200, 100));
-        g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, new float[]{(int)(6 * SCALE), (int)(8 * SCALE)}, 0));
-        g.drawLine((int)cannon.x, (int)cannon.y, lineEndX, lineEndY);
+            g.setColor(new Color(255, 100, 200, 100));
+            g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, new float[]{(int)(6 * SCALE), (int)(8 * SCALE)}, 0));
+            g.drawLine((int)cannon.x, (int)cannon.y, (int)endX, (int)endY);
 
-        // 能量环（放在辅助线末端）
-        g.setStroke(new BasicStroke((int)(3 * SCALE)));
-        g.setColor(new Color(100, 200, 255, 180));
-        g.drawOval(lineEndX - (int)(12 * SCALE), lineEndY - (int)(12 * SCALE), (int)(24 * SCALE), (int)(24 * SCALE));
-        g.setColor(new Color(255, 180, 80, 200));
-        g.drawOval(lineEndX - (int)(8 * SCALE), lineEndY - (int)(8 * SCALE), (int)(16 * SCALE), (int)(16 * SCALE));
-
-        // 靶心
-        g.setStroke(new BasicStroke((float)(1.5 * SCALE)));
-        g.setColor(new Color(255, 50, 100, 200));
-        g.drawOval(lineEndX - (int)(6 * SCALE), lineEndY - (int)(6 * SCALE), (int)(12 * SCALE), (int)(12 * SCALE));
-        g.drawOval(lineEndX - (int)(2 * SCALE), lineEndY - (int)(2 * SCALE), (int)(4 * SCALE), (int)(4 * SCALE));
-        g.fillOval(lineEndX - (int)(1 * SCALE), lineEndY - (int)(1 * SCALE), (int)(2 * SCALE), (int)(2 * SCALE));
+            g.setStroke(new BasicStroke((int)(3 * SCALE)));
+            g.setColor(new Color(100, 200, 255, 180));
+            g.drawOval((int)endX - (int)(12 * SCALE), (int)endY - (int)(12 * SCALE), (int)(24 * SCALE), (int)(24 * SCALE));
+            g.setColor(new Color(255, 180, 80, 200));
+            g.drawOval((int)endX - (int)(8 * SCALE), (int)endY - (int)(8 * SCALE), (int)(16 * SCALE), (int)(16 * SCALE));
+            g.setStroke(new BasicStroke((float)(1.5 * SCALE)));
+            g.setColor(new Color(255, 50, 100, 200));
+            g.drawOval((int)endX - (int)(6 * SCALE), (int)endY - (int)(6 * SCALE), (int)(12 * SCALE), (int)(12 * SCALE));
+            g.drawOval((int)endX - (int)(2 * SCALE), (int)endY - (int)(2 * SCALE), (int)(4 * SCALE), (int)(4 * SCALE));
+            g.fillOval((int)endX - (int)(1 * SCALE), (int)endY - (int)(1 * SCALE), (int)(2 * SCALE), (int)(2 * SCALE));
+        }
 
         g.setStroke(new BasicStroke(1));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
     }
 
+    private static final int[] STAR_X_POINTS = new int[10];
+    private static final int[] STAR_Y_POINTS = new int[10];
+
     private void drawStar(Graphics2D g, double x, double y, int size) {
-        int[] xPoints = new int[10];
-        int[] yPoints = new int[10];
         double outerR = size;
         double innerR = size * 0.4;
         for (int i = 0; i < 10; i++) {
             double angle = Math.PI * 2 * i / 10 - Math.PI / 2;
             double r = (i % 2 == 0) ? outerR : innerR;
-            xPoints[i] = (int)(x + Math.cos(angle) * r);
-            yPoints[i] = (int)(y + Math.sin(angle) * r);
+            STAR_X_POINTS[i] = (int)(x + Math.cos(angle) * r);
+            STAR_Y_POINTS[i] = (int)(y + Math.sin(angle) * r);
         }
         g.setColor(new Color(255, 255, 200, 200));
-        g.fillPolygon(xPoints, yPoints, 10);
+        g.fillPolygon(STAR_X_POINTS, STAR_Y_POINTS, 10);
         g.setColor(new Color(255, 200, 50));
-        g.drawPolygon(xPoints, yPoints, 10);
+        g.drawPolygon(STAR_X_POINTS, STAR_Y_POINTS, 10);
     }
 
     public void setNextMarbleColorType(int type) {

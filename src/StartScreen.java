@@ -7,49 +7,92 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.imageio.ImageIO;
 
-public class StartMenu extends JPanel {
-    public interface StartMenuListener {
+public class StartScreen extends JPanel {
+    public interface StartScreenListener {
         void onStartGame();
+        void onExitGame();
     }
 
-    private final StartMenuListener listener;
+    private final StartScreenListener listener;
     private final ArrayList<Marble> decorMarbles = new ArrayList<>();
     private boolean startHover = false;
     private boolean settingHover = false;
+    private boolean exitHover = false;
     private boolean startPressed = false;
     private boolean settingPressed = false;
-    public static boolean isSoundOnStatic = true; // 静态，给暂停菜单使用
+    public static boolean isSoundOnStatic = true;
+
+    private static final LinearGradientPaint BG_GRADIENT;
+    private static final Font TITLE_FONT;
+    private static final Color TITLE_SHADOW_COLOR_1 = new Color(0, 0, 0, 50);
+    private static final Color TITLE_SHADOW_COLOR_2 = new Color(0, 0, 0, 30);
+    private static final Color TITLE_OUTLINE_COLOR = new Color(255, 255, 255, 220);
+    private static final Color TITLE_SHADOW_OUTLINE = new Color(0, 0, 0, 80);
+    private static final float[] TITLE_GRADIENT_STOPS = {0, 0.25f, 0.5f, 0.75f, 1f};
+    private static final Color[] TITLE_GRADIENT_COLORS = {
+            new Color(255, 70, 70),
+            new Color(255, 180, 50),
+            new Color(50, 200, 255),
+            new Color(180, 70, 255),
+            new Color(255, 90, 150)
+    };
+
+    static {
+        BG_GRADIENT = new LinearGradientPaint(
+                0, 0, 0, 1,
+                new float[]{0, 1},
+                new Color[]{new Color(230, 245, 255), new Color(190, 225, 255)}
+        );
+        TITLE_FONT = new Font("Arial Black", Font.BOLD, 70);
+    }
+
+    private static final Map<String, BufferedImage> ICON_CACHE = new HashMap<>();
 
     private final int BTN_WIDTH = 200;
     private final int BTN_HEIGHT = 80;
     private int startX, startY;
     private int settingX, settingY;
+    private int exitX, exitY;
     private final int SETTING_SIZE = 60;
+    private final int SHUTDOWN_SIZE = 50;
+    private final int SHUTDOWN_FRAME_WIDTH = 188;
+    private final int SHUTDOWN_FRAME_HEIGHT = 1894;
 
     private int fallOffset = -300;
     private final Timer animationTimer = new Timer();
     private BufferedImage settingsIcon;
     private BufferedImage helpIcon;
     private BufferedImage soundIcon;
+    private BufferedImage shutdownIcon;
 
-    public StartMenu(StartMenuListener listener) {
+    public StartScreen(StartScreenListener listener) {
         this.listener = listener;
         setBackground(new Color(240, 248, 255));
-        setPreferredSize(new Dimension(483, 1080));
+        setPreferredSize(new Dimension(483, 483));
 
         try {
-            settingsIcon = ImageIO.read(new File("resources/settings.png"));
-            helpIcon = ImageIO.read(new File("resources/help.png"));
-            soundIcon = ImageIO.read(new File("resources/sound.png"));
+            File settingsFile = new File("resources/settings.png");
+            File helpFile = new File("resources/help.png");
+            File soundFile = new File("resources/sound.png");
+            File shutdownFile = new File("resources/shut-down.png");
+
+            if (settingsFile.exists()) settingsIcon = ImageIO.read(settingsFile);
+            if (helpFile.exists()) helpIcon = ImageIO.read(helpFile);
+            if (soundFile.exists()) soundIcon = ImageIO.read(soundFile);
+            if (shutdownFile.exists()) shutdownIcon = ImageIO.read(shutdownFile);
+            else System.out.println("警告：找不到resources/shut-down.png");
         } catch (IOException e) {
             System.out.println("警告：找不到resources文件夹中的图标文件");
             settingsIcon = null;
             helpIcon = null;
             soundIcon = null;
+            shutdownIcon = null;
         }
 
         initDecorMarbles();
@@ -69,6 +112,9 @@ public class StartMenu extends JPanel {
                 }
                 if (settingPressed) {
                     openSettings();
+                }
+                if (new Rectangle(exitX, exitY, SHUTDOWN_SIZE, SHUTDOWN_SIZE).contains(mx, my)) {
+                    listener.onExitGame();
                 }
             }
 
@@ -98,31 +144,34 @@ public class StartMenu extends JPanel {
             public void mouseExited(MouseEvent e) {
                 startHover = false;
                 settingHover = false;
+                exitHover = false;
                 setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 repaint();
-            }
-
-            private void updateHoverState(int mx, int my) {
-                boolean oldStartHover = startHover;
-                boolean oldSettingHover = settingHover;
-
-                startHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
-                settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
-
-                if (startHover || settingHover) {
-                    setCursor(new Cursor(Cursor.HAND_CURSOR));
-                } else {
-                    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                }
-
-                if (oldStartHover != startHover || oldSettingHover != settingHover) {
-                    repaint();
-                }
             }
         };
 
         addMouseListener(mouseAdapter);
         addMouseMotionListener(mouseAdapter);
+    }
+
+    private void updateHoverState(int mx, int my) {
+        boolean oldStartHover = startHover;
+        boolean oldSettingHover = settingHover;
+        boolean oldExitHover = exitHover;
+
+        startHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
+        settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
+        exitHover = new Rectangle(exitX, exitY, SHUTDOWN_SIZE, SHUTDOWN_SIZE).contains(mx, my);
+
+        if (startHover || settingHover || exitHover) {
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        } else {
+            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        }
+
+        if (oldStartHover != startHover || oldSettingHover != settingHover || oldExitHover != exitHover) {
+            repaint();
+        }
     }
 
     private void initDecorMarbles() {
@@ -147,6 +196,13 @@ public class StartMenu extends JPanel {
         }, 0, 16);
     }
 
+    public void stopAnimation() {
+        if (animationTimer != null) {
+            animationTimer.cancel();
+            animationTimer.purge();
+        }
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -155,16 +211,24 @@ public class StartMenu extends JPanel {
 
         int w = getWidth();
         int h = getHeight();
+
+        // 整体下降10像素
+        int yOffset = 10;
+
         startX = w / 2 - BTN_WIDTH / 2;
-        startY = h / 2 - BTN_HEIGHT / 2;
+        startY = h / 2 - BTN_HEIGHT / 2 + 50 + yOffset; // 向下移动开始按钮
 
         settingX = 30;
         settingY = h - SETTING_SIZE - 30;
 
+        exitX = w - SHUTDOWN_SIZE - 30;
+        exitY = h - SHUTDOWN_SIZE - 30;
+
         drawBackground(g2d, w, h);
-        drawLuxuryTitle(g2d, w, h, fallOffset);
-        drawCompactMarbles(g2d, w, h, fallOffset);
+        drawLuxuryTitle(g2d, w, h, fallOffset + yOffset); // 标题下降10像素
+        drawCompactMarbles(g2d, w, h, fallOffset + yOffset); // 装饰弹珠下降10像素
         drawStartButton(g2d);
+        ShutDownButton(g2d);
         drawStandardGearButton(g2d, h);
     }
 
@@ -185,39 +249,31 @@ public class StartMenu extends JPanel {
     }
 
     private void drawLuxuryTitle(Graphics2D g2d, int w, int h, int offset) {
-        Font titleFont = new Font("Arial Black", Font.BOLD, 70);
-        g2d.setFont(titleFont);
+        g2d.setFont(TITLE_FONT);
         String title = "MARBLE";
         FontMetrics fm = g2d.getFontMetrics();
         int titleWidth = fm.stringWidth(title);
         int baseX = w / 2 - titleWidth / 2;
         int baseY = h / 5 + offset;
 
-        g2d.setColor(new Color(0, 0, 0, 50));
+        g2d.setColor(TITLE_SHADOW_COLOR_1);
         g2d.drawString(title, baseX + 6, baseY + 6);
-        g2d.setColor(new Color(0, 0, 0, 30));
+        g2d.setColor(TITLE_SHADOW_COLOR_2);
         g2d.drawString(title, baseX + 3, baseY + 3);
 
         LinearGradientPaint textGrad = new LinearGradientPaint(
                 baseX, baseY - 40, baseX + titleWidth, baseY + 40,
-                new float[]{0, 0.25f, 0.5f, 0.75f, 1f},
-                new Color[]{
-                        new Color(255, 70, 70),
-                        new Color(255, 180, 50),
-                        new Color(50, 200, 255),
-                        new Color(180, 70, 255),
-                        new Color(255, 90, 150)
-                }
+                TITLE_GRADIENT_STOPS, TITLE_GRADIENT_COLORS
         );
         g2d.setPaint(textGrad);
         g2d.drawString(title, baseX, baseY);
 
         g2d.setStroke(new BasicStroke(3.5f));
-        g2d.setColor(new Color(255, 255, 255, 220));
+        g2d.setColor(TITLE_OUTLINE_COLOR);
         g2d.drawString(title, baseX, baseY);
 
         g2d.setStroke(new BasicStroke(1.5f));
-        g2d.setColor(new Color(0, 0, 0, 80));
+        g2d.setColor(TITLE_SHADOW_OUTLINE);
         g2d.drawString(title, baseX, baseY);
     }
 
@@ -266,6 +322,39 @@ public class StartMenu extends JPanel {
         int[] xP = {x - 18, x + 18, x - 18};
         int[] yP = {y - 18, y, y + 18};
         g2d.fillPolygon(xP, yP, 3);
+    }
+
+    private void ShutDownButton(Graphics2D g2d) {
+        if (shutdownIcon != null) {
+            int frameIndex = 0;
+            if (exitHover) {
+                frameIndex = 1;
+            }
+            int frameX = frameIndex * SHUTDOWN_FRAME_WIDTH;
+            g2d.drawImage(shutdownIcon,
+                    exitX, exitY, exitX + SHUTDOWN_SIZE, exitY + SHUTDOWN_SIZE,
+                    frameX, 0, frameX + SHUTDOWN_FRAME_WIDTH, SHUTDOWN_FRAME_HEIGHT,
+                    null);
+        } else {
+            RoundRectangle2D btn = new RoundRectangle2D.Double(exitX, exitY, SHUTDOWN_SIZE, SHUTDOWN_SIZE, 15, 15);
+            Color c1 = exitHover ? new Color(255, 100, 100) : new Color(200, 60, 60);
+            Color c2 = exitHover ? new Color(180, 40, 40) : new Color(150, 30, 30);
+            LinearGradientPaint btnGrad = new LinearGradientPaint(exitX, exitY, exitX, exitY + SHUTDOWN_SIZE,
+                    new float[]{0, 1}, new Color[]{c1, c2});
+            g2d.setPaint(btnGrad);
+            g2d.fill(btn);
+
+            g2d.setStroke(new BasicStroke(2.5f));
+            g2d.setColor(Color.WHITE);
+            g2d.draw(btn);
+
+            int cx = exitX + SHUTDOWN_SIZE / 2;
+            int cy = exitY + SHUTDOWN_SIZE / 2;
+            int len = 15;
+            g2d.setStroke(new BasicStroke(3f));
+            g2d.drawLine(cx - len, cy - len, cx + len, cy + len);
+            g2d.drawLine(cx + len, cy - len, cx - len, cy + len);
+        }
     }
 
     private void drawStandardGearButton(Graphics2D g2d, int h) {
@@ -329,13 +418,13 @@ public class StartMenu extends JPanel {
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 20));
         buttonPanel.setBackground(new Color(240, 248, 255));
 
-        JButton soundButton = createStyledButtonStatic(isSoundOnStatic ? "Sound on" : "Sound off", true, false, "sound.png");
+        JButton soundButton = createStyledButtonStatic(isSoundOnStatic ? "Sound on" : "Sound off", true, "sound.png");
         soundButton.addActionListener(e -> {
             isSoundOnStatic = !isSoundOnStatic;
             soundButton.setText(isSoundOnStatic ? "Sound on" : "Sound off");
         });
 
-        JButton helpButton = createStyledButtonStatic("How to play", true, false, "help.png");
+        JButton helpButton = createStyledButtonStatic("How to play", true, "help.png");
         helpButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(settingsDialog,
                     "游戏玩法：\n1. 点击屏幕或按空格键发射弹珠\n2. 相同颜色的弹珠碰撞会消除\n3. 不要让弹珠堆到屏幕底部",
@@ -354,8 +443,18 @@ public class StartMenu extends JPanel {
         repaint();
     }
 
-    // ====== 静态按钮方法，给 Main 暂停菜单共用 ======
-    public static JButton createStyledButtonStatic(String text, boolean hasIcon, boolean isResumeOrQuit, String iconName) {
+    public static BufferedImage loadIcon(String iconName) {
+        return ICON_CACHE.computeIfAbsent(iconName, name -> {
+            try {
+                File f = new File("resources/" + name);
+                return f.exists() ? ImageIO.read(f) : null;
+            } catch (IOException e) {
+                return null;
+            }
+        });
+    }
+
+    public static JButton createStyledButtonStatic(String text, boolean hasIcon, String iconName) {
         JButton button = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -388,15 +487,10 @@ public class StartMenu extends JPanel {
                 int textX = (width - textWidth) / 2;
 
                 if (hasIcon) {
-                    int iconSize = 32;
-                    int iconX = 15;
-                    int iconY = (height - iconSize) / 2;
-                    try {
-                        BufferedImage icon = ImageIO.read(new File("resources/" + iconName));
-                        if (icon != null) {
-                            g2d.drawImage(icon, iconX, iconY, iconSize, iconSize, null);
-                        }
-                    } catch (Exception ex) {}
+                    BufferedImage icon = loadIcon(iconName);
+                    if (icon != null) {
+                        g2d.drawImage(icon, 15, (height - 32) / 2, 32, 32, null);
+                    }
                 }
 
                 g2d.drawString(btnText, textX, textY);

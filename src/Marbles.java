@@ -2,22 +2,12 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.BiConsumer;
 
 public class Marbles {
     private static final double SQRT3 = Math.sqrt(3);
     private static final int MIN_GROUP_SIZE = 3;
-    // 偶数行六边形邻接方向
-    private static final int[][] EVEN_ROW_DIRS = {
-            {-1, 0}, {-1, 1},
-            {0, -1},          {0, 1},
-            {1, 0}, {1, 1}
-    };
-    // 奇数行六边形邻接方向
-    private static final int[][] ODD_ROW_DIRS = {
-            {-1, -1}, {-1, 0},
-            {0, -1},          {0, 1},
-            {1, -1}, {1, 0}
-    };
+
     private int rowCount;
     private Marble[][] marbles;
     private double ySpacing;
@@ -25,8 +15,16 @@ public class Marbles {
     private double baseX;
     private double accumulatedY;
     private int screenWidth;
+    private int screenHeight;
     private int maxRowCount;
     private double side;
+
+    // 得分监听器
+    private BiConsumer<Marble, Integer> scoreListener;
+
+    // 动画相关
+    private long lastAnimationTime = 0;
+    private float sparkleOffset = 0;
 
     public Marbles() {
         this.marbles = null;
@@ -35,6 +33,10 @@ public class Marbles {
         this.baseX = 0;
         this.accumulatedY = 0;
         this.side = 24.22;
+    }
+
+    public void setScoreListener(BiConsumer<Marble, Integer> listener) {
+        this.scoreListener = listener;
     }
 
     public double getSide() { return side; }
@@ -46,6 +48,7 @@ public class Marbles {
 
     public void StartMarbles(int screenWidth, int screenHeight, int initialRowCount) {
         this.screenWidth = screenWidth;
+        this.screenHeight = screenHeight;
         this.ySpacing = side * 1.5;
 
         int totalRows = maxRowCount + initialRowCount;
@@ -89,36 +92,12 @@ public class Marbles {
         for (int col = 0; col < perRow; col++) {
             this.marbles[row][col] = new Marble();
             this.marbles[row][col].init(baseX + col * xSpacing, baseY, row, col);
-            initEdgeAttachment(marbles[row][col], row, col);
         }
         this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
     }
 
-    private void initEdgeAttachment(Marble hex, int row, int col) {
-        int[][] edgeAttachment = hex.getEdgeAttachment();
-        double centerX = hex.getCenterX();
-        double refX = side * SQRT3;
-        boolean isEvenCol = Math.abs(centerX - refX) < 0.001;
-
-        if (isEvenCol) {
-            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col + 1;
-            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1;
-            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col + 1;
-            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col;
-            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1;
-            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1;
-        } else {
-            edgeAttachment[0][0] = row + 1; edgeAttachment[0][1] = col;
-            edgeAttachment[1][0] = row;     edgeAttachment[1][1] = col + 1;
-            edgeAttachment[2][0] = row - 1; edgeAttachment[2][1] = col;
-            edgeAttachment[3][0] = row - 1; edgeAttachment[3][1] = col - 1;
-            edgeAttachment[4][0] = row;     edgeAttachment[4][1] = col - 1;
-            edgeAttachment[5][0] = row + 1; edgeAttachment[5][1] = col - 1;
-        }
-    }
-
     public void initRow(int screenWidth, int screenHeight) {
-        StartMarbles(screenWidth, screenHeight, 8);
+        StartMarbles(screenWidth, screenHeight, 4);
     }
 
     public void update(double dt) {
@@ -128,10 +107,18 @@ public class Marbles {
 
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
-            for (Marble hex : marbles[r]) {
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble hex = marbles[r][c];
                 if (hex != null) {
-                    hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
+                    if (!hex.isFalling()) {
+                        hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
+                    }
+                    hex.update(dt);
                     hex.recalculateVerticesIfDirty();
+
+                    if (hex.isDead()) {
+                        marbles[r][c] = null;
+                    }
                 }
             }
         }
@@ -143,6 +130,10 @@ public class Marbles {
             AddMarbleRow(newRow, screenWidth, this.rowCount);
             accumulatedY -= ySpacing;
         }
+
+        // 更新动画偏移
+        sparkleOffset += dt * 3;
+        if (sparkleOffset > Math.PI * 2) sparkleOffset -= Math.PI * 2;
     }
 
     public Marble getHex(int row, int col) {
@@ -160,7 +151,45 @@ public class Marbles {
         return marbles != null ? marbles.length : 0;
     }
 
-    // 新增：供 Main 类进行碰撞检测时获取行数据
+    private boolean isMarbleActive(Marble m) {
+        return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone();
+    }
+
+    public void checkAllEdgeAttachments(int screenWidth) {
+        if (marbles == null) return;
+
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                if (!isMarbleActive(m)) continue;
+
+                int[][] ea = m.getEdgeAttachment();
+                boolean allZero = true;
+                if (ea != null) {
+                    for (int i = 0; i < ea.length; i++) {
+                        if (ea[i][0] != 0 || ea[i][1] != 0) {
+                            allZero = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (allZero) {
+                    int triggerEdge = 0;
+                    double xSpacing = side * SQRT3;
+                    if (m.getCol() % 2 == 0) {
+                        triggerEdge = 4;
+                    } else {
+                        triggerEdge = 1;
+                    }
+                    m.startAlone(triggerEdge, 0);
+                    marbles[r][c] = null;
+                }
+            }
+        }
+    }
+
     public Marble[] getRow(int row) {
         if (marbles != null && row >= 0 && row < marbles.length) {
             return marbles[row];
@@ -168,18 +197,16 @@ public class Marbles {
         return null;
     }
 
-    // 新增：核心算法，将发射的弹珠吸附到六边形网格的正确位置
     public void attachMarble(Marble launchMarble, int screenWidth) {
         double lx = launchMarble.getCenterX();
         double ly = launchMarble.getCenterY();
         double xSpacing = side * SQRT3;
 
-        // 1. 寻找网格中的一个参考球，用来推算当前动态网格的绝对坐标偏移
         Marble ref = null;
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] != null) {
                 for (Marble m : marbles[r]) {
-                    if (m != null && m.isInitialized()) {
+                    if (isMarbleActive(m)) {
                         ref = m;
                         break;
                     }
@@ -190,14 +217,10 @@ public class Marbles {
 
         if (ref == null) return;
 
-        // 根据 Y 坐标差异推算目标行
         int rowOffset = (int) Math.round((ref.getCenterY() - ly) / ySpacing);
         int targetRow = ref.getRow() + rowOffset;
-
-        // 预留的 0~17 空间兜底防越界
         if (targetRow < 0) targetRow = 0;
 
-        // 3. 计算这一行的基础 X 偏移量 (处理交错排列 - 健壮的整型状态判断)
         double refBaseX = ref.getCenterX() - ref.getCol() * xSpacing;
         double targetBaseX = refBaseX;
 
@@ -206,21 +229,16 @@ public class Marbles {
             targetBaseX = (refBaseState == 1) ? xSpacing : (xSpacing / 2.0);
         }
 
-        // 4. 根据 X 坐标推算应该吸附在第几列
         int targetCol = (int) Math.round((lx - targetBaseX) / xSpacing);
         int maxCols = (int) (screenWidth / xSpacing);
         if (targetCol < 0) targetCol = 0;
         if (targetCol > maxCols) targetCol = maxCols;
 
-        // 检测目标网格是否被占用
         boolean isOccupied = false;
         if (targetRow < marbles.length && marbles[targetRow] != null && targetCol < marbles[targetRow].length) {
-            if (marbles[targetRow][targetCol] != null && marbles[targetRow][targetCol].isInitialized()) {
-                isOccupied = true;
-            }
+            isOccupied = isMarbleActive(marbles[targetRow][targetCol]);
         }
 
-        // 如果计算出的完美位置被占用，启用邻域搜索
         if (isOccupied) {
             int bestRow = targetRow;
             int bestCol = targetCol;
@@ -235,9 +253,7 @@ public class Marbles {
                 for (int c = Math.max(0, targetCol - 2); c <= targetCol + 2; c++) {
                     boolean occ = false;
                     if (r < marbles.length && marbles[r] != null && c < marbles[r].length) {
-                        if (marbles[r][c] != null && marbles[r][c].isInitialized()) {
-                            occ = true;
-                        }
+                        occ = isMarbleActive(marbles[r][c]);
                     }
                     if (!occ) {
                         double cellX = rBaseX + c * xSpacing;
@@ -257,14 +273,12 @@ public class Marbles {
             targetRow = bestRow;
             targetCol = bestCol;
 
-            // 根据新找到的安全行重新校正 BaseX
             targetBaseX = refBaseX;
             if (Math.abs(targetRow - ref.getRow()) % 2 == 1) {
                 targetBaseX = (refBaseState == 1) ? xSpacing : (xSpacing / 2.0);
             }
         }
 
-        // 扩容处理
         if (targetRow >= marbles.length) {
             Marble[][] newMarbles = new Marble[targetRow + 2][];
             System.arraycopy(marbles, 0, newMarbles, 0, marbles.length);
@@ -281,15 +295,12 @@ public class Marbles {
             marbles[targetRow] = newRow;
         }
 
-        // 5. 实例化球体，赋予绝对坐标，并继承发射球的颜色
         double exactX = targetBaseX + targetCol * xSpacing;
         double exactY = ref.getCenterY() - (targetRow - ref.getRow()) * ySpacing;
 
         marbles[targetRow][targetCol] = new Marble();
         marbles[targetRow][targetCol].setColorType(launchMarble.getColorType());
         marbles[targetRow][targetCol].init(exactX, exactY, targetRow, targetCol);
-
-        initEdgeAttachment(marbles[targetRow][targetCol], targetRow, targetCol);
 
         checkConnectedFromLaunch(targetRow, targetCol, launchMarble.getColorType());
     }
@@ -306,11 +317,110 @@ public class Marbles {
         dfs(launchRow, launchCol, launchColor, visited, connectedGroup);
 
         if (connectedGroup.size() >= MIN_GROUP_SIZE) {
+            Marble launchM = marbles[launchRow][launchCol];
+            double originX = launchM != null ? launchM.getCenterX() : 0;
+            double originY = launchM != null ? launchM.getCenterY() : 0;
+
             for (Marble m : connectedGroup) {
-                int r = m.getRow();
-                int c = m.getCol();
-                if (r >= 0 && r < marbles.length && c >= 0 && c < marbles[r].length) {
-                    marbles[r][c] = null;
+                if (!m.isScored() && scoreListener != null) {
+                    scoreListener.accept(m, 10);
+                    m.setScored(true);
+                }
+                double dist = 0;
+                if (launchM != null) {
+                    dist = Math.hypot(m.getCenterX() - originX, m.getCenterY() - originY);
+                }
+                double delay = dist / 600.0;
+                m.startPop(delay);
+            }
+
+            checkFloatingMarbles();
+        }
+    }
+
+    private void checkFloatingMarbles() {
+        if (marbles == null) return;
+
+        double minY = Double.MAX_VALUE;
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                if (isMarbleActive(m)) {
+                    if (m.getCenterY() < minY) {
+                        minY = m.getCenterY();
+                    }
+                }
+            }
+        }
+
+        if (minY == Double.MAX_VALUE) return;
+
+        List<Marble> ceilingMarbles = new ArrayList<>();
+        boolean[][] visited = new boolean[marbles.length][];
+        for (int i = 0; i < marbles.length; i++) {
+            if (marbles[i] != null) visited[i] = new boolean[marbles[i].length];
+        }
+
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                if (isMarbleActive(m)) {
+                    if (m.getCenterY() <= minY + side * 1.5) {
+                        ceilingMarbles.add(m);
+                    }
+                }
+            }
+        }
+
+        for (Marble cm : ceilingMarbles) {
+            if (!visited[cm.getRow()][cm.getCol()]) {
+                dfsFloating(cm.getRow(), cm.getCol(), visited);
+            }
+        }
+
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                if (isMarbleActive(m) && !visited[r][c]) {
+                    if (!m.isScored() && scoreListener != null) {
+                        scoreListener.accept(m, 10);
+                        m.setScored(true);
+                    }
+                    m.startFalling(random.nextDouble() * 0.1);
+                }
+            }
+        }
+    }
+
+    private void dfsFloating(int r, int c, boolean[][] visited) {
+        if (r < 0 || r >= marbles.length || marbles[r] == null || c < 0 || c >= marbles[r].length) return;
+        if (visited[r][c]) return;
+
+        Marble current = marbles[r][c];
+        if (current == null || !current.isInitialized() || current.isPopping() || current.isFalling()) return;
+
+        visited[r][c] = true;
+
+        double thresholdSq = (side * SQRT3 * 1.2) * (side * SQRT3 * 1.2);
+
+        for (int dr = -2; dr <= 2; dr++) {
+            int nr = r + dr;
+            if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
+                for (int dc = -2; dc <= 2; dc++) {
+                    int nc = c + dc;
+                    if (nc >= 0 && nc < marbles[nr].length) {
+                        Marble neighbor = marbles[nr][nc];
+                        if (isMarbleActive(neighbor)) {
+                            double dx = current.getCenterX() - neighbor.getCenterX();
+                            double dy = current.getCenterY() - neighbor.getCenterY();
+                            if (dx * dx + dy * dy <= thresholdSq) {
+                                dfsFloating(nr, nc, visited);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -322,15 +432,31 @@ public class Marbles {
         if (visited[r][c]) return;
 
         Marble current = marbles[r][c];
-        if (current == null || !current.isInitialized()) return;
+        if (current == null || !current.isInitialized() || current.isPopping() || current.isFalling()) return;
         if (current.getColorType() != targetColor) return;
 
         visited[r][c] = true;
         res.add(current);
 
-        int[][] directions = (r % 2 == 0) ? EVEN_ROW_DIRS : ODD_ROW_DIRS;
-        for (int[] dir : directions) {
-            dfs(r + dir[0], c + dir[1], targetColor, visited, res);
+        double thresholdSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);
+
+        for (int dr = -1; dr <= 1; dr++) {
+            int nr = r + dr;
+            if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
+                for (int dc = -2; dc <= 2; dc++) {
+                    int nc = c + dc;
+                    if (nc >= 0 && nc < marbles[nr].length) {
+                        Marble neighbor = marbles[nr][nc];
+                        if (isMarbleActive(neighbor) && neighbor.getColorType() == targetColor) {
+                            double dx = current.getCenterX() - neighbor.getCenterX();
+                            double dy = current.getCenterY() - neighbor.getCenterY();
+                            if (dx * dx + dy * dy <= thresholdSq) {
+                                dfs(nr, nc, targetColor, visited, res);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -339,6 +465,10 @@ public class Marbles {
     }
 
     public void draw(Graphics2D g) {
+        // 先绘制卡通风格左边界虚线（在弹珠底层，位于deadline最左端）
+        drawCartoonLeftBoundary(g);
+
+        // 再绘制弹珠
         if (marbles == null) return;
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
@@ -346,6 +476,88 @@ public class Marbles {
                 if (hex != null) hex.draw(g);
             }
         }
+    }
+
+    /**
+     * 绘制卡通风格左边界虚线 - 位于deadline最左端（简洁版，无装饰）
+     */
+    private void drawCartoonLeftBoundary(Graphics2D g) {
+        if (screenWidth <= 0 || screenHeight <= 0) return;
+
+        // deadline最左端位置，x = 0
+        double leftBoundaryX = 0;
+
+        // 确定Y轴范围（从顶部到底部，覆盖整个游戏区域）
+        double topY = -side * 3;
+        double bottomY = screenHeight + side * 3;
+
+        // 保存原始设置
+        Stroke originalStroke = g.getStroke();
+
+        // 启用抗锯齿
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // ========== 1. 绘制外发光效果 ==========
+        for (float offset = -3; offset <= 3; offset += 1.0f) {
+            int alpha = (int) (20 - Math.abs(offset) * 5);
+            g.setColor(new Color(255, 200, 100, Math.max(5, alpha)));
+            g.setStroke(new BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g.drawLine((int) (leftBoundaryX + offset), (int) topY, (int) (leftBoundaryX + offset), (int) bottomY);
+        }
+
+        // ========== 2. 绘制主虚线（彩虹渐变） ==========
+        float[] dashPattern = {16, 12};
+        BasicStroke dashedStroke = new BasicStroke(
+                4.0f,                    // 线宽
+                BasicStroke.CAP_ROUND,   // 圆形端点
+                BasicStroke.JOIN_ROUND,
+                1.0f,
+                dashPattern,
+                0f
+        );
+        g.setStroke(dashedStroke);
+
+        // 分段彩虹渐变
+        int segments = 30;
+        double segmentHeight = (bottomY - topY) / segments;
+
+        for (int i = 0; i < segments; i++) {
+            double startY = topY + i * segmentHeight;
+            double endY = startY + segmentHeight;
+
+            // 彩虹色
+            float hue = (float) (i * 0.033);
+            Color lineColor = Color.getHSBColor(hue, 0.9f, 0.8f);
+            g.setColor(new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), 220));
+
+            g.drawLine((int) leftBoundaryX, (int) startY, (int) leftBoundaryX, (int) endY);
+        }
+
+        // ========== 3. 绘制细虚线内层 ==========
+        float[] innerDashPattern = {8, 14};
+        BasicStroke innerStroke = new BasicStroke(
+                2.0f,
+                BasicStroke.CAP_ROUND,
+                BasicStroke.JOIN_ROUND,
+                1.0f,
+                innerDashPattern,
+                4f
+        );
+        g.setStroke(innerStroke);
+
+        for (int i = 0; i < segments; i++) {
+            double startY = topY + i * segmentHeight;
+            double endY = startY + segmentHeight;
+
+            float hue = (float) ((i * 0.033 + 0.5) % 1.0);
+            Color lineColor = Color.getHSBColor(hue, 0.95f, 0.95f);
+            g.setColor(new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), 200));
+
+            g.drawLine((int) leftBoundaryX, (int) startY, (int) leftBoundaryX, (int) endY);
+        }
+
+        // 恢复原始设置
+        g.setStroke(originalStroke);
     }
 
     public void resetRow() {
