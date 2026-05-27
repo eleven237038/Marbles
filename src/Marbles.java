@@ -294,9 +294,20 @@ public class Marbles {
             double originX = launchM != null ? launchM.getCenterX() : 0;
             double originY = launchM != null ? launchM.getCenterY() : 0;
 
+            // 根据消除数量计算每个球的分数
+            int groupSize = connectedGroup.size();
+            int pointsPerMarble;
+            if (groupSize <= 3) {
+                pointsPerMarble = 10;
+            } else if (groupSize <= 6) {
+                pointsPerMarble = 15;
+            } else {
+                pointsPerMarble = 20;
+            }
+
             for (Marble m : connectedGroup) {
                 if (!m.isScored() && scoreListener != null) {
-                    scoreListener.accept(m, 10);
+                    scoreListener.accept(m, pointsPerMarble);
                     m.setScored(true);
                 }
                 // 计算每个弹珠到发射点的物理距离，以产生由近及远的递进式延迟
@@ -369,7 +380,7 @@ public class Marbles {
                 Marble m = marbles[r][c];
                 if (isMarbleActive(m) && !visited[r][c]) {
                     if (!m.isScored() && scoreListener != null) {
-                        scoreListener.accept(m, 10);
+                        scoreListener.accept(m, 20);
                         m.setScored(true);
                     }
                     // 加入极小随机延迟以达到错落掉落视觉感
