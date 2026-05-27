@@ -15,7 +15,7 @@ import java.awt.LinearGradientPaint;
 import java.util.Random;
 import java.util.prefs.Preferences;
 
-public class Main extends GameEngine implements StartScreen.StartScreenListener, GameOver.GameOverListener {
+public class Main extends GameEngine implements ScreenStart.ScreenStartListener, GameOver.GameOverListener {
     private Marbles hexGrid;
     private LaunchPad launchPad;
     private LaunchMarble launchMarble;
@@ -27,7 +27,7 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
     private boolean frozen = false;
     private double deadline;
     private Random random = new Random();
-    private StartScreen startScreen; // 保存菜单引用用于销毁 Timer
+    private ScreenStart startScreen; // 保存菜单引用用于销毁 Timer
 
     // 窗口尺寸
     private static final int WINDOW_WIDTH = 1080;
@@ -53,7 +53,7 @@ public class Main extends GameEngine implements StartScreen.StartScreenListener,
 
             Main game = new Main(frame);
 
-            StartScreen startScreen = new StartScreen(game);
+            ScreenStart startScreen = new ScreenStart(game);
             game.startScreen = startScreen;
 
             // 创建居中容器
