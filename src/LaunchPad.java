@@ -8,13 +8,13 @@ public class LaunchPad {
     private double topY;
 
     private static final double SCALE = 1.25;
-    private static final double BASE_RATIO_W = 1.0 / 5.0; // 宽度为屏幕宽度的1/5
-    private static final double BASE_RATIO_H = 0.45; // 高度为宽度的0.45倍
+    private static final double BASE_RATIO_W = 1.0 / 4.8; // 发射台底座相对于宽度的比例微调
+    private static final double BASE_RATIO_H = 0.45;
 
     private static final double BARREL_LEN = 45 * SCALE;
 
     private static final int AMMO_SLOT_SIZE = (int)(16 * SCALE);
-    private static final double AMMO_OFFSET_X_RATIO = 0.375; // 相对于baseWidth的比例
+    private static final double AMMO_OFFSET_X_RATIO = 0.375;
 
     private static final Color BASE_COLOR_TOP = new Color(255, 180, 80);
     private static final Color BASE_COLOR_BOTTOM = new Color(255, 100, 40);
@@ -48,21 +48,12 @@ public class LaunchPad {
         this.nextMarbleColor = 1;
     }
 
-    private double calculateTopY() {
-        return maxRowCount % 2 == 1 ?
-                3 * ((maxRowCount - 1) / 2.0 + Math.sqrt(3) / 2) * side :
-                3 * ((maxRowCount - 2) / 2.0 + Math.sqrt(3) / 2 + 0.5) * side;
-    }
-
     public void setCannonPosition(int w, int h) {
-        // 发射台宽度为屏幕宽度的1/5，高度为宽度的0.45倍
         currentBaseWidth = (int)(w * BASE_RATIO_W);
         currentBaseHeight = (int)(currentBaseWidth * BASE_RATIO_H);
 
         cannon.x = w / 2.0;
-        // 将发射台Y坐标调整为距离底部 1/5 处
-        cannon.y = h - (h / 5.0);
-        // 动态同步安全底线 (deadline) 的位置
+        cannon.y = h - (h / 5.2); // 发射台位置适度微调
         topY = cannon.y - currentBaseHeight;
     }
 

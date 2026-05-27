@@ -47,38 +47,32 @@ public class ScreenStart extends JPanel {
                 new float[]{0, 1},
                 new Color[]{new Color(230, 245, 255), new Color(190, 225, 255)}
         );
-        TITLE_FONT = new Font("Arial Black", Font.BOLD, 70);
+        TITLE_FONT = new Font("Arial Black", Font.BOLD, 75);
     }
 
     private static final Map<String, BufferedImage> ICON_CACHE = new HashMap<>();
 
-    private final int BTN_WIDTH = 200;
+    private final int BTN_WIDTH = 220;
     private final int BTN_HEIGHT = 80;
     private int startX, startY;
     private int settingX, settingY;
-    private int exitX, exitY;
     private final int SETTING_SIZE = 60;
 
     private int fallOffset = -300;
     private final Timer animationTimer = new Timer();
     private BufferedImage settingsIcon;
-    private BufferedImage helpIcon;
-    private BufferedImage soundIcon;
 
     public ScreenStart(ScreenStartListener listener) {
         this.listener = listener;
         setBackground(new Color(240, 248, 255));
-        setPreferredSize(new Dimension(483, 483));
+        
+        // 动态适配总宽度，无需硬编码
+        setPreferredSize(new Dimension(Main.TOTAL_WIDTH, Main.GAME_HEIGHT));
 
         try {
             settingsIcon = ImageIO.read(new File("resources/settings.png"));
-            helpIcon = ImageIO.read(new File("resources/help.png"));
-            soundIcon = ImageIO.read(new File("resources/sound.png"));
         } catch (IOException e) {
-            System.out.println("警告：找不到resources文件夹中的图标文件");
             settingsIcon = null;
-            helpIcon = null;
-            soundIcon = null;
         }
 
         initDecorMarbles();
@@ -87,8 +81,8 @@ public class ScreenStart extends JPanel {
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                int mx = e.getX();
-                int my = e.getY();
+                int mx = e.getPoint().x;
+                int my = e.getPoint().y;
                 startPressed = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
                 settingPressed = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
                 repaint();
@@ -167,7 +161,7 @@ public class ScreenStart extends JPanel {
             @Override
             public void run() {
                 if (fallOffset < 0) {
-                    fallOffset += 3;
+                    fallOffset += 4;
                     repaint();
                 } else {
                     this.cancel();
@@ -176,7 +170,6 @@ public class ScreenStart extends JPanel {
         }, 0, 16);
     }
 
-    // [Bug 7] 修复：提供停止并在 GC 时清理 Timer 的机制
     public void stopAnimation() {
         if (animationTimer != null) {
             animationTimer.cancel();
@@ -192,8 +185,10 @@ public class ScreenStart extends JPanel {
 
         int w = getWidth();
         int h = getHeight();
+
+        // 重新适配新尺寸下的正中心位置
         startX = w / 2 - BTN_WIDTH / 2;
-        startY = h / 2 - BTN_HEIGHT / 2 + 50; // 向下移动开始按钮
+        startY = h / 2 - BTN_HEIGHT / 2 + 60;
 
         settingX = 30;
         settingY = h - SETTING_SIZE - 30;
@@ -227,7 +222,7 @@ public class ScreenStart extends JPanel {
         FontMetrics fm = g2d.getFontMetrics();
         int titleWidth = fm.stringWidth(title);
         int baseX = w / 2 - titleWidth / 2;
-        int baseY = h / 5 + offset;
+        int baseY = h / 4 + offset; // 将标题略微下移，更显平衡
 
         g2d.setColor(TITLE_SHADOW_COLOR_1);
         g2d.drawString(title, baseX + 6, baseY + 6);
@@ -252,17 +247,17 @@ public class ScreenStart extends JPanel {
 
     private void drawCompactMarbles(Graphics2D g2d, int w, int h, int offset) {
         int centerX = w / 2;
-        int titleY = h / 5 + offset;
+        int titleY = h / 4 + offset;
 
         int[][] positions = {
-                {centerX - 150, titleY - 60},
-                {centerX + 150, titleY - 60},
-                {centerX - 180, titleY},
-                {centerX + 180, titleY},
-                {centerX - 100, titleY + 50},
-                {centerX, titleY + 70},
-                {centerX + 100, titleY + 50},
-                {centerX, titleY - 75}
+                {centerX - 170, titleY - 60},
+                {centerX + 170, titleY - 60},
+                {centerX - 200, titleY},
+                {centerX + 200, titleY},
+                {centerX - 120, titleY + 50},
+                {centerX, titleY + 80},
+                {centerX + 120, titleY + 50},
+                {centerX, titleY - 80}
         };
 
         for (int i = 0; i < decorMarbles.size(); i++) {
@@ -318,6 +313,7 @@ public class ScreenStart extends JPanel {
         } else {
             double cx = x + SETTING_SIZE / 2.0;
             double cy = y + SETTING_SIZE / 2.0;
+            g2d.setColor(new Color(100, 140, 180));
             drawStandardGear(g2d, cx, cy, 22, 12, 8);
         }
     }
@@ -336,6 +332,7 @@ public class ScreenStart extends JPanel {
         }
         gear.closePath();
         g2d.fill(gear);
+        g2d.setColor(Color.WHITE);
         g2d.fillOval((int) cx - 6, (int) cy - 6, 12, 12);
     }
 
@@ -367,7 +364,7 @@ public class ScreenStart extends JPanel {
         JButton helpButton = createStyledButtonStatic("How to play", true, "help.png");
         helpButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(settingsDialog,
-                    "游戏玩法：\n1. 点击屏幕或按空格键发射弹珠\n2. 相同颜色的弹珠碰撞会消除\n3. 不要让弹珠堆到屏幕底部",
+                    "游戏玩法：\n1. 点击/空格发射弹珠\n2. 3个同色相连即消除\n3. 不要让弹珠碰到底部红线",
                     "How to play", JOptionPane.INFORMATION_MESSAGE);
         });
 

@@ -5,40 +5,29 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * BoardGame - 整合弹珠游戏所有核心游戏逻辑
- * 包括: Marble[][] 生成规则、发射弹珠规则、碰撞检测、消除规则等
- *
- * 设计原则: BoardGame 是一个独立的游戏界面模块,可嵌入到任意窗口中
- * 所有尺寸相关的数值都以 side(弹珠半径的2倍)为基准进行相对计算
- * 不会直接依赖屏幕像素值,而是根据传入的游戏界面尺寸按比例计算
+ * BoardGame - 核心游戏界面同步类
  */
 public class BoardGame {
-    // ==================== 常量定义 ====================
     private static final double SQRT3 = Math.sqrt(3);
     private static final int MIN_GROUP_SIZE = 3;
     private static final double SCALE = 1.25;
     private static final double NEIGHBOR_DIST_RATIO = 1.1;
     private static final double FLOATING_DIST_RATIO = 1.2;
 
-    // 基于 side 的固定缩放比例(使发射台等UI元素在不同尺寸下保持比例)
     private double uiScale = 1.0;
 
-    // 基于 side 的固定比例常量(用于计算发射台尺寸)
-    private static final double BASE_WIDTH_RATIO = 1.0 / 5.0;        // 发射台宽度为游戏界面宽度的1/5
-    private static final double BASE_HEIGHT_RATIO = 0.45;            // 发射台高度为宽度的0.45倍
-    private static final double BARREL_LEN_RATIO = 45.0 / 24.22 * 2;  // 炮管长度相对于 side
-    private static final double AMMO_SLOT_SIZE_RATIO = 16.0 / 24.22 * 2; // 弹药槽大小
-    private static final double AMMO_OFFSET_X_RATIO = 0.375;          // 弹药槽X偏移比例
+    private static final double BASE_WIDTH_RATIO = 1.0 / 4.8;        
+    private static final double BASE_HEIGHT_RATIO = 0.45;            
+    private static final double BARREL_LEN_RATIO = 45.0 / 24.22 * 2;  
+    private static final double AMMO_SLOT_SIZE_RATIO = 16.0 / 24.22 * 2; 
+    private static final double AMMO_OFFSET_X_RATIO = 0.375;          
 
-    // 移动速度比例(基于 side)
-    private static final double MARBLE_MOVE_SPEED = 0.4;            // 弹珠网格下降速度
-    private static final double LAUNCH_SPEED = 1500;                  // 发射速度(与掉落加速度一致)
+    private static final double MARBLE_MOVE_SPEED = 0.4;            
+    private static final double LAUNCH_SPEED = 1500;                  
 
-    // 游戏界面内部比例(这些比例使得游戏可以适应不同尺寸)
-    private static final double CANNON_Y_RATIO = 4.0 / 5.0;          // 发射台Y位置:距底部1/5处
-    private static final double DEADLINE_MARGIN_RATIO = 0.0;           // deadline 边距(为0,使用计算值)
+    private static final double CANNON_Y_RATIO = 4.0 / 5.2;          
+    private static final double DEADLINE_MARGIN_RATIO = 0.0;           
 
-    // ==================== 颜色定义 ====================
     private static final Color[] MARBLE_COLORS = {
         null,
         new Color(220, 30, 30),
@@ -59,392 +48,36 @@ public class BoardGame {
     private static final Color EYE_PUPIL = new Color(40, 40, 60);
     private static final Color EYE_HIGHLIGHT = new Color(255, 255, 255);
 
-    // ==================== 游戏状态 ====================
-    private int gameWidth;    // 游戏界面宽度
-    private int gameHeight;   // 游戏界面高度
-    private double side;       // 弹珠大小基准值(所有尺寸的基准)
+    private int gameWidth;    
+    private int gameHeight;   
+    private double side;       
     private int maxRowCount;
-    private double ySpacing;   // 基于 side 计算
-    private double xSpacing;  // 基于 side 计算(六边形网格)
+    private double ySpacing;   
+    private double xSpacing;  
     private double baseX;
     private double accumulatedY;
     private int rowCount;
     private Marble[][] marbles;
     private Random random = new Random();
 
-    // 预计算的邻域距离阈值(避免在dfs递归中重复计算)
     private double neighborThresholdSq;
     private double floatingThresholdSq;
 
-    // 发射台状态(基于 side 和比例计算)
     private Point2D.Double cannon;
     private double headAngle = -Math.PI / 2;
     private int nextMarbleColor;
-    private double topY;              // deadline 位置(基于计算)
-    private int currentBaseWidth;     // 基于 gameWidth 计算
-    private int currentBaseHeight;    // 基于 currentBaseWidth 计算
-    private double barrelLen;        // 基于 side 计算
-    private int ammoSlotSize;         // 基于 side 计算
-    private double uiScaleFactor;     // UI元素的缩放因子
+    private double topY;              
+    private int currentBaseWidth;     
+    private int currentBaseHeight;    
+    private double barrelLen;        
+    private int ammoSlotSize;         
+    private double uiScaleFactor;     
 
-    // 发射弹珠状态
     private MarbleLaunch launchMarble;
     private boolean marbleLaunched = false;
 
-    // ==================== Marble 内部类 ====================
-    public static class Marble {
-        private double cx, cy;
-        private double side;
-        private boolean initialized;
-        private boolean verticesDirty;
-        public static final int RED = 1;
-        public static final int BLUE = 2;
-        public static final int YELLOW = 3;
-        public static final int PURPLE = 4;
-
-        // 动画状态相关
-        private boolean popping = false;
-        private boolean falling = false;
-        private boolean dead = false;
-        private double popDelay = 0;
-        private double popProgress = 0;
-
-        // 掉落物理参数
-        private double fallVy = 0;
-        private double fallAy = 1500;  // 重力加速度
-        private static final double FALL_DEATH_Y = 1500;  // 掉落死亡阈值
-
-        // 单独动画状态
-        private boolean alone = false;
-        private double aloneSlideVx = 0;
-        private double aloneSlideVy = 0;
-        private double aloneDelay = 0;
-
-        // 颜色定义
-        private static final Color[] BASE_COLOR = {
-            null,
-            new Color(220, 30, 30),
-            new Color(20, 80, 220),
-            new Color(240, 200, 20),
-            new Color(160, 30, 200)
-        };
-        private static final Color[] BRIGHT_COLOR = {
-            null,
-            new Color(255, 130, 130),
-            new Color(110, 190, 255),
-            new Color(255, 250, 180),
-            new Color(220, 130, 255)
-        };
-        private static final Color[] DARK_COLOR = {
-            null,
-            new Color(120, 10, 10),
-            new Color(10, 40, 120),
-            new Color(160, 120, 0),
-            new Color(90, 10, 120)
-        };
-
-        private static final Random random = new Random();
-        private int colorType;
-        private int row;
-        private int col;
-        private int[][] edgeAttachment;
-        private boolean markedForRemove = false;
-
-        public Marble() {
-            this.cx = 0;
-            this.cy = 0;
-            this.side = 24.22;
-            this.initialized = false;
-            this.colorType = random.nextInt(4) + 1;
-            this.row = 0;
-            this.col = 0;
-            this.edgeAttachment = new int[6][2];
-            this.verticesDirty = false;
-        }
-
-        public void init(double cx, double cy, int row, int col) {
-            this.cx = cx;
-            this.cy = cy;
-            this.row = row;
-            this.col = col;
-            this.initialized = true;
-        }
-
-        public void startPop(double delay) {
-            this.popping = true;
-            this.popDelay = delay;
-            this.popProgress = 0;
-        }
-
-        public void startFalling(double delay) {
-            this.falling = true;
-            this.popping = false;
-            this.alone = false;
-            this.popDelay = delay;
-            this.fallVy = -150 - (random.nextDouble() * 80);
-        }
-
-        public void startAlone(int triggerEdge, double delay) {
-            this.alone = true;
-            this.falling = false;
-            this.popping = false;
-            this.popDelay = delay;
-            double angle = triggerEdge * Math.PI / 3.0;
-            double slideSpeed = 120 + random.nextDouble() * 60;
-            this.aloneSlideVx = Math.cos(angle) * slideSpeed;
-            this.aloneSlideVy = -Math.abs(Math.sin(angle) * slideSpeed);
-        }
-
-        public boolean isAlone() { return alone; }
-        public boolean isPopping() { return popping; }
-        public boolean isFalling() { return falling; }
-        public boolean isDead() { return dead; }
-
-        public void update(double dt) {
-            if (popping) {
-                if (popDelay > 0) {
-                    popDelay -= dt;
-                } else {
-                    popProgress += dt * 6.0;
-                    if (popProgress >= 1.0) {
-                        dead = true;
-                    }
-                }
-            } else if (alone) {
-                if (popDelay > 0) {
-                    popDelay -= dt;
-                } else {
-                    if (aloneDelay < 0.3) {
-                        cx += aloneSlideVx * dt;
-                        cy += aloneSlideVy * dt;
-                        aloneDelay += dt;
-                        verticesDirty = true;
-                    } else {
-                        cy += (400 + random.nextDouble() * 100) * dt;
-                        verticesDirty = true;
-                        if (cy > FALL_DEATH_Y) {
-                            dead = true;
-                        }
-                    }
-                }
-            } else if (falling) {
-                if (popDelay > 0) {
-                    popDelay -= dt;
-                } else {
-                    cy += fallVy * dt;
-                    fallVy += fallAy * dt;
-                    verticesDirty = true;
-                    if (cy > FALL_DEATH_Y) {
-                        dead = true;
-                    }
-                }
-            }
-        }
-
-        public void setCenter(double cx, double cy) {
-            this.cx = cx;
-            this.cy = cy;
-            this.verticesDirty = true;
-        }
-
-        public void setSide(double side) { this.side = side; }
-        public double getCenterX() { return cx; }
-        public double getCenterY() { return cy; }
-        public double getSide() { return side; }
-        public boolean isInitialized() { return initialized; }
-        public int getColorType() { return colorType; }
-        public void setColorType(int colorType) { this.colorType = colorType; }
-        public int getRow() { return row; }
-        public int getCol() { return col; }
-        public int[][] getEdgeAttachment() { return edgeAttachment; }
-        public void setEdgeAttachment(int[][] edgeAttachment) { this.edgeAttachment = edgeAttachment; }
-        public void markForRemove(boolean b) { markedForRemove = b; }
-        public boolean isMarkedForRemove() { return markedForRemove; }
-
-        public void draw(Graphics2D g) {
-            if (!initialized || dead) return;
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-
-            double scale = 1.0;
-            float alpha = 1.0f;
-
-            if (popping && popDelay <= 0) {
-                scale = 1.0 + popProgress * 0.4;
-                alpha = 1.0f - (float)popProgress;
-                if (alpha < 0f) alpha = 0f;
-                if (alpha > 1f) alpha = 1f;
-            }
-
-            Composite originalComposite = null;
-            if (alpha < 1.0f) {
-                originalComposite = g.getComposite();
-                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
-            }
-
-            double radius = side * 0.866 * scale;
-            double x = cx - radius;
-            double y = cy - radius;
-            double diameter = radius * 2;
-
-            Color base = BASE_COLOR[colorType];
-            Color bright = BRIGHT_COLOR[colorType];
-            Color dark = DARK_COLOR[colorType];
-
-            g.setColor(new Color(0,0,0,40));
-            g.fillOval((int)(x + 2 * scale), (int)(y + 2 * scale), (int)diameter, (int)diameter);
-
-            Point2D center = new Point2D.Double(cx, cy);
-            float[] stop = {0f, 0.6f, 1f};
-            Color[] gradColor = {bright, base, dark};
-            RadialGradientPaint ballGrad = new RadialGradientPaint(center, (float)radius, stop, gradColor);
-            g.setPaint(ballGrad);
-            g.fillOval((int)x, (int)y, (int)diameter, (int)diameter);
-
-            g.setStroke(new BasicStroke(1.8f * (float)scale));
-            g.setColor(new Color(0,0,0,70));
-            g.drawOval((int)x, (int)y, (int)diameter, (int)diameter);
-
-            g.setStroke(new BasicStroke(0.8f * (float)scale));
-            g.setColor(new Color(255,255,255,50));
-            g.drawOval((int)(x + 1 * scale), (int)(y + 1 * scale), (int)(diameter - 2 * scale), (int)(diameter - 2 * scale));
-
-            g.setColor(new Color(255,255,255,200));
-            double highlightR = radius * 0.32;
-            g.fillOval((int)(cx - radius * 0.48), (int)(cy - radius * 0.48), (int)highlightR, (int)highlightR);
-
-            g.setColor(new Color(255,255,255,120));
-            int reflect1Size = Math.max(1, (int)(4 * scale));
-            int reflect2Size = Math.max(1, (int)(3 * scale));
-            g.fillOval((int)(cx + radius * 0.25), (int)(cy - radius * 0.2), reflect1Size, reflect1Size);
-            g.fillOval((int)(cx - radius * 0.2), (int)(cy + radius * 0.3), reflect2Size, reflect2Size);
-
-            if (alpha < 1.0f) {
-                g.setComposite(originalComposite);
-            }
-        }
-
-        public void reset() {
-            this.cx = 0;
-            this.cy = 0;
-            this.side = 24.22;
-            this.initialized = false;
-            this.popping = false;
-            this.falling = false;
-            this.alone = false;
-            this.dead = false;
-            this.popDelay = 0;
-            this.popProgress = 0;
-            this.fallVy = 0;
-            this.aloneDelay = 0;
-        }
-    }
-
-    // ==================== MarbleLaunch 内部类 ====================
-    public class MarbleLaunch {
-        private double vx;
-        private double vy;
-        private double launchSpeed = LAUNCH_SPEED;  // 与掉落加速度一致
-        private boolean launched;
-        private double prevCx;
-        private double prevCy;
-        private Marble marble;
-
-        public MarbleLaunch() {
-            this.vx = 0;
-            this.vy = 0;
-            this.launched = false;
-            this.prevCx = 0;
-            this.prevCy = 0;
-            this.marble = new Marble();
-        }
-
-        public void setScreenSize(int width, int height) {
-            // 仅供继承GameEngine的类使用,BoardGame直接使用screenWidth/screenHeight
-        }
-
-        public void init(double cx, double cy, int row, int col) {
-            marble.init(cx, cy, row, col);
-            this.prevCx = cx;
-            this.prevCy = cy;
-        }
-
-        public void launch(double targetX, double targetY) {
-            double dx = targetX - getCenterX();
-            double dy = targetY - getCenterY();
-            double distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > 1) {
-                vx = (dx / distance) * launchSpeed;
-                vy = (dy / distance) * launchSpeed;
-                launched = true;
-                prevCx = getCenterX();
-                prevCy = getCenterY();
-            }
-        }
-
-        public void reset(double x, double y) {
-            this.vx = 0;
-            this.vy = 0;
-            this.launched = false;
-            marble.setCenter(x, y);
-            this.prevCx = x;
-            this.prevCy = y;
-        }
-
-        public void update(double dt) {
-            if (launched && gameWidth > 0 && gameHeight > 0) {
-                prevCx = getCenterX();
-                prevCy = getCenterY();
-
-                double cx = prevCx + vx * dt;
-                double cy = prevCy + vy * dt;
-                double radius = side * 0.866;
-
-                // 左右墙壁碰撞
-                if (cx <= radius) {
-                    cx = radius;
-                    vx = -vx;
-                } else if (cx >= gameWidth - radius) {
-                    cx = gameWidth - radius;
-                    vx = -vx;
-                }
-
-                // 顶部判定:接触顶部时停止,触发吸附
-                if (cy <= radius) {
-                    cy = radius;
-                    vy = 0;
-                    vx = 0;
-                    launched = false;
-                }
-
-                marble.setCenter(cx, cy);
-            }
-        }
-
-        public boolean isLaunched() { return launched; }
-        public double getVx() { return vx; }
-        public double getVy() { return vy; }
-        public double getPrevCenterX() { return prevCx; }
-        public double getPrevCenterY() { return prevCy; }
-        public void setLaunchSpeed(double speed) { this.launchSpeed = speed; }
-
-        public double getCenterX() { return marble.getCenterX(); }
-        public double getCenterY() { return marble.getCenterY(); }
-        public double getSide() { return marble.getSide(); }
-        public int getColorType() { return marble.getColorType(); }
-        public void setColorType(int type) { marble.setColorType(type); }
-
-        public void draw(Graphics2D g) {
-            if (!launched) return;
-            marble.draw(g);
-        }
-    }
-
-    // ==================== BoardGame 构造函数 ====================
     public BoardGame() {
-        this.side = 24.22;  // 基准尺寸
+        this.side = 24.22;  
         this.marbles = null;
         this.rowCount = 0;
         this.ySpacing = 0;
@@ -456,26 +89,20 @@ public class BoardGame {
         this.launchMarble = new MarbleLaunch();
     }
 
-    // ==================== 初始化 ====================
     public void init(int gameWidth, int gameHeight, int maxRowCount) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         this.maxRowCount = maxRowCount;
-        this.side = 24.22;  // 固定基准值
+        this.side = 24.22;  
 
-        // 基于 side 计算间距
         this.ySpacing = side * 1.5;
         this.xSpacing = side * SQRT3;
 
-        // 预计算邻域距离阈值
         this.neighborThresholdSq = (side * SQRT3 * NEIGHBOR_DIST_RATIO) * (side * SQRT3 * NEIGHBOR_DIST_RATIO);
         this.floatingThresholdSq = (side * SQRT3 * FLOATING_DIST_RATIO) * (side * SQRT3 * FLOATING_DIST_RATIO);
 
-        // 计算UI缩放因子,使弹珠在不同尺寸下保持比例
-        // 使用标准尺寸(483)作为参考,计算缩放比例
         this.uiScaleFactor = gameWidth / 483.0;
 
-        // 计算基于比例的尺寸
         this.barrelLen = side * BARREL_LEN_RATIO * uiScaleFactor;
         this.ammoSlotSize = (int)(side * AMMO_SLOT_SIZE_RATIO * uiScaleFactor);
         this.currentBaseWidth = (int)(gameWidth * BASE_WIDTH_RATIO);
@@ -492,7 +119,6 @@ public class BoardGame {
     public int getGameWidth() { return gameWidth; }
     public int getGameHeight() { return gameHeight; }
 
-    // ==================== Marble[][] 生成规则 ====================
     public void StartMarbles(int gameWidth, int gameHeight, int initialRowCount) {
         this.gameWidth = gameWidth;
         this.ySpacing = side * 1.5;
@@ -546,7 +172,6 @@ public class BoardGame {
         StartMarbles(gameWidth, gameHeight, 4);
     }
 
-    // ==================== 游戏更新 ====================
     public void update(double dt) {
         if (marbles == null) return;
 
@@ -577,7 +202,6 @@ public class BoardGame {
             accumulatedY -= ySpacing;
         }
 
-        // 更新发射弹珠
         if (launchMarble.isLaunched()) {
             launchMarble.update(dt);
         }
@@ -594,7 +218,6 @@ public class BoardGame {
     public int getMarblesLength() { return marbles != null ? marbles.length : 0; }
     public double getVerticalSpacing() { return ySpacing; }
 
-    // ==================== 发射弹珠规则 ====================
     public void prepareNextMarble() {
         nextMarbleColor = random.nextInt(4) + 1;
     }
@@ -617,22 +240,12 @@ public class BoardGame {
         if (type >= 1 && type <= 4) this.nextMarbleColor = type;
     }
 
-    // ==================== 发射台相关 ====================
-    private double calculateTopY() {
-        return maxRowCount % 2 == 1 ?
-                3 * ((maxRowCount - 1) / 2.0 + Math.sqrt(3) / 2) * side :
-                3 * ((maxRowCount - 2) / 2.0 + Math.sqrt(3) / 2 + 0.5) * side;
-    }
-
     public void setCannonPosition(int w, int h) {
-        // 发射台尺寸基于游戏界面宽度按比例计算
         currentBaseWidth = (int)(w * BASE_WIDTH_RATIO);
         currentBaseHeight = (int)(currentBaseWidth * BASE_HEIGHT_RATIO);
 
         cannon.x = w / 2.0;
-        // 发射台Y坐标:距离底部1/5处
         cannon.y = h * CANNON_Y_RATIO;
-        // deadline 位置:发射台顶部
         topY = cannon.y - currentBaseHeight;
     }
 
@@ -661,7 +274,6 @@ public class BoardGame {
     public double getCannonX() { return cannon.x; }
     public double getCannonY() { return cannon.y; }
 
-    // ==================== 碰撞检测与吸附 ====================
     private boolean isMarbleActive(Marble m) {
         return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone();
     }
@@ -670,7 +282,6 @@ public class BoardGame {
         double lx = launchMarble.getCenterX();
         double ly = launchMarble.getCenterY();
 
-        // 1. 寻找参考球,推算网格偏移
         Marble ref = null;
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] != null) {
@@ -686,12 +297,10 @@ public class BoardGame {
 
         if (ref == null) return;
 
-        // 2. 计算目标行
         int rowOffset = (int) Math.round((ref.getCenterY() - ly) / ySpacing);
         int targetRow = ref.getRow() + rowOffset;
         if (targetRow < 0) targetRow = 0;
 
-        // 3. 计算基础X偏移
         double refBaseX = ref.getCenterX() - ref.getCol() * xSpacing;
         double targetBaseX = refBaseX;
 
@@ -700,19 +309,16 @@ public class BoardGame {
             targetBaseX = (refBaseState == 1) ? xSpacing : (xSpacing / 2.0);
         }
 
-        // 4. 计算目标列
         int targetCol = (int) Math.round((lx - targetBaseX) / xSpacing);
         int maxCols = (int)(gameWidth / xSpacing);
         if (targetCol < 0) targetCol = 0;
         if (targetCol > maxCols) targetCol = maxCols;
 
-        // 检测位置是否被占用
         boolean isOccupied = false;
         if (targetRow < marbles.length && marbles[targetRow] != null && targetCol < marbles[targetRow].length) {
             isOccupied = isMarbleActive(marbles[targetRow][targetCol]);
         }
 
-        // 邻域搜索找空位
         if (isOccupied) {
             int bestRow = targetRow;
             int bestCol = targetCol;
@@ -753,7 +359,6 @@ public class BoardGame {
             }
         }
 
-        // 扩容
         if (targetRow >= marbles.length) {
             Marble[][] newMarbles = new Marble[targetRow + 2][];
             System.arraycopy(marbles, 0, newMarbles, 0, marbles.length);
@@ -770,7 +375,6 @@ public class BoardGame {
             marbles[targetRow] = newRow;
         }
 
-        // 5. 实例化弹珠
         double exactX = targetBaseX + targetCol * xSpacing;
         double exactY = ref.getCenterY() - (targetRow - ref.getRow()) * ySpacing;
 
@@ -781,7 +385,6 @@ public class BoardGame {
         checkConnectedFromLaunch(targetRow, targetCol, launchMarble.getColorType());
     }
 
-    // ==================== 消除规则 ====================
     private void checkConnectedFromLaunch(int launchRow, int launchCol, int launchColor) {
         if (marbles == null) return;
 
@@ -843,7 +446,6 @@ public class BoardGame {
         }
     }
 
-    // ==================== 悬空检测与消除 ====================
     public void checkAllEdgeAttachments(int gameWidth) {
         if (marbles == null) return;
 
@@ -884,7 +486,6 @@ public class BoardGame {
     private void checkFloatingMarbles() {
         if (marbles == null) return;
 
-        // 找最高位置
         double minY = Double.MAX_VALUE;
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
@@ -900,7 +501,6 @@ public class BoardGame {
 
         if (minY == Double.MAX_VALUE) return;
 
-        // 天花板节点
         List<Marble> ceilingMarbles = new ArrayList<>();
         boolean[][] visited = new boolean[marbles.length][];
         for (int i = 0; i < marbles.length; i++) {
@@ -919,14 +519,12 @@ public class BoardGame {
             }
         }
 
-        // DFS遍历
         for (Marble cm : ceilingMarbles) {
             if (!visited[cm.getRow()][cm.getCol()]) {
                 dfsFloating(cm.getRow(), cm.getCol(), visited);
             }
         }
 
-        // 未遍历到的开始掉落
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
             for (int c = 0; c < marbles[r].length; c++) {
@@ -974,7 +572,6 @@ public class BoardGame {
         return null;
     }
 
-    // ==================== 绘制 ====================
     public void draw(Graphics2D g) {
         if (marbles == null) return;
         for (int r = 0; r < marbles.length; r++) {
@@ -1191,7 +788,6 @@ public class BoardGame {
         g.drawPolygon(STAR_X_POINTS, STAR_Y_POINTS, 10);
     }
 
-    // ==================== 重置 ====================
     public void resetRow() {
         if (marbles != null) {
             for (Marble[] row : marbles) {
