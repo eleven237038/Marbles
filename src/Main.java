@@ -852,6 +852,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 launchPad.updateScore(score);
                 launchPad.updateHighScore(high);
             }
+            if (mPanel != null) mPanel.repaint();
+            repaint();
         }
     }
 }
