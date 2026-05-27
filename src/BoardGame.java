@@ -14,18 +14,16 @@ public class BoardGame {
     private static final double NEIGHBOR_DIST_RATIO = 1.1;
     private static final double FLOATING_DIST_RATIO = 1.2;
 
-    private double uiScale = 1.0;
-
-    private static final double BASE_WIDTH_RATIO = 1.0 / 4.8;        
-    private static final double BASE_HEIGHT_RATIO = 0.45;            
-    private static final double BARREL_LEN_RATIO = 45.0 / 24.22 * 2;  
-    private static final double AMMO_SLOT_SIZE_RATIO = 16.0 / 24.22 * 2; 
+    private static final double BASE_RATIO_W = 1.0 / 4.8;
+    private static final double BASE_RATIO_H = 0.45;
+    private static final double BARREL_LEN = 45 * SCALE;
+    private static final int AMMO_SLOT_SIZE = (int)(16 * SCALE);
     private static final double AMMO_OFFSET_X_RATIO = 0.375;          
 
     private static final double MARBLE_MOVE_SPEED = 0.4;            
     private static final double LAUNCH_SPEED = 1500;                  
 
-    private static final double CANNON_Y_RATIO = 4.0 / 5.2;          
+    private static final double CANNON_Y_RATIO = 4.0 / 5.2;
     private static final double DEADLINE_MARGIN_RATIO = 0.0;           
 
     private static final Color[] MARBLE_COLORS = {
@@ -63,15 +61,12 @@ public class BoardGame {
     private double neighborThresholdSq;
     private double floatingThresholdSq;
 
-    private Point2D.Double cannon;
+    public Point2D.Double cannon;
     private double headAngle = -Math.PI / 2;
     private int nextMarbleColor;
     private double topY;              
-    private int currentBaseWidth;     
-    private int currentBaseHeight;    
-    private double barrelLen;        
-    private int ammoSlotSize;         
-    private double uiScaleFactor;     
+    private int currentBaseWidth;
+    private int currentBaseHeight;
 
     private MarbleLaunch launchMarble;
     private boolean marbleLaunched = false;
@@ -101,12 +96,8 @@ public class BoardGame {
         this.neighborThresholdSq = (side * SQRT3 * NEIGHBOR_DIST_RATIO) * (side * SQRT3 * NEIGHBOR_DIST_RATIO);
         this.floatingThresholdSq = (side * SQRT3 * FLOATING_DIST_RATIO) * (side * SQRT3 * FLOATING_DIST_RATIO);
 
-        this.uiScaleFactor = gameWidth / 483.0;
-
-        this.barrelLen = side * BARREL_LEN_RATIO * uiScaleFactor;
-        this.ammoSlotSize = (int)(side * AMMO_SLOT_SIZE_RATIO * uiScaleFactor);
-        this.currentBaseWidth = (int)(gameWidth * BASE_WIDTH_RATIO);
-        this.currentBaseHeight = (int)(currentBaseWidth * BASE_HEIGHT_RATIO);
+        this.currentBaseWidth = (int)(gameWidth * BASE_RATIO_W);
+        this.currentBaseHeight = (int)(currentBaseWidth * BASE_RATIO_H);
 
         initRow(gameWidth, gameHeight);
         setCannonPosition(gameWidth, gameHeight);
@@ -241,19 +232,19 @@ public class BoardGame {
     }
 
     public void setCannonPosition(int w, int h) {
-        currentBaseWidth = (int)(w * BASE_WIDTH_RATIO);
-        currentBaseHeight = (int)(currentBaseWidth * BASE_HEIGHT_RATIO);
+        currentBaseWidth = (int)(w * BASE_RATIO_W);
+        currentBaseHeight = (int)(currentBaseWidth * BASE_RATIO_H);
 
         cannon.x = w / 2.0;
-        cannon.y = h * CANNON_Y_RATIO;
+        cannon.y = h - (h / 5.2);
         topY = cannon.y - currentBaseHeight;
     }
 
     public double getTopY() { return topY; }
 
     public Point2D.Double getMuzzlePosition() {
-        double muzzleX = cannon.x + Math.cos(headAngle) * barrelLen;
-        double muzzleY = cannon.y + Math.sin(headAngle) * barrelLen;
+        double muzzleX = cannon.x + Math.cos(headAngle) * BARREL_LEN;
+        double muzzleY = cannon.y + Math.sin(headAngle) * BARREL_LEN;
         return new Point2D.Double(muzzleX, muzzleY);
     }
 
@@ -273,6 +264,7 @@ public class BoardGame {
 
     public double getCannonX() { return cannon.x; }
     public double getCannonY() { return cannon.y; }
+    public Point2D.Double getCannon() { return cannon; }
 
     private boolean isMarbleActive(Marble m) {
         return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone();
@@ -591,11 +583,11 @@ public class BoardGame {
     public void drawLaunchPad(Graphics2D g, int w, int h) {
         setCannonPosition(w, h);
         g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 10, new float[]{10, 7}, 0));
-        for (int i = 0; i < w; i += (int)(20 * uiScaleFactor)) {
+        for (int i = 0; i < w; i += (int)(20 * SCALE)) {
             float hue = (float) (i / (float) w);
             Color rainbow = Color.getHSBColor(hue, 0.8f, 0.9f);
             g.setColor(rainbow);
-            g.drawLine(i, (int) topY, Math.min(i + (int)(12 * uiScaleFactor), w), (int) topY);
+            g.drawLine(i, (int) topY, Math.min(i + (int)(12 * SCALE), w), (int) topY);
         }
         g.setStroke(new BasicStroke(1));
     }
@@ -616,26 +608,22 @@ public class BoardGame {
         g.fillOval(baseX, baseY, currentBaseWidth, currentBaseHeight);
 
         g.setColor(new Color(255, 255, 200, 120));
-        g.setStroke(new BasicStroke((int)(2 * uiScaleFactor)));
-        g.drawOval(baseX + (int)(2 * uiScaleFactor), baseY + (int)(2 * uiScaleFactor), currentBaseWidth - (int)(4 * uiScaleFactor), currentBaseHeight - (int)(4 * uiScaleFactor));
-
-        g.setColor(new Color(255, 255, 180));
-        drawStar(g, cannon.x - currentBaseWidth/2 - (int)(5 * uiScaleFactor), cannon.y - (int)(5 * uiScaleFactor), (int)(6 * uiScaleFactor));
-        drawStar(g, cannon.x + currentBaseWidth/2 + (int)(5 * uiScaleFactor), cannon.y - (int)(5 * uiScaleFactor), (int)(6 * uiScaleFactor));
+        g.setStroke(new BasicStroke((int)(2 * SCALE)));
+        g.drawOval(baseX + (int)(2 * SCALE), baseY + (int)(2 * SCALE), currentBaseWidth - (int)(4 * SCALE), currentBaseHeight - (int)(4 * SCALE));
 
         int turretWidth = (int)(currentBaseWidth * 0.75);
-        int turretHeight = (int)(turretWidth * BASE_HEIGHT_RATIO);
+        int turretHeight = (int)(turretWidth * BASE_RATIO_H);
         int turretX = (int)(cannon.x - turretWidth/2);
         int turretY = (int)(cannon.y - turretHeight/2);
-        Point2D turretCenter = new Point2D.Double(cannon.x, cannon.y - (int)(5 * uiScaleFactor));
+        Point2D turretCenter = new Point2D.Double(cannon.x, cannon.y - (int)(5 * SCALE));
         RadialGradientPaint turretGrad = new RadialGradientPaint(turretCenter, turretWidth/1.3f,
                 new float[]{0f, 0.8f, 1f},
                 new Color[]{TURRET_COLOR_TOP, TURRET_COLOR_BOTTOM, new Color(180, 80, 30)});
         g.setPaint(turretGrad);
-        g.fillRoundRect(turretX, turretY, turretWidth, turretHeight, (int)(20 * uiScaleFactor), (int)(20 * uiScaleFactor));
+        g.fillRoundRect(turretX, turretY, turretWidth, turretHeight, (int)(20 * SCALE), (int)(20 * SCALE));
 
         g.setColor(new Color(255, 255, 220, 100));
-        g.fillRoundRect(turretX + (int)(5 * uiScaleFactor), turretY + (int)(2 * uiScaleFactor), turretWidth - (int)(10 * uiScaleFactor), (int)(8 * uiScaleFactor), (int)(5 * uiScaleFactor), (int)(5 * uiScaleFactor));
+        g.fillRoundRect(turretX + (int)(5 * SCALE), turretY + (int)(2 * SCALE), turretWidth - (int)(10 * SCALE), (int)(8 * SCALE), (int)(5 * SCALE), (int)(5 * SCALE));
 
         int eyeRadius = (int)(currentBaseWidth * 0.1125);
         int leftEyeX = (int)(cannon.x - currentBaseWidth * 0.2);
@@ -648,15 +636,15 @@ public class BoardGame {
         g.fillOval(rightEyeX - eyeRadius, rightEyeY - eyeRadius/2, eyeRadius*2, eyeRadius);
 
         double angleToMouse = Math.atan2(my - leftEyeY, mx - leftEyeX);
-        double pupilOffsetX = Math.cos(angleToMouse) * (2.5 * uiScaleFactor);
-        double pupilOffsetY = Math.sin(angleToMouse) * (2.5 * uiScaleFactor);
+        double pupilOffsetX = Math.cos(angleToMouse) * (2.5 * SCALE);
+        double pupilOffsetY = Math.sin(angleToMouse) * (2.5 * SCALE);
         g.setColor(EYE_PUPIL);
-        g.fillOval((int)(leftEyeX - 3 * uiScaleFactor + pupilOffsetX), (int)(leftEyeY - 3 * uiScaleFactor + pupilOffsetY), (int)(6 * uiScaleFactor), (int)(6 * uiScaleFactor));
-        g.fillOval((int)(rightEyeX - 3 * uiScaleFactor + pupilOffsetX), (int)(rightEyeY - 3 * uiScaleFactor + pupilOffsetY), (int)(6 * uiScaleFactor), (int)(6 * uiScaleFactor));
+        g.fillOval((int)(leftEyeX - 3 * SCALE + pupilOffsetX), (int)(leftEyeY - 3 * SCALE + pupilOffsetY), (int)(6 * SCALE), (int)(6 * SCALE));
+        g.fillOval((int)(rightEyeX - 3 * SCALE + pupilOffsetX), (int)(rightEyeY - 3 * SCALE + pupilOffsetY), (int)(6 * SCALE), (int)(6 * SCALE));
 
         g.setColor(EYE_HIGHLIGHT);
-        g.fillOval((int)(leftEyeX - 1 * uiScaleFactor + pupilOffsetX), (int)(leftEyeY - 4 * uiScaleFactor + pupilOffsetY), (int)(3 * uiScaleFactor), (int)(3 * uiScaleFactor));
-        g.fillOval((int)(rightEyeX - 1 * uiScaleFactor + pupilOffsetX), (int)(rightEyeY - 4 * uiScaleFactor + pupilOffsetY), (int)(3 * uiScaleFactor), (int)(3 * uiScaleFactor));
+        g.fillOval((int)(leftEyeX - 1 * SCALE + pupilOffsetX), (int)(leftEyeY - 4 * SCALE + pupilOffsetY), (int)(3 * SCALE), (int)(3 * SCALE));
+        g.fillOval((int)(rightEyeX - 1 * SCALE + pupilOffsetX), (int)(rightEyeY - 4 * SCALE + pupilOffsetY), (int)(3 * SCALE), (int)(3 * SCALE));
 
         g.setColor(new Color(255, 160, 80));
         int[] earXLeft = {
@@ -682,46 +670,46 @@ public class BoardGame {
         };
         g.fillPolygon(earXRight, earYRight, 3);
 
-        int barrelStartX = (int)(cannon.x + Math.cos(headAngle) * (12 * uiScaleFactor));
-        int barrelStartY = (int)(cannon.y + Math.sin(headAngle) * (12 * uiScaleFactor));
-        int barrelEndX = (int)(cannon.x + Math.cos(headAngle) * barrelLen);
-        int barrelEndY = (int)(cannon.y + Math.sin(headAngle) * barrelLen);
+        int barrelStartX = (int)(cannon.x + Math.cos(headAngle) * (12 * SCALE));
+        int barrelStartY = (int)(cannon.y + Math.sin(headAngle) * (12 * SCALE));
+        int barrelEndX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
+        int barrelEndY = (int)(cannon.y + Math.sin(headAngle) * BARREL_LEN);
 
         Point2D barrelStart = new Point2D.Double(barrelStartX, barrelStartY);
         Point2D barrelEnd = new Point2D.Double(barrelEndX, barrelEndY);
         LinearGradientPaint barrelGrad = new LinearGradientPaint(barrelStart, barrelEnd,
                 new float[]{0f, 1f}, new Color[]{BARREL_COLOR_TOP, BARREL_COLOR_BOTTOM});
-        g.setStroke(new BasicStroke((int)(12 * uiScaleFactor), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.setStroke(new BasicStroke((int)(12 * SCALE), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         g.setPaint(barrelGrad);
         g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
 
-        g.setStroke(new BasicStroke((int)(15 * uiScaleFactor), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.setStroke(new BasicStroke((int)(15 * SCALE), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         g.setColor(new Color(255, 200, 100, 60));
         g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
 
-        int tipX = (int)(cannon.x + Math.cos(headAngle) * barrelLen);
-        int tipY = (int)(cannon.y + Math.sin(headAngle) * barrelLen);
+        int tipX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
+        int tipY = (int)(cannon.y + Math.sin(headAngle) * BARREL_LEN);
         g.setStroke(new BasicStroke(1));
-        RadialGradientPaint tipGrad = new RadialGradientPaint(tipX, tipY, (int)(12 * uiScaleFactor),
+        RadialGradientPaint tipGrad = new RadialGradientPaint(tipX, tipY, (int)(12 * SCALE),
                 new float[]{0f, 1f}, new Color[]{BARREL_TIP_COLOR, new Color(255, 100, 30)});
         g.setPaint(tipGrad);
-        g.fillOval(tipX - (int)(8 * uiScaleFactor), tipY - (int)(8 * uiScaleFactor), (int)(16 * uiScaleFactor), (int)(16 * uiScaleFactor));
+        g.fillOval(tipX - (int)(8 * SCALE), tipY - (int)(8 * SCALE), (int)(16 * SCALE), (int)(16 * SCALE));
         g.setColor(Color.WHITE);
-        g.fillOval(tipX - (int)(3 * uiScaleFactor), tipY - (int)(3 * uiScaleFactor), (int)(6 * uiScaleFactor), (int)(6 * uiScaleFactor));
+        g.fillOval(tipX - (int)(3 * SCALE), tipY - (int)(3 * SCALE), (int)(6 * SCALE), (int)(6 * SCALE));
 
         int slotX = (int)(cannon.x + currentBaseWidth * AMMO_OFFSET_X_RATIO);
         int slotY = (int)(cannon.y - currentBaseWidth * 0.15);
-        int size = ammoSlotSize;
+        int size = AMMO_SLOT_SIZE;
 
         Point2D slotCenter = new Point2D.Double(slotX, slotY);
         RadialGradientPaint slotGrad = new RadialGradientPaint(slotCenter, size/2f,
                 new float[]{0f, 0.6f, 1f}, new Color[]{new Color(160, 100, 180), AMMO_BG_COLOR, new Color(30, 20, 40)});
         g.setPaint(slotGrad);
-        g.fillRoundRect(slotX - size/2, slotY - size/2, size, size, (int)(8 * uiScaleFactor), (int)(8 * uiScaleFactor));
+        g.fillRoundRect(slotX - size/2, slotY - size/2, size, size, (int)(8 * SCALE), (int)(8 * SCALE));
 
         g.setColor(new Color(255, 215, 0, 200));
-        g.setStroke(new BasicStroke((float)(1.5 * uiScaleFactor)));
-        g.drawRoundRect(slotX - size/2, slotY - size/2, size, size, (int)(8 * uiScaleFactor), (int)(8 * uiScaleFactor));
+        g.setStroke(new BasicStroke((float)(1.5 * SCALE)));
+        g.drawRoundRect(slotX - size/2, slotY - size/2, size, size, (int)(8 * SCALE), (int)(8 * SCALE));
 
         int marbleRadius = (int)(size * 0.4);
         Color marbleColor = MARBLE_COLORS[nextMarbleColor];
@@ -737,11 +725,6 @@ public class BoardGame {
             g.fillOval(slotX - marbleRadius/2, slotY - marbleRadius/2, marbleRadius/2, marbleRadius/2);
         }
 
-        long time = System.currentTimeMillis();
-        float angle1 = (time % 1000) / 1000f * (float)Math.PI * 2;
-        drawStar(g, slotX + (int)(Math.cos(angle1) * 10 * uiScaleFactor), slotY + (int)(Math.sin(angle1) * 10 * uiScaleFactor), (int)(2 * uiScaleFactor));
-        drawStar(g, slotX - (int)(Math.cos(angle1+2) * 8 * uiScaleFactor), slotY + (int)(Math.sin(angle1+1.5) * 8 * uiScaleFactor), (int)(2 * uiScaleFactor));
-
         double dyToLine = cannon.y - topY;
         double sinTheta = Math.sin(headAngle);
         double distanceToLine = dyToLine / (-sinTheta);
@@ -751,41 +734,23 @@ public class BoardGame {
         lineEndY = (int) topY;
 
         g.setColor(new Color(255, 100, 200, 100));
-        g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, new float[]{(int)(6 * uiScaleFactor), (int)(8 * uiScaleFactor)}, 0));
+        g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, new float[]{(int)(6 * SCALE), (int)(8 * SCALE)}, 0));
         g.drawLine((int)cannon.x, (int)cannon.y, lineEndX, lineEndY);
 
-        g.setStroke(new BasicStroke((int)(3 * uiScaleFactor)));
+        g.setStroke(new BasicStroke((int)(3 * SCALE)));
         g.setColor(new Color(100, 200, 255, 180));
-        g.drawOval(lineEndX - (int)(12 * uiScaleFactor), lineEndY - (int)(12 * uiScaleFactor), (int)(24 * uiScaleFactor), (int)(24 * uiScaleFactor));
+        g.drawOval(lineEndX - (int)(12 * SCALE), lineEndY - (int)(12 * SCALE), (int)(24 * SCALE), (int)(24 * SCALE));
         g.setColor(new Color(255, 180, 80, 200));
-        g.drawOval(lineEndX - (int)(8 * uiScaleFactor), lineEndY - (int)(8 * uiScaleFactor), (int)(16 * uiScaleFactor), (int)(16 * uiScaleFactor));
+        g.drawOval(lineEndX - (int)(8 * SCALE), lineEndY - (int)(8 * SCALE), (int)(16 * SCALE), (int)(16 * SCALE));
 
-        g.setStroke(new BasicStroke((float)(1.5 * uiScaleFactor)));
+        g.setStroke(new BasicStroke((float)(1.5 * SCALE)));
         g.setColor(new Color(255, 50, 100, 200));
-        g.drawOval(lineEndX - (int)(6 * uiScaleFactor), lineEndY - (int)(6 * uiScaleFactor), (int)(12 * uiScaleFactor), (int)(12 * uiScaleFactor));
-        g.drawOval(lineEndX - (int)(2 * uiScaleFactor), lineEndY - (int)(2 * uiScaleFactor), (int)(4 * uiScaleFactor), (int)(4 * uiScaleFactor));
-        g.fillOval(lineEndX - (int)(1 * uiScaleFactor), lineEndY - (int)(1 * uiScaleFactor), (int)(2 * uiScaleFactor), (int)(2 * uiScaleFactor));
+        g.drawOval(lineEndX - (int)(6 * SCALE), lineEndY - (int)(6 * SCALE), (int)(12 * SCALE), (int)(12 * SCALE));
+        g.drawOval(lineEndX - (int)(2 * SCALE), lineEndY - (int)(2 * SCALE), (int)(4 * SCALE), (int)(4 * SCALE));
+        g.fillOval(lineEndX - (int)(1 * SCALE), lineEndY - (int)(1 * SCALE), (int)(2 * SCALE), (int)(2 * SCALE));
 
         g.setStroke(new BasicStroke(1));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-    }
-
-    private static final int[] STAR_X_POINTS = new int[10];
-    private static final int[] STAR_Y_POINTS = new int[10];
-
-    private void drawStar(Graphics2D g, double x, double y, int size) {
-        double outerR = size;
-        double innerR = size * 0.4;
-        for (int i = 0; i < 10; i++) {
-            double angle = Math.PI * 2 * i / 10 - Math.PI / 2;
-            double r = (i % 2 == 0) ? outerR : innerR;
-            STAR_X_POINTS[i] = (int)(x + Math.cos(angle) * r);
-            STAR_Y_POINTS[i] = (int)(y + Math.sin(angle) * r);
-        }
-        g.setColor(new Color(255, 255, 200, 200));
-        g.fillPolygon(STAR_X_POINTS, STAR_Y_POINTS, 10);
-        g.setColor(new Color(255, 200, 50));
-        g.drawPolygon(STAR_X_POINTS, STAR_Y_POINTS, 10);
     }
 
     public void resetRow() {
@@ -801,4 +766,6 @@ public class BoardGame {
         rowCount = 0;
         ySpacing = 0;
     }
+
+    public void fire() { }
 }
