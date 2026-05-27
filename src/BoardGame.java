@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * GameBoard - 整合弹珠游戏所有核心游戏逻辑
+ * BoardGame - 整合弹珠游戏所有核心游戏逻辑
  * 包括: Marble[][] 生成规则、发射弹珠规则、碰撞检测、消除规则等
  *
- * 设计原则: GameBoard 是一个独立的游戏界面模块,可嵌入到任意窗口中
+ * 设计原则: BoardGame 是一个独立的游戏界面模块,可嵌入到任意窗口中
  * 所有尺寸相关的数值都以 side(弹珠半径的2倍)为基准进行相对计算
  * 不会直接依赖屏幕像素值,而是根据传入的游戏界面尺寸按比例计算
  */
-public class GameBoard {
+public class BoardGame {
     // ==================== 常量定义 ====================
     private static final double SQRT3 = Math.sqrt(3);
     private static final int MIN_GROUP_SIZE = 3;
@@ -361,7 +361,7 @@ public class GameBoard {
         }
 
         public void setScreenSize(int width, int height) {
-            // 仅供继承GameEngine的类使用,GameBoard直接使用screenWidth/screenHeight
+            // 仅供继承GameEngine的类使用,BoardGame直接使用screenWidth/screenHeight
         }
 
         public void init(double cx, double cy, int row, int col) {
@@ -442,8 +442,8 @@ public class GameBoard {
         }
     }
 
-    // ==================== GameBoard 构造函数 ====================
-    public GameBoard() {
+    // ==================== BoardGame 构造函数 ====================
+    public BoardGame() {
         this.side = 24.22;  // 基准尺寸
         this.marbles = null;
         this.rowCount = 0;

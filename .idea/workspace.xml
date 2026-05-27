@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="将StartScreen更名为ScreenStart">
-      <change beforePath="$PROJECT_DIR$/src/GameBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/GameBoard.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/LaunchMarble.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="将ScreenBoard更名为BoardScreen">
+      <change beforePath="$PROJECT_DIR$/src/GameBoard.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,7 +117,7 @@
       <workItem from="1779811973660" duration="399000" />
       <workItem from="1779813084312" duration="424000" />
       <workItem from="1779849180880" duration="6000" />
-      <workItem from="1779849203020" duration="503000" />
+      <workItem from="1779849203020" duration="849000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -441,7 +439,23 @@
       <option name="project" value="LOCAL" />
       <updated>1779849438766</updated>
     </task>
-    <option name="localTasksCounter" value="41" />
+    <task id="LOCAL-00041" summary="将LaunchMarble更名为MarbleLaunch">
+      <option name="closed" value="true" />
+      <created>1779849803413</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1779849803413</updated>
+    </task>
+    <task id="LOCAL-00042" summary="将ScreenBoard更名为BoardScreen">
+      <option name="closed" value="true" />
+      <created>1779849965568</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1779849965568</updated>
+    </task>
+    <option name="localTasksCounter" value="43" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -459,8 +473,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="更新发射台初始窗口" />
-    <MESSAGE value="更正六边形生成规则,增加初始朝向随机性" />
     <MESSAGE value="更正六边形生成规则,为下降规则做准备" />
     <MESSAGE value="更正下降规则(有bug)" />
     <MESSAGE value="更正下降规则" />
@@ -484,6 +496,8 @@
     <MESSAGE value="更名,统一格式" />
     <MESSAGE value="合并gameover" />
     <MESSAGE value="将StartScreen更名为ScreenStart" />
-    <option name="LAST_COMMIT_MESSAGE" value="将StartScreen更名为ScreenStart" />
+    <MESSAGE value="将LaunchMarble更名为MarbleLaunch" />
+    <MESSAGE value="将ScreenBoard更名为BoardScreen" />
+    <option name="LAST_COMMIT_MESSAGE" value="将ScreenBoard更名为BoardScreen" />
   </component>
 </project>
