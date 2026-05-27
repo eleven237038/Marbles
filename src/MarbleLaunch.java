@@ -1,4 +1,4 @@
-public class LaunchMarble extends Marble {
+public class MarbleLaunch extends Marble {
     private double vx;
     private double vy;
     private double launchSpeed = 500;
@@ -8,7 +8,7 @@ public class LaunchMarble extends Marble {
     private double prevCx;
     private double prevCy;
 
-    public LaunchMarble() {
+    public MarbleLaunch() {
         super();
         this.vx = 0;
         this.vy = 0;

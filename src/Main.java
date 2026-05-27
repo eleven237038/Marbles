@@ -18,7 +18,7 @@ import java.util.prefs.Preferences;
 public class Main extends GameEngine implements ScreenStart.ScreenStartListener, GameOver.GameOverListener {
     private Marbles hexGrid;
     private LaunchPad launchPad;
-    private LaunchMarble launchMarble;
+    private MarbleLaunch launchMarble;
     private double mouseX = 0;
     private double mouseY = 0;
     private CardLayout cardLayout;
@@ -173,7 +173,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
         deadline = launchPad.getTopY();
 
         // 初始化：生成第一个当前弹珠和第一个下一个弹珠
-        launchMarble = new LaunchMarble();
+        launchMarble = new MarbleLaunch();
         launchMarble.setScreenSize(mWidth, mHeight);
         // 使用精确的 double 位置初始化
         launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
@@ -248,7 +248,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
 
             // 在 init 时提前赋予下一次正确的颜色类型
             int nextColor = launchPad.getNextMarbleColorType();
-            launchMarble = new LaunchMarble();
+            launchMarble = new MarbleLaunch();
             launchMarble.setScreenSize(mWidth, mHeight);
             launchMarble.setColorType(nextColor);
             launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);

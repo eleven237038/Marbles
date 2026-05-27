@@ -88,7 +88,7 @@ public class GameBoard {
     private double uiScaleFactor;     // UI元素的缩放因子
 
     // 发射弹珠状态
-    private LaunchMarble launchMarble;
+    private MarbleLaunch launchMarble;
     private boolean marbleLaunched = false;
 
     // ==================== Marble 内部类 ====================
@@ -341,8 +341,8 @@ public class GameBoard {
         }
     }
 
-    // ==================== LaunchMarble 内部类 ====================
-    public class LaunchMarble {
+    // ==================== MarbleLaunch 内部类 ====================
+    public class MarbleLaunch {
         private double vx;
         private double vy;
         private double launchSpeed = LAUNCH_SPEED;  // 与掉落加速度一致
@@ -351,7 +351,7 @@ public class GameBoard {
         private double prevCy;
         private Marble marble;
 
-        public LaunchMarble() {
+        public MarbleLaunch() {
             this.vx = 0;
             this.vy = 0;
             this.launched = false;
@@ -453,7 +453,7 @@ public class GameBoard {
         this.accumulatedY = 0;
         this.cannon = new Point2D.Double();
         this.nextMarbleColor = 1;
-        this.launchMarble = new LaunchMarble();
+        this.launchMarble = new MarbleLaunch();
     }
 
     // ==================== 初始化 ====================
@@ -601,7 +601,7 @@ public class GameBoard {
 
     public void launchMarbleAt(double targetX, double targetY) {
         Point2D.Double muzzle = getMuzzlePosition();
-        launchMarble = new LaunchMarble();
+        launchMarble = new MarbleLaunch();
         launchMarble.setColorType(nextMarbleColor);
         launchMarble.init(muzzle.x, muzzle.y, -1, -1);
         launchMarble.launch(targetX, targetY);
@@ -609,7 +609,7 @@ public class GameBoard {
     }
 
     public boolean isMarbleLaunched() { return marbleLaunched; }
-    public LaunchMarble getLaunchMarble() { return launchMarble; }
+    public MarbleLaunch getMarbleLaunch() { return launchMarble; }
     public void setMarbleLaunched(boolean launched) { this.marbleLaunched = launched; }
 
     public int getNextMarbleColorType() { return nextMarbleColor; }
@@ -985,7 +985,7 @@ public class GameBoard {
         }
     }
 
-    public void drawLaunchMarble(Graphics2D g) {
+    public void drawMarbleLaunch(Graphics2D g) {
         if (launchMarble != null) {
             launchMarble.draw(g);
         }
