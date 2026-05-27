@@ -2,8 +2,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 
 /**
- * BoardGame - 仅保留大炮/发射台渲染逻辑
- * 弹珠网格逻辑已迁移至 Marbles
+ * BoardGame - 大炮/发射台渲染 + 计分板
  */
 public class BoardGame {
     private static final double SCALE = 1.25;
@@ -40,6 +39,10 @@ public class BoardGame {
     private double topY;
     private int currentBaseWidth;
     private int currentBaseHeight;
+
+    // 计分板数据
+    private int currentScore = 0;
+    private int highScore = 0;
 
     public BoardGame() {
         this.cannon = new Point2D.Double();
@@ -82,6 +85,17 @@ public class BoardGame {
         if (type >= 1 && type <= 4) this.nextMarbleColor = type;
     }
 
+    public void updateScore(int score) {
+        currentScore = score;
+    }
+
+    public void updateHighScore(int high) {
+        highScore = high;
+    }
+
+    public int getCurrentScore() { return currentScore; }
+    public int getHighScore() { return highScore; }
+
     public void drawLaunchPad(Graphics2D g, int w, int h) {
         setCannonPosition(w, h);
         g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 10, new float[]{10, 7}, 0));
@@ -92,6 +106,72 @@ public class BoardGame {
             g.drawLine(i, (int) topY, Math.min(i + (int)(12 * SCALE), w), (int) topY);
         }
         g.setStroke(new BasicStroke(1));
+    }
+
+    public void drawScoreBoard(Graphics2D g, int leftZoneWidth, int totalHeight) {
+        int boardX = 25, boardY = 30;
+        int boardWidth = 200, boardHeight = 110;
+
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // 阴影
+        g.setColor(new Color(0, 0, 0, 30));
+        g.fillRoundRect(boardX + 3, boardY + 3, boardWidth, boardHeight, 22, 22);
+
+        // 背景
+        g.setColor(new Color(255, 255, 250, 240));
+        g.fillRoundRect(boardX, boardY, boardWidth, boardHeight, 22, 22);
+
+        // 彩虹渐变边框
+        LinearGradientPaint border = new LinearGradientPaint(boardX, boardY, boardX + boardWidth, boardY + boardHeight,
+                new float[]{0, 0.25f, 0.5f, 0.75f, 1f},
+                new Color[]{new Color(255, 90, 90), new Color(255, 180, 80),
+                        new Color(80, 240, 120), new Color(100, 180, 255),
+                        new Color(240, 100, 220)});
+        g.setStroke(new BasicStroke(3.0f));
+        g.setPaint(border);
+        g.drawRoundRect(boardX, boardY, boardWidth, boardHeight, 22, 22);
+
+        g.setStroke(new BasicStroke(1.0f));
+        g.setColor(new Color(255, 255, 255, 150));
+        g.drawRoundRect(boardX + 2, boardY + 2, boardWidth - 4, boardHeight - 4, 18, 18);
+
+        // 标题文字
+        Font textFont = new Font("Comic Sans MS", Font.BOLD, 15);
+        g.setFont(textFont);
+        String sText = "SCORE", bText = "BEST";
+        FontMetrics fm = g.getFontMetrics();
+        int sW = fm.stringWidth(sText), bW = fm.stringWidth(bText);
+        int totalW = sW + 30 + bW;
+        int startX = boardX + (boardWidth - totalW) / 2;
+
+        g.setColor(new Color(60, 40, 100, 90));
+        g.drawString(sText, startX + 1, boardY + 32);
+        g.drawString(bText, startX + sW + 30 + 1, boardY + 32);
+
+        LinearGradientPaint textGrad = new LinearGradientPaint(startX, boardY + 10, startX + totalW, boardY + 35,
+                new float[]{0, 1}, new Color[]{new Color(180, 120, 255), new Color(80, 50, 130)});
+        g.setPaint(textGrad);
+        g.drawString(sText, startX, boardY + 32);
+        g.drawString(bText, startX + sW + 30, boardY + 32);
+
+        // 分数数字
+        Font numFont = new Font("Arial Black", Font.BOLD, 24);
+        g.setFont(numFont);
+        String sVal = String.valueOf(currentScore), bVal = String.valueOf(highScore);
+        fm = g.getFontMetrics();
+        int svW = fm.stringWidth(sVal), bvW = fm.stringWidth(bVal);
+        int valStartX = boardX + (boardWidth - (svW + 30 + bvW)) / 2;
+
+        g.setColor(new Color(0, 0, 0, 50));
+        g.drawString(sVal, valStartX + 1, boardY + 78);
+        g.drawString(bVal, valStartX + svW + 30 + 1, boardY + 78);
+
+        LinearGradientPaint numGrad = new LinearGradientPaint(valStartX, boardY + 50, valStartX + totalW, boardY + 85,
+                new float[]{0, 1}, new Color[]{new Color(255, 110, 30), new Color(180, 40, 0)});
+        g.setPaint(numGrad);
+        g.drawString(sVal, valStartX, boardY + 78);
+        g.drawString(bVal, valStartX + svW + 30, boardY + 78);
     }
 
     public void drawCannon(Graphics2D g, double mx, double my) {

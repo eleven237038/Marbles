@@ -34,7 +34,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     // 计分相关
     private int currentScore = 0;
     private int highScore = 0;
-    public BoardScore scoreBoard;
     private CustomGlassPane glassPane;
 
     public static void main(String[] args) {
@@ -130,7 +129,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
         if (glassPane != null) {
             glassPane.setVisible(true);
-            if(scoreBoard != null) scoreBoard.setVisible(true);
             glassPane.updateScores(currentScore, highScore);
         }
 
@@ -416,10 +414,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             setFocusable(false);
             setLayout(null);
 
-            // 将计分板精确定位在左侧空白区中
-            scoreBoard = new BoardScore();
-            add(scoreBoard);
-
             // 建立动画刷新定时器 (保证以高刷新率不断触发重绘而不会造成死锁或主线程卡死)
             animTimer = new javax.swing.Timer(16, e -> {
                 if (animating) {
@@ -535,10 +529,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         public void showOverlay(int mode, boolean win) {
             overlayMode = mode;
             isScreenGameOverWin = win;
-            // 开启遮罩时，隐藏左侧计分板以防止叠加显示混乱
-            if (scoreBoard != null) {
-                scoreBoard.setVisible(false);
-            }
+            // Pause状态时保持计分板显示，仅在GameOver/Settings/Help时隐藏
             setVisible(true);
             animating = true;
             animStartTime = System.currentTimeMillis();
@@ -549,9 +540,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         public void showSettings() {
             overlayMode = 3;
             isScreenGameOverWin = false;
-            if (scoreBoard != null) {
-                scoreBoard.setVisible(false);
-            }
             setVisible(true);
             animating = true;
             animStartTime = System.currentTimeMillis();
@@ -563,9 +551,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             returnToMode = overlayMode; // 保存从哪里来的，以便Back时回去
             overlayMode = 4;
             isScreenGameOverWin = false;
-            if (scoreBoard != null) {
-                scoreBoard.setVisible(false);
-            }
             setVisible(true);
             animating = true;
             animStartTime = System.currentTimeMillis();
@@ -588,9 +573,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             
             // 只有当游戏已经处于开始状态时，才恢复计分板和保持 GlassPane 显示 (为了 Pause 按钮)
             if (gameStarted) {
-                if (scoreBoard != null) {
-                    scoreBoard.setVisible(true);
-                }
+                // scoreboard is now drawn via launchPad.drawScoreBoard() in paintComponent
             } else {
                 setVisible(false);
             }
@@ -641,6 +624,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 g2d.setColor(new Color(180, 205, 235));
                 g2d.setStroke(new BasicStroke(1.5f));
                 g2d.drawLine(LEFT_ZONE_WIDTH - 2, 0, LEFT_ZONE_WIDTH - 2, h);
+
+                // 绘制计分板
+                if (launchPad != null) {
+                    launchPad.drawScoreBoard(g2d, LEFT_ZONE_WIDTH, h);
+                }
             }
 
             if (overlayMode == 0) {
@@ -860,9 +848,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         public void updateScores(int score, int high) {
-            if (scoreBoard != null) {
-                scoreBoard.updateScore(score);
-                scoreBoard.updateHighScore(high);
+            if (launchPad != null) {
+                launchPad.updateScore(score);
+                launchPad.updateHighScore(high);
             }
         }
     }
