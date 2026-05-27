@@ -1,8 +1,4 @@
 import java.awt.*;
-import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import javax.swing.Timer;
 
 /**
@@ -13,10 +9,8 @@ public class BoardScore extends javax.swing.JComponent {
     private int currentScore = 0;
     private int highScore = 0;
 
-    private List<DecorationMarble> decorationMarbles = new ArrayList<>();
     private double starRotation = 0;
     private Timer animationTimer;
-    private Random random = new Random();
 
     // 适配左侧 250 宽度的计分板尺寸
     private int boardX = 25, boardY = 30;
@@ -27,53 +21,7 @@ public class BoardScore extends javax.swing.JComponent {
         setFocusable(false);
         // 定位并限定组件尺寸
         setBounds(0, 0, boardX + boardWidth + 35, boardY + boardHeight + 35);
-        initDecorationMarbles();
         startAnimation();
-    }
-
-    @Override
-    public void setBounds(int x, int y, int width, int height) {
-        super.setBounds(x, y, width, height);
-        updateMarblePositions();
-    }
-
-    private void initDecorationMarbles() {
-        decorationMarbles.clear();
-        int[][] positions = getDecoPositions();
-        for (int[] pos : positions) {
-            decorationMarbles.add(new DecorationMarble(pos[0], pos[1], random.nextInt(4) + 1));
-        }
-    }
-
-    private int[][] getDecoPositions() {
-        return new int[][] {
-            {boardX + boardWidth / 2, boardY - 10},
-            {boardX - 8, boardY + boardHeight / 2},
-            {boardX + boardWidth / 2, boardY + boardHeight + 8},
-            {boardX + boardWidth + 8, boardY + boardHeight / 2},
-            {boardX - 6, boardY + 8},
-            {boardX + boardWidth + 6, boardY + 8},
-            {boardX - 6, boardY + boardHeight - 8},
-            {boardX + boardWidth + 6, boardY + boardHeight - 8}
-        };
-    }
-
-    private void startAnimation() {
-        animationTimer = new Timer(30, e -> {
-            starRotation += 0.05;
-            for (DecorationMarble m : decorationMarbles) m.update(0.03);
-            updateMarblePositions();
-            repaint();
-        });
-        animationTimer.start();
-    }
-
-    private void updateMarblePositions() {
-        int[][] positions = getDecoPositions();
-        for (int i = 0; i < decorationMarbles.size() && i < positions.length; i++) {
-            decorationMarbles.get(i).x = positions[i][0];
-            decorationMarbles.get(i).y = positions[i][1];
-        }
     }
 
     public void updateScore(int score) {
@@ -152,8 +100,6 @@ public class BoardScore extends javax.swing.JComponent {
         g2d.drawString(bVal, valStartX + svW + 30, boardY + 78);
 
         drawStar(g2d, boardX + boardWidth - 18, boardY + 18, 11, starRotation);
-
-        for (DecorationMarble dm : decorationMarbles) dm.draw(g2d);
     }
 
     private static final int[] STAR_X = new int[10];
@@ -179,62 +125,11 @@ public class BoardScore extends javax.swing.JComponent {
         }
     }
 
-    private class DecorationMarble {
-        double x, y;
-        int colorType;
-        double floatOffset = 0, floatSpeed, phase;
-
-        DecorationMarble(double x, double y, int color) {
-            this.x = x;
-            this.y = y;
-            this.colorType = color;
-            this.floatSpeed = 0.5 + Math.random() * 1.2;
-            this.phase = Math.random() * Math.PI * 2;
-        }
-
-        void update(double dt) {
-            floatOffset += floatSpeed * dt;
-            if (floatOffset > Math.PI * 2) floatOffset -= Math.PI * 2;
-        }
-
-        void draw(Graphics2D g) {
-            double r = 10;
-            double cx = x;
-            double cy = y + Math.sin(floatOffset + phase) * 2.8;
-
-            Color base, bright, dark;
-            switch (colorType) {
-                case 1:
-                    base = new Color(220, 30, 30);
-                    bright = new Color(255, 130, 130);
-                    dark = new Color(120, 10, 10);
-                    break;
-                case 2:
-                    base = new Color(20, 80, 220);
-                    bright = new Color(110, 190, 255);
-                    dark = new Color(10, 40, 120);
-                    break;
-                case 3:
-                    base = new Color(240, 200, 20);
-                    bright = new Color(255, 250, 180);
-                    dark = new Color(160, 120, 0);
-                    break;
-                default:
-                    base = new Color(160, 30, 200);
-                    bright = new Color(220, 130, 255);
-                    dark = new Color(90, 10, 120);
-            }
-
-            RadialGradientPaint grad = new RadialGradientPaint(
-                    new Point2D.Double(cx, cy), (float) r,
-                    new float[]{0f, 0.6f, 1f},
-                    new Color[]{bright, base, dark}
-            );
-            g.setPaint(grad);
-            g.fillOval((int) (cx - r), (int) (cy - r), (int) (r * 2), (int) (r * 2));
-
-            g.setColor(new Color(255, 255, 255, 160));
-            g.fillOval((int) (cx - r * 0.35), (int) (cy - r * 0.35), (int) (r * 0.45), (int) (r * 0.45));
-        }
+    private void startAnimation() {
+        animationTimer = new Timer(30, e -> {
+            starRotation += 0.05;
+            repaint();
+        });
+        animationTimer.start();
     }
 }
