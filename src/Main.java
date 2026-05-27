@@ -11,7 +11,7 @@ import java.util.prefs.Preferences;
 
 public class Main extends GameEngine implements ScreenStart.ScreenStartListener {
     private Marbles hexGrid;
-    private BoardGame launchPad;
+    private ScreenGame launchPad;
     private MarbleLaunch launchMarble;
     private double mouseX = 0;
     private double mouseY = 0;
@@ -161,7 +161,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     private void initMarbleGrid() {
         hexGrid = new Marbles();
-        launchPad = new BoardGame();
+        launchPad = new ScreenGame();
         hexGrid.setMaxRowCount(18);
         hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);

@@ -2,9 +2,9 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 
 /**
- * BoardGame - 大炮/发射台渲染 + 计分板
+ * ScreenGame - 大炮/发射台渲染 + 计分板
  */
-public class BoardGame {
+public class ScreenGame {
     private static final double SCALE = 1.25;
     private static final double BARREL_LEN = 45 * SCALE;
     private static final int AMMO_SLOT_SIZE = (int)(16 * SCALE);
@@ -44,7 +44,7 @@ public class BoardGame {
     private int currentScore = 0;
     private int highScore = 0;
 
-    public BoardGame() {
+    public ScreenGame() {
         this.cannon = new Point2D.Double();
         this.nextMarbleColor = 1;
     }
