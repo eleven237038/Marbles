@@ -353,7 +353,7 @@ public class Marbles {
                 if (dx * dx + dy * dy <= thresholdSq) {
                     // 距离越近延迟越短，距离越远延迟越长
                     double dist = Math.sqrt(dx * dx + dy * dy);
-                    double delay = (dist / threshold) * 0.06;
+                    double delay = (dist / threshold) * 0.02;
                     m.startCollision(collisionX, collisionY, delay);
                 }
             }
