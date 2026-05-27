@@ -127,11 +127,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         boolean wasStarted = gameStarted;
         gameStarted = true;
 
-        if (glassPane != null) {
-            glassPane.setVisible(true);
-            glassPane.updateScores(currentScore, highScore);
-        }
-
         if (!wasStarted) {
             if (startScreen != null) {
                 startScreen.stopAnimation();
@@ -140,6 +135,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             gameLoop(60);
         } else {
             init(); // 已在循环中则只重置数据
+        }
+
+        // 同步并显示计分板，需在init生成新launchPad对象之后调用，避免指向旧数据
+        if (glassPane != null) {
+            glassPane.setVisible(true);
+            glassPane.updateScores(currentScore, highScore);
         }
     }
 
@@ -339,10 +340,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         frozen = false;
         gamePaused = false;
         currentScore = 0;
+        init(); // 重新生成网格和大炮，需要重新传递分数
         if (glassPane != null) {
             glassPane.updateScores(currentScore, highScore);
         }
-        init();
         mPanel.repaint();
     }
 
@@ -608,8 +609,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             int h = getHeight();
             if (w == 0 || h == 0) return;
 
-            // [核心修复] - 无论何种模式，只要在游戏进行界面中，玻璃面板都必须垫绘左侧背景
-            // 避免 overlayMode != 0 时左侧出现图形绘制空白或造成背景撕裂崩溃
+            // 无论何种模式，只要在游戏进行界面中，玻璃面板都必须垫绘左侧背景及计分板组件
             if (gameStarted) {
                 // 绘制左侧区域的渐变底色
                 LinearGradientPaint leftBg = new LinearGradientPaint(
@@ -629,42 +629,41 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 if (launchPad != null) {
                     launchPad.drawScoreBoard(g2d, LEFT_ZONE_WIDTH, h);
                 }
+
+                // 绘制Pause按钮（将其独立出overlayMode判断条件），即使在遮罩层触发后，也能继续渲染在原位，使深色遮罩自然覆盖。
+                int btnW = 180;
+                int btnH = 55;
+                int btnX = (LEFT_ZONE_WIDTH - btnW) / 2;
+                int btnY = h - btnH - 30;
+                pauseButtonRect = new Rectangle(btnX, btnY, btnW, btnH);
+
+                RoundRectangle2D btnShape = new RoundRectangle2D.Double(btnX, btnY, btnW, btnH, 18, 18);
+                if (pausePressed) {
+                    g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
+                            new Color[]{new Color(50, 130, 240, 230), new Color(30, 100, 220, 230)}));
+                } else if (pauseHover) {
+                    g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
+                            new Color[]{new Color(100, 180, 255, 230), new Color(50, 130, 240, 230)}));
+                } else {
+                    g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
+                            new Color[]{new Color(120, 190, 255, 180), new Color(70, 140, 240, 180)}));
+                }
+                g2d.fill(btnShape);
+
+                g2d.setColor(Color.WHITE);
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.draw(btnShape);
+
+                g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
+                String btnText = "PAUSE";
+                FontMetrics fm = g2d.getFontMetrics();
+                int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
+                int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
+                g2d.drawString(btnText, tx, ty);
             }
 
-            if (overlayMode == 0) {
-                // 非遮罩状态下，且只有游戏开始时才显示 Pause 按钮
-                if (gameStarted) {
-                    int btnW = 180;
-                    int btnH = 55;
-                    int btnX = (LEFT_ZONE_WIDTH - btnW) / 2;
-                    int btnY = h - btnH - 30;
-                    pauseButtonRect = new Rectangle(btnX, btnY, btnW, btnH);
-
-                    RoundRectangle2D btnShape = new RoundRectangle2D.Double(btnX, btnY, btnW, btnH, 18, 18);
-                    if (pausePressed) {
-                        g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
-                                new Color[]{new Color(50, 130, 240, 230), new Color(30, 100, 220, 230)}));
-                    } else if (pauseHover) {
-                        g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
-                                new Color[]{new Color(100, 180, 255, 230), new Color(50, 130, 240, 230)}));
-                    } else {
-                        g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
-                                new Color[]{new Color(120, 190, 255, 180), new Color(70, 140, 240, 180)}));
-                    }
-                    g2d.fill(btnShape);
-
-                    g2d.setColor(Color.WHITE);
-                    g2d.setStroke(new BasicStroke(2f));
-                    g2d.draw(btnShape);
-
-                    g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
-                    String btnText = "PAUSE";
-                    FontMetrics fm = g2d.getFontMetrics();
-                    int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
-                    int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
-                    g2d.drawString(btnText, tx, ty);
-                }
-            } else {
+            // 当存在遮罩层交互时，在整体 UI 层之上渲染深色遮罩及弹窗内容
+            if (overlayMode != 0) {
                 drawOverlayContent(g2d, w, h);
             }
         }
@@ -851,8 +850,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             if (launchPad != null) {
                 launchPad.updateScore(score);
                 launchPad.updateHighScore(high);
+                mPanel.repaint();
             }
-            if (mPanel != null) mPanel.repaint();
+            // 关键修复：当分数发生变动时必须强制刷新玻璃面板本身，以便触发左侧区域重绘
             repaint();
         }
     }
