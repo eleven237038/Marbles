@@ -33,6 +33,10 @@ public class ScreenGame {
     private static final Color EYE_PUPIL = new Color(40, 40, 60);
     private static final Color EYE_HIGHLIGHT = new Color(255, 255, 255);
 
+    // 角度边界计算相关常量
+    private static final double ANGLE_CLAMP_EPSILON = -0.001;
+    private static final double SQRT3 = Math.sqrt(3);
+
     public Point2D.Double cannon;
     private double headAngle = -Math.PI / 2;
     private int nextMarbleColor;
@@ -40,8 +44,9 @@ public class ScreenGame {
     private int currentBaseWidth;
     private int currentBaseHeight;
     private double screenWidth;
-    private double maxLeftAngle;  // 扇形左边界角度
-    private double maxRightAngle; // 扇形右边界角度
+    private double maxLeftAngle;
+    private double maxRightAngle;
+    private boolean angleBoundsCached = false;
 
     // 计分板数据
     private int currentScore = 0;
@@ -78,29 +83,31 @@ public class ScreenGame {
         double dy = my - cannon.y;
         headAngle = Math.atan2(dy, dx);
 
-        // 使用相对引用值(炮台当前坐标和deadline)重新构造边界约束扇形角度
-        double leftDx = 0 - cannon.x;
-        double leftDy = topY - cannon.y;
-        if (leftDy >= 0) leftDy = -0.001; // 防止恰好处在同一水平线上时返回+PI破坏边界运算
-        
-        double rightDx = screenWidth - cannon.x;
-        double rightDy = topY - cannon.y;
-        if (rightDy >= 0) rightDy = -0.001;
+        // 重新计算扇形边界角度
+        recalculateAngleBounds();
 
-        maxLeftAngle = Math.atan2(leftDy, leftDx);
-        maxRightAngle = Math.atan2(rightDy, rightDx);
-
-        // 限制炮台射击角度在动态扇形边界内（y轴向下，上半圈为负，下半圈为正）
-        if (headAngle > 0) { // 如果鼠标指到了炮台下方
+        // 限制炮台射击角度在动态扇形边界内
+        if (headAngle > 0) {
             if (headAngle > Math.PI / 2) {
                 headAngle = maxLeftAngle;
             } else {
                 headAngle = maxRightAngle;
             }
-        } else { // 正常在炮台上方移动
+        } else {
             if (headAngle < maxLeftAngle) headAngle = maxLeftAngle;
             if (headAngle > maxRightAngle) headAngle = maxRightAngle;
         }
+    }
+
+    // 重新计算扇形边界角度（当炮台位置变化时调用）
+    private void recalculateAngleBounds() {
+        double leftDy = topY - cannon.y;
+        double rightDy = topY - cannon.y;
+        if (leftDy >= 0) leftDy = ANGLE_CLAMP_EPSILON;
+        if (rightDy >= 0) rightDy = ANGLE_CLAMP_EPSILON;
+
+        maxLeftAngle = Math.atan2(leftDy, 0 - cannon.x);
+        maxRightAngle = Math.atan2(rightDy, screenWidth - cannon.x);
     }
 
     public int getNextMarbleColorType() { return nextMarbleColor; }
