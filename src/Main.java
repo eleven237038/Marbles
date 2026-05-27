@@ -37,6 +37,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private boolean downPressed = false;
 
     private int currentScore = 0;
+    private int levelHighScore = 0;
+    private int levelWinScore = 0;
+    private boolean levelWon = false;
     private int highScore = 0;
     private CustomGlassPane glassPane;
 
@@ -141,24 +144,32 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
         if (glassPane != null) {
             glassPane.setVisible(true);
-            glassPane.updateScores(currentScore, highScore);
+            glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
     }
 
     @Override
     public void init() {
+        Level level = Level.getInstance();
+        levelWinScore = level.getWinScore();
+        levelHighScore = level.getLevelHighScore();
+        levelWon = false;
+
         initMarbleGrid();
         upPressed = false;
         downPressed = false;
 
         hexGrid.setScoreListener((marble, points) -> {
             currentScore += points;
-            if (currentScore > highScore) {
-                highScore = currentScore;
-                saveHighScore(highScore);
+            if (currentScore > levelHighScore) {
+                levelHighScore = currentScore;
+                level.updateLevelHighScore(levelHighScore);
+            }
+            if (!levelWon && level.isWinConditionMet(currentScore)) {
+                levelWon = true;
             }
             if (glassPane != null) {
-                glassPane.updateScores(currentScore, highScore);
+                glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
             }
         });
     }
@@ -381,12 +392,13 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         downPressed = false;
         init();
         if (glassPane != null) {
-            glassPane.updateScores(currentScore, highScore);
+            glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
         mPanel.repaint();
     }
 
     public void onNextLevel() {
+        Level.getInstance().nextLevel();
         onRestart();
     }
 
@@ -540,7 +552,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     returnToMenu();
                 }
             } else if (overlayMode == 2) {
-                if (!isScreenGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(p)) {
+                if (levelWon && lastRestartBtn != null && lastRestartBtn.contains(p)) {
+                    onNextLevel();
+                } else if (!isScreenGameOverWin && !levelWon && lastRestartBtn != null && lastRestartBtn.contains(p)) {
                     onRestart();
                 } else if (lastMenuBtn != null && lastMenuBtn.contains(p)) {
                     onBackToMenu();
@@ -577,7 +591,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                             (lastHelpBtn != null && lastHelpBtn.contains(p)) ||
                             (lastQuitBtn != null && lastQuitBtn.contains(p));
                 } else if (overlayMode == 2) {
-                    hoveringAny = (!isScreenGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(p)) ||
+                    hoveringAny = ((levelWon || !isScreenGameOverWin) && lastRestartBtn != null && lastRestartBtn.contains(p)) ||
                             (lastMenuBtn != null && lastMenuBtn.contains(p));
                 } else if (overlayMode == 3) {
                     hoveringAny = (lastSettingsBtn != null && lastSettingsBtn.contains(p)) ||
@@ -777,8 +791,13 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         private void drawScreenGameOverOverlay(Graphics2D g2d, int cx, int cy) {
-            g2d.setFont(new Font("Arial Black", Font.BOLD, 48));
-            if (isScreenGameOverWin) {
+            g2d.setFont(new Font("Arial Black", Font.BOLD, 42));
+            if (levelWon) {
+                g2d.setColor(new Color(255, 215, 0));
+                String title = "LEVEL CLEAR!";
+                FontMetrics fm = g2d.getFontMetrics();
+                g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 130);
+            } else if (isScreenGameOverWin) {
                 g2d.setColor(new Color(255, 215, 0));
                 String title = "VICTORY!";
                 FontMetrics fm = g2d.getFontMetrics();
@@ -790,24 +809,32 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 130);
             }
 
-            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 28));
+            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 26));
             g2d.setColor(Color.WHITE);
             String scoreText = "Score: " + currentScore;
             FontMetrics fm = g2d.getFontMetrics();
-            g2d.drawString(scoreText, cx - fm.stringWidth(scoreText) / 2, cy - 60);
+            g2d.drawString(scoreText, cx - fm.stringWidth(scoreText) / 2, cy - 70);
+
+            String targetText = "Target: " + levelWinScore;
+            fm = g2d.getFontMetrics();
+            g2d.drawString(targetText, cx - fm.stringWidth(targetText) / 2, cy - 35);
 
             int btnWidth = 220;
             int btnHeight = 55;
             int btnSpacing = 20;
-            int startY = cy;
+            int startY = cy + 10;
 
-            if (!isScreenGameOverWin) {
+            if (levelWon) {
+                Rectangle nextLevelBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
+                drawOverlayButton(g2d, nextLevelBtn, "Next Level", new Color(70, 200, 100));
+                lastRestartBtn = nextLevelBtn;
+            } else if (!isScreenGameOverWin) {
                 Rectangle restartBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
                 drawOverlayButton(g2d, restartBtn, "Restart", new Color(70, 150, 255));
                 lastRestartBtn = restartBtn;
             }
 
-            Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + (isScreenGameOverWin ? 0 : btnHeight + btnSpacing), btnWidth, btnHeight);
+            Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + (levelWon || isScreenGameOverWin ? 0 : btnHeight + btnSpacing), btnWidth, btnHeight);
             drawOverlayButton(g2d, menuBtn, "Main Menu", new Color(100, 190, 255));
             lastMenuBtn = menuBtn;
         }
@@ -903,10 +930,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             return true;
         }
 
-        public void updateScores(int score, int high) {
+        public void updateScores(int score, int high, int levelHigh, int levelWin) {
             if (launchPad != null) {
                 launchPad.updateScore(score);
                 launchPad.updateHighScore(high);
+                launchPad.updateLevelScores(score, levelHigh, levelWin);
                 mPanel.repaint();
             }
             repaint();

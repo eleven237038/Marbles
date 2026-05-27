@@ -51,6 +51,8 @@ public class ScreenGame {
     // 计分板数据
     private int currentScore = 0;
     private int highScore = 0;
+    private int levelHighScore = 0;
+    private int levelWinScore = 0;
 
     public ScreenGame() {
         this.cannon = new Point2D.Double();
@@ -123,8 +125,16 @@ public class ScreenGame {
         highScore = high;
     }
 
+    public void updateLevelScores(int current, int levelHigh, int levelWin) {
+        currentScore = current;
+        levelHighScore = levelHigh;
+        levelWinScore = levelWin;
+    }
+
     public int getCurrentScore() { return currentScore; }
     public int getHighScore() { return highScore; }
+    public int getLevelHighScore() { return levelHighScore; }
+    public int getLevelWinScore() { return levelWinScore; }
 
     public void drawLaunchPad(Graphics2D g, int w, int h) {
         setCannonPosition(w, h);
@@ -139,8 +149,8 @@ public class ScreenGame {
     }
 
     public void drawScoreBoard(Graphics2D g, int leftZoneWidth, int totalHeight) {
-        int boardX = 25, boardY = 30;
-        int boardWidth = 200, boardHeight = 160;
+        int boardX = 25, boardY = 20;
+        int boardWidth = 200, boardHeight = 190;
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -166,57 +176,87 @@ public class ScreenGame {
         g.setColor(new Color(255, 255, 255, 150));
         g.drawRoundRect(boardX + 2, boardY + 2, boardWidth - 4, boardHeight - 4, 18, 18);
 
-        Font textFont = new Font("Comic Sans MS", Font.BOLD, 15);
-        Font numFont = new Font("Arial Black", Font.BOLD, 26);
+        Font textFont = new Font("Comic Sans MS", Font.BOLD, 13);
+        Font numFont = new Font("Arial Black", Font.BOLD, 20);
         FontMetrics fmText = g.getFontMetrics(textFont);
         FontMetrics fmNum = g.getFontMetrics(numFont);
 
-        // ============ 上方区域: 最高分 BEST ============
-        String bText = "BEST";
-        int bTextX = boardX + (boardWidth - fmText.stringWidth(bText)) / 2;
+        // ============ Level 标题 ============
+        String levelText = "LEVEL " + Level.getInstance().getCurrentLevel();
+        int levelTextX = boardX + (boardWidth - fmText.stringWidth(levelText)) / 2;
         g.setFont(textFont);
         g.setColor(new Color(60, 40, 100, 90));
-        g.drawString(bText, bTextX + 1, boardY + 28);
-        
-        LinearGradientPaint textGrad = new LinearGradientPaint(boardX, boardY + 10, boardX + boardWidth, boardY + 35,
+        g.drawString(levelText, levelTextX + 1, boardY + 22);
+
+        LinearGradientPaint textGrad = new LinearGradientPaint(boardX, boardY + 10, boardX + boardWidth, boardY + 25,
                 new float[]{0, 1}, new Color[]{new Color(180, 120, 255), new Color(80, 50, 130)});
         g.setPaint(textGrad);
-        g.drawString(bText, bTextX, boardY + 28);
+        g.drawString(levelText, levelTextX, boardY + 22);
 
-        String bVal = String.valueOf(highScore);
-        int bValX = boardX + (boardWidth - fmNum.stringWidth(bVal)) / 2;
+        // ============ Target 目标分 ============
+        String tText = "TARGET";
+        int tTextX = boardX + 20;
+        g.setFont(textFont);
+        g.setColor(new Color(60, 40, 100, 90));
+        g.drawString(tText, tTextX + 1, boardY + 45);
+        g.setPaint(textGrad);
+        g.drawString(tText, tTextX, boardY + 45);
+
+        String tVal = String.valueOf(levelWinScore);
+        int tValX = boardX + boardWidth - 20 - fmNum.stringWidth(tVal);
         g.setFont(numFont);
         g.setColor(new Color(0, 0, 0, 50));
-        g.drawString(bVal, bValX + 2, boardY + 65);
-        
-        LinearGradientPaint numGrad = new LinearGradientPaint(boardX, boardY + 40, boardX + boardWidth, boardY + 70,
-                new float[]{0, 1}, new Color[]{new Color(255, 110, 30), new Color(180, 40, 0)});
-        g.setPaint(numGrad);
-        g.drawString(bVal, bValX, boardY + 65);
+        g.drawString(tVal, tValX + 2, boardY + 70);
+        LinearGradientPaint numGradTarget = new LinearGradientPaint(boardX, boardY + 50, boardX + boardWidth, boardY + 75,
+                new float[]{0, 1}, new Color[]{new Color(0, 200, 100), new Color(0, 120, 50)});
+        g.setPaint(numGradTarget);
+        g.drawString(tVal, tValX, boardY + 70);
 
-        // ============ 中间修饰分割线 ============
+        // ============ 分割线1 ============
         g.setColor(new Color(200, 200, 200, 120));
-        g.drawLine(boardX + 30, boardY + 80, boardX + boardWidth - 30, boardY + 80);
+        g.drawLine(boardX + 15, boardY + 80, boardX + boardWidth - 15, boardY + 80);
 
-        // ============ 下方区域: 当前分 SCORE ============
+        // ============ 当前分 SCORE ============
         String sText = "SCORE";
         int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
         g.setFont(textFont);
         g.setColor(new Color(60, 40, 100, 90));
-        g.drawString(sText, sTextX + 1, boardY + 108);
+        g.drawString(sText, sTextX + 1, boardY + 102);
         g.setPaint(textGrad);
-        g.drawString(sText, sTextX, boardY + 108);
+        g.drawString(sText, sTextX, boardY + 102);
 
         String sVal = String.valueOf(currentScore);
         int sValX = boardX + (boardWidth - fmNum.stringWidth(sVal)) / 2;
         g.setFont(numFont);
         g.setColor(new Color(0, 0, 0, 50));
-        g.drawString(sVal, sValX + 2, boardY + 145);
-        
-        LinearGradientPaint numGrad2 = new LinearGradientPaint(boardX, boardY + 120, boardX + boardWidth, boardY + 150,
+        g.drawString(sVal, sValX + 2, boardY + 130);
+        LinearGradientPaint numGrad2 = new LinearGradientPaint(boardX, boardY + 105, boardX + boardWidth, boardY + 135,
                 new float[]{0, 1}, new Color[]{new Color(40, 150, 255), new Color(0, 80, 180)});
         g.setPaint(numGrad2);
-        g.drawString(sVal, sValX, boardY + 145);
+        g.drawString(sVal, sValX, boardY + 130);
+
+        // ============ 分割线2 ============
+        g.setColor(new Color(200, 200, 200, 120));
+        g.drawLine(boardX + 15, boardY + 138, boardX + boardWidth - 15, boardY + 138);
+
+        // ============ 最高分 BEST ============
+        String bText = "BEST";
+        int bTextX = boardX + 20;
+        g.setFont(textFont);
+        g.setColor(new Color(60, 40, 100, 90));
+        g.drawString(bText, bTextX + 1, boardY + 160);
+        g.setPaint(textGrad);
+        g.drawString(bText, bTextX, boardY + 160);
+
+        String bVal = String.valueOf(levelHighScore);
+        int bValX = boardX + boardWidth - 20 - fmNum.stringWidth(bVal);
+        g.setFont(numFont);
+        g.setColor(new Color(0, 0, 0, 50));
+        g.drawString(bVal, bValX + 2, boardY + 185);
+        LinearGradientPaint numGrad = new LinearGradientPaint(boardX, boardY + 165, boardX + boardWidth, boardY + 190,
+                new float[]{0, 1}, new Color[]{new Color(255, 110, 30), new Color(180, 40, 0)});
+        g.setPaint(numGrad);
+        g.drawString(bVal, bValX, boardY + 185);
     }
 
     public void drawCannon(Graphics2D g, double mx, double my) {
