@@ -15,7 +15,7 @@ import java.awt.LinearGradientPaint;
 import java.util.Random;
 import java.util.prefs.Preferences;
 
-public class Main extends GameEngine implements ScreenStart.ScreenStartListener, GameOver.GameOverListener {
+public class Main extends GameEngine implements ScreenStart.ScreenStartListener, ScreenGameOver.ScreenGameOverListener {
     private Marbles hexGrid;
     private LaunchPad launchPad;
     private MarbleLaunch launchMarble;
@@ -268,7 +268,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
                 Marble marble = row[c];
                 // 忽略正在播放消除或掉落动画的弹珠，防止掉落期间触发判定
                 if (marble != null && marble.isInitialized() && !marble.isPopping() && !marble.isFalling() && marble.getCenterY() + radius >= deadline) {
-                    openGameOverMenu(false);
+                    openScreenGameOverMenu(false);
                     return;
                 }
             }
@@ -312,8 +312,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
         mPanel.repaint();
     }
 
-    // ==================== GameOver 界面 ====================
-    private void openGameOverMenu(boolean win) {
+    // ==================== ScreenGameOver 界面 ====================
+    private void openScreenGameOverMenu(boolean win) {
         frozen = true;
         gamePaused = true;
 
@@ -421,7 +421,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
 
         // 覆盖层模式: 0=无, 1=暂停菜单, 2=游戏结束
         private int overlayMode = 0;
-        private boolean isGameOverWin = false;
+        private boolean isScreenGameOverWin = false;
 
         public CustomGlassPane() {
             setOpaque(false);
@@ -490,7 +490,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
                 }
             } else if (overlayMode == 2) {
                 // 游戏结束
-                if (!isGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(p)) {
+                if (!isScreenGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(p)) {
                     onRestart();
                 } else if (lastMenuBtn != null && lastMenuBtn.contains(p)) {
                     onBackToMenu();
@@ -504,7 +504,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
 
         public void showOverlay(int mode, boolean win) {
             overlayMode = mode;
-            isGameOverWin = win;
+            isScreenGameOverWin = win;
             setVisible(true);
             repaint();
         }
@@ -575,7 +575,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
                 drawPauseMenuOverlay(g2d, centerX, centerY);
             } else if (overlayMode == 2) {
                 // 游戏结束
-                drawGameOverOverlay(g2d, centerX, centerY);
+                drawScreenGameOverOverlay(g2d, centerX, centerY);
             }
         }
 
@@ -611,10 +611,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
             lastQuitBtn = quitBtn;
         }
 
-        private void drawGameOverOverlay(Graphics2D g2d, int cx, int cy) {
+        private void drawScreenGameOverOverlay(Graphics2D g2d, int cx, int cy) {
             // 标题
             g2d.setFont(new Font("Arial", Font.BOLD, 48));
-            if (isGameOverWin) {
+            if (isScreenGameOverWin) {
                 g2d.setColor(new Color(255, 220, 80));
                 String title = "LEVEL COMPLETE!";
                 FontMetrics fm = g2d.getFontMetrics();
@@ -639,7 +639,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
             int btnSpacing = 15;
             int startY = cy - 20;
 
-            if (!isGameOverWin) {
+            if (!isScreenGameOverWin) {
                 // Restart按钮
                 Rectangle restartBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
                 drawOverlayButton(g2d, restartBtn, "Restart", new Color(70, 150, 255));
@@ -647,7 +647,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
             }
 
             // Main Menu按钮
-            Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + (isGameOverWin ? 0 : btnHeight + btnSpacing), btnWidth, btnHeight);
+            Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + (isScreenGameOverWin ? 0 : btnHeight + btnSpacing), btnWidth, btnHeight);
             drawOverlayButton(g2d, menuBtn, "Main Menu", new Color(100, 190, 255));
             lastMenuBtn = menuBtn;
         }
@@ -695,7 +695,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
                 if (lastHelpBtn != null && lastHelpBtn.contains(x, y)) return true;
                 if (lastQuitBtn != null && lastQuitBtn.contains(x, y)) return true;
             } else if (overlayMode == 2) {
-                if (!isGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(x, y)) return true;
+                if (!isScreenGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(x, y)) return true;
                 if (lastMenuBtn != null && lastMenuBtn.contains(x, y)) return true;
             }
             return false;

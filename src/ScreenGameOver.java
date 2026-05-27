@@ -7,12 +7,12 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
- * GameOver - 游戏结束界面
+ * ScreenGameOver - 游戏结束界面
  * 显示 GAME OVER 或 LEVEL COMPLETE，以及相应按钮
  */
-public class GameOver extends JPanel implements MouseListener {
+public class ScreenGameOver extends JPanel implements MouseListener {
 
-    public interface GameOverListener {
+    public interface ScreenGameOverListener {
         void onRestart();
         void onBackToMenu();
         void onNextLevel();
@@ -29,15 +29,15 @@ public class GameOver extends JPanel implements MouseListener {
     private Rectangle menuBtn;
     private Rectangle nextBtn;
 
-    private GameOverListener listener;
+    private ScreenGameOverListener listener;
 
-    public GameOver(
+    public ScreenGameOver(
             boolean win,
             int score,
             BufferedImage restartImg,
             BufferedImage menuImg,
             BufferedImage nextImg,
-            GameOverListener listener
+            ScreenGameOverListener listener
     ) {
         this.win = win;
         this.score = score;
