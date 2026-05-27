@@ -39,6 +39,9 @@ public class ScreenGame {
     private double topY;
     private int currentBaseWidth;
     private int currentBaseHeight;
+    private double screenWidth;
+    private double maxLeftAngle;  // 扇形左边界角度
+    private double maxRightAngle; // 扇形右边界角度
 
     // 计分板数据
     private int currentScore = 0;
@@ -52,10 +55,14 @@ public class ScreenGame {
     public void setCannonPosition(int w, int h) {
         currentBaseWidth = (int)(w * BASE_RATIO_W);
         currentBaseHeight = (int)(currentBaseWidth * BASE_RATIO_H);
+        screenWidth = w;
 
-        cannon.x = w / 2.0;
-        cannon.y = h - (h / 5.2);
-        topY = cannon.y - currentBaseHeight;
+        // 仅在初始化时设定炮台的原始位置和deadline (topY)。后续绘制时不覆盖此数据。
+        if (cannon.x == 0 && cannon.y == 0) {
+            cannon.x = w / 2.0;
+            cannon.y = h - (h / 5.0);
+            topY = cannon.y - currentBaseHeight; // topY就是我们的deadline基准线
+        }
     }
 
     public double getTopY() { return topY; }
@@ -69,14 +76,30 @@ public class ScreenGame {
     public void updateCannonAngle(double mx, double my) {
         double dx = mx - cannon.x;
         double dy = my - cannon.y;
-        if (dy < 0) {
-            headAngle = Math.atan2(dy, dx);
-            double maxLeft = -Math.PI * 5 / 6;
-            double maxRight = -Math.PI / 6;
-            if (headAngle < maxLeft) headAngle = maxLeft;
-            if (headAngle > maxRight) headAngle = maxRight;
-        } else {
-            headAngle = -Math.PI / 2;
+        headAngle = Math.atan2(dy, dx);
+
+        // 使用相对引用值(炮台当前坐标和deadline)重新构造边界约束扇形角度
+        double leftDx = 0 - cannon.x;
+        double leftDy = topY - cannon.y;
+        if (leftDy >= 0) leftDy = -0.001; // 防止恰好处在同一水平线上时返回+PI破坏边界运算
+        
+        double rightDx = screenWidth - cannon.x;
+        double rightDy = topY - cannon.y;
+        if (rightDy >= 0) rightDy = -0.001;
+
+        maxLeftAngle = Math.atan2(leftDy, leftDx);
+        maxRightAngle = Math.atan2(rightDy, rightDx);
+
+        // 限制炮台射击角度在动态扇形边界内（y轴向下，上半圈为负，下半圈为正）
+        if (headAngle > 0) { // 如果鼠标指到了炮台下方
+            if (headAngle > Math.PI / 2) {
+                headAngle = maxLeftAngle;
+            } else {
+                headAngle = maxRightAngle;
+            }
+        } else { // 正常在炮台上方移动
+            if (headAngle < maxLeftAngle) headAngle = maxLeftAngle;
+            if (headAngle > maxRightAngle) headAngle = maxRightAngle;
         }
     }
 

@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.awt.geom.RoundRectangle2D;
 import java.util.Random;
 import java.util.prefs.Preferences;
+import java.awt.geom.Point2D;
 
 public class Main extends GameEngine implements ScreenStart.ScreenStartListener {
     private Marbles hexGrid;
@@ -30,6 +31,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     public static final int GAME_HEIGHT = 560;      // 游戏区域高度
 
     private boolean gamePaused = false;
+    
+    // 炮台移动按键状态
+    private boolean upPressed = false;
+    private boolean downPressed = false;
 
     // 计分相关
     private int currentScore = 0;
@@ -147,6 +152,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     @Override
     public void init() {
         initMarbleGrid();
+        upPressed = false;
+        downPressed = false;
 
         hexGrid.setScoreListener((marble, points) -> {
             currentScore += points;
@@ -178,6 +185,31 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     public void update(double dt) {
         if (frozen || gamePaused) return;
         if (hexGrid != null) hexGrid.update(dt, deadline);
+        
+        // 处理炮台上下移动
+        if (launchPad != null) {
+            boolean moved = false;
+            if (upPressed) {
+                launchPad.cannon.y -= 400 * dt;
+                moved = true;
+            }
+            if (downPressed) {
+                launchPad.cannon.y += 400 * dt;
+                moved = true;
+            }
+            
+            // 范围限制与视觉同步
+            if (moved) {
+                if (launchPad.cannon.y < deadline) launchPad.cannon.y = deadline;
+                if (launchPad.cannon.y > mHeight) launchPad.cannon.y = mHeight;
+                
+                // 让未发射的弹珠紧跟炮台位置
+                if (launchMarble != null && !launchMarble.isLaunched()) {
+                    launchMarble.setCenter(launchPad.cannon.x, launchPad.cannon.y);
+                }
+            }
+        }
+
         if (launchMarble != null) launchMarble.update(dt);
         checkCollisions();
         collisionWithDeadline();
@@ -316,6 +348,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         gameStarted = false; // 优先重置状态
         hexGrid = null;
         launchMarble = null;
+        upPressed = false;
+        downPressed = false;
         mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         
         if (glassPane != null) {
@@ -340,6 +374,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         frozen = false;
         gamePaused = false;
         currentScore = 0;
+        upPressed = false;
+        downPressed = false;
         init(); // 重新生成网格和大炮，需要重新传递分数
         if (glassPane != null) {
             glassPane.updateScores(currentScore, highScore);
@@ -369,8 +405,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     public void mousePressed(MouseEvent e) {
         if (frozen || gamePaused) return;
         if (launchMarble != null && !launchMarble.isLaunched()) {
+            // 更新炮台角度并重新获取真正的枪口目标以供受限发射
+            launchPad.updateCannonAngle(e.getX(), e.getY());
             launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
-            launchMarble.launch(e.getX(), e.getY());
+            Point2D.Double muzzle = launchPad.getMuzzlePosition();
+            launchMarble.launch(muzzle.x, muzzle.y);
         }
     }
 
@@ -380,11 +419,23 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     @Override
     public void keyPressed(KeyEvent event) {
         if (frozen || gamePaused) return;
+        
+        if (event.getKeyCode() == KeyEvent.VK_UP) upPressed = true;
+        if (event.getKeyCode() == KeyEvent.VK_DOWN) downPressed = true;
+
         if (event.getKeyCode() == KeyEvent.VK_SPACE && launchMarble != null && !launchMarble.isLaunched()) {
-            launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
-            launchMarble.launch(mouseX > 0 ? mouseX : launchPad.cannon.x,
+            launchPad.updateCannonAngle(mouseX > 0 ? mouseX : launchPad.cannon.x,
                     mouseY > 0 ? mouseY : launchPad.cannon.y - 100);
+            launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
+            Point2D.Double muzzle = launchPad.getMuzzlePosition();
+            launchMarble.launch(muzzle.x, muzzle.y);
         }
+    }
+    
+    @Override
+    public void keyReleased(KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.VK_UP) upPressed = false;
+        if (event.getKeyCode() == KeyEvent.VK_DOWN) downPressed = false;
     }
 
     private int loadHighScore() {
