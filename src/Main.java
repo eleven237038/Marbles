@@ -17,7 +17,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private double mouseY = 0;
     private CardLayout cardLayout;
     private JPanel mainPanel;
-    private boolean gameStarted = false;
+    public boolean gameStarted = false;
     private boolean frozen = false;
     private double deadline;
     private Random random = new Random();
@@ -27,14 +27,14 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     public static final int GAME_ZONE_WIDTH = 483;  // 游戏区域宽度 (右侧)
     public static final int LEFT_ZONE_WIDTH = 250;  // 左侧空白区域宽度 (放置计分板、控制区)
     public static final int TOTAL_WIDTH = LEFT_ZONE_WIDTH + GAME_ZONE_WIDTH; // 窗口总宽度: 733像素
-    public static final int GAME_HEIGHT = 560;      // 游戏区域高度 (适当拉高，留出底部操作空间)
+    public static final int GAME_HEIGHT = 560;      // 游戏区域高度
 
     private boolean gamePaused = false;
 
     // 计分相关
     private int currentScore = 0;
     private int highScore = 0;
-    private BoardScore scoreBoard;
+    public BoardScore scoreBoard;
     private CustomGlassPane glassPane;
 
     public static void main(String[] args) {
@@ -124,19 +124,24 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     public void onStartGame() {
         cardLayout.show(mainPanel, "game");
         currentScore = 0;
+        
+        boolean wasStarted = gameStarted;
+        gameStarted = true;
 
         if (glassPane != null) {
             glassPane.setVisible(true);
+            if(scoreBoard != null) scoreBoard.setVisible(true);
             glassPane.updateScores(currentScore, highScore);
         }
 
-        if (!gameStarted) {
-            gameStarted = true;
+        if (!wasStarted) {
             if (startScreen != null) {
                 startScreen.stopAnimation();
             }
             init();
             gameLoop(60);
+        } else {
+            init(); // 已在循环中则只重置数据
         }
     }
 
@@ -169,7 +174,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
         launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
     }
-
 
     @Override
     public void update(double dt) {
@@ -310,17 +314,23 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private void returnToMenu() {
         frozen = false;
         gamePaused = false;
-        gameStarted = false;
+        gameStarted = false; // 优先重置状态
         hexGrid = null;
         launchMarble = null;
         mPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        
+        if (glassPane != null) {
+            glassPane.hideOverlay(); // 彻底隐藏遮罩层，防止吃掉鼠标事件
+        }
+        
         cardLayout.show(mainPanel, "menu");
+        
+        if (startScreen != null) {
+            startScreen.restartAnimation(); // 重新触发下降动画
+        }
     }
 
     public void onBackToMenu() {
-        if (glassPane != null) {
-            glassPane.hideOverlay();
-        }
         returnToMenu();
     }
 
@@ -343,8 +353,14 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     }
 
     @Override
+    public void onOpenSettings() {
+        if (glassPane != null) {
+            glassPane.showSettings();
+        }
+    }
+
+    @Override
     public void mouseMoved(MouseEvent e) {
-        // 鼠标移至右侧游戏面板内，需要转换坐标差
         mouseX = e.getX();
         mouseY = e.getY();
         if (frozen || gamePaused) return;
@@ -384,8 +400,15 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     class CustomGlassPane extends JComponent {
         private Rectangle pauseButtonRect;
         private boolean pauseHover = false, pausePressed = false;
-        private int overlayMode = 0;
+        private int overlayMode = 0; // 0=游戏正常进行, 1=暂停菜单, 2=结算界面, 3=设置界面
         private boolean isScreenGameOverWin = false;
+
+        // 动画控制相关参数
+        private boolean animating = false;
+        private long animStartTime = 0;
+        private static final long ANIM_DURATION = 350; // 动画时长350ms
+        private static final double ANIM_OVERSHOOT = 0.12;
+        private javax.swing.Timer animTimer; // 专用刷新定时器，杜绝卡死
 
         public CustomGlassPane() {
             setOpaque(false);
@@ -396,20 +419,37 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             scoreBoard = new BoardScore();
             add(scoreBoard);
 
+            // 建立动画刷新定时器 (保证以高刷新率不断触发重绘而不会造成死锁或主线程卡死)
+            animTimer = new javax.swing.Timer(16, e -> {
+                if (animating) {
+                    long elapsed = System.currentTimeMillis() - animStartTime;
+                    if (elapsed >= ANIM_DURATION) {
+                        animating = false;
+                        animTimer.stop();
+                    }
+                    repaint();
+                }
+            });
+
             MouseAdapter mouseAdapter = new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
                     Point p = e.getPoint();
-                    if (overlayMode == 0 && pauseButtonRect != null && pauseButtonRect.contains(p)) {
-                        pausePressed = true;
-                        repaint();
-                        openPauseMenu();
-                        pausePressed = false;
-                        Point mp = getMousePosition();
-                        pauseHover = (mp != null && pauseButtonRect.contains(mp));
-                        repaint();
-                    } else if (overlayMode != 0) {
-                        handleOverlayClick(p);
+                    if (overlayMode == 0) {
+                        if (gameStarted && pauseButtonRect != null && pauseButtonRect.contains(p)) {
+                            pausePressed = true;
+                            repaint();
+                            openPauseMenu();
+                            pausePressed = false;
+                            Point mp = getMousePosition();
+                            pauseHover = (mp != null && pauseButtonRect.contains(mp));
+                            repaint();
+                        }
+                    } else {
+                        // 确保动画期间禁止按钮点击，防止状态混乱
+                        if (!animating) {
+                            handleOverlayClick(p);
+                        }
                     }
                 }
                 @Override
@@ -425,7 +465,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 public void mouseMoved(MouseEvent e) {
                     Point p = e.getPoint();
                     if (overlayMode == 0) {
-                        boolean newHover = pauseButtonRect != null && pauseButtonRect.contains(p);
+                        boolean newHover = gameStarted && pauseButtonRect != null && pauseButtonRect.contains(p);
                         if (pauseHover != newHover) {
                             pauseHover = newHover;
                             repaint();
@@ -445,7 +485,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 } else if (lastHelpBtn != null && lastHelpBtn.contains(p)) {
                     JOptionPane.showMessageDialog(mPanel,
                             "游戏玩法：\n1. 移动鼠标瞄准，点击/按空格键发射弹珠。\n2. 3个或更多同色相连即可消除。\n3. 不要让弹珠越过底部虚线！",
-                            "游戏指南", JOptionPane.INFORMATION_MESSAGE);
+                            "How to play", JOptionPane.INFORMATION_MESSAGE);
                 } else if (lastQuitBtn != null && lastQuitBtn.contains(p)) {
                     closePauseMenu();
                     returnToMenu();
@@ -456,24 +496,99 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 } else if (lastMenuBtn != null && lastMenuBtn.contains(p)) {
                     onBackToMenu();
                 }
+            } else if (overlayMode == 3) {
+                if (lastSettingsBtn != null && lastSettingsBtn.contains(p)) {
+                    ScreenStart.isSoundOnStatic = !ScreenStart.isSoundOnStatic;
+                    repaint();
+                } else if (lastHelpBtn != null && lastHelpBtn.contains(p)) {
+                    JOptionPane.showMessageDialog(mPanel,
+                            "游戏玩法：\n1. 移动鼠标瞄准，点击/按空格键发射弹珠。\n2. 3个或更多同色相连即可消除。\n3. 不要让弹珠越过底部虚线！",
+                            "How to play", JOptionPane.INFORMATION_MESSAGE);
+                } else if (lastQuitBtn != null && lastQuitBtn.contains(p)) {
+                    closeSettings();
+                }
             }
         }
 
         private void updateOverlayHover(Point p) {
-            repaint();
+            if (overlayMode != 0 && !animating) {
+                boolean hoveringAny = false;
+                if (overlayMode == 1) {
+                    hoveringAny = (lastResumeBtn != null && lastResumeBtn.contains(p)) ||
+                                  (lastHelpBtn != null && lastHelpBtn.contains(p)) ||
+                                  (lastQuitBtn != null && lastQuitBtn.contains(p));
+                } else if (overlayMode == 2) {
+                    hoveringAny = (!isScreenGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(p)) ||
+                                  (lastMenuBtn != null && lastMenuBtn.contains(p));
+                } else if (overlayMode == 3) {
+                    hoveringAny = (lastSettingsBtn != null && lastSettingsBtn.contains(p)) ||
+                                  (lastHelpBtn != null && lastHelpBtn.contains(p)) ||
+                                  (lastQuitBtn != null && lastQuitBtn.contains(p));
+                }
+                setCursor(hoveringAny ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+            }
         }
 
         public void showOverlay(int mode, boolean win) {
             overlayMode = mode;
             isScreenGameOverWin = win;
+            // 开启遮罩时，隐藏左侧计分板以防止叠加显示混乱
+            if (scoreBoard != null) {
+                scoreBoard.setVisible(false);
+            }
             setVisible(true);
+            animating = true;
+            animStartTime = System.currentTimeMillis();
+            if (!animTimer.isRunning()) animTimer.start();
+            repaint();
+        }
+
+        public void showSettings() {
+            overlayMode = 3;
+            isScreenGameOverWin = false;
+            if (scoreBoard != null) {
+                scoreBoard.setVisible(false);
+            }
+            setVisible(true);
+            animating = true;
+            animStartTime = System.currentTimeMillis();
+            if (!animTimer.isRunning()) animTimer.start();
             repaint();
         }
 
         public void hideOverlay() {
+            animating = false;
+            if (animTimer != null) animTimer.stop();
             overlayMode = 0;
-            setVisible(false);
+            
+            // 只有当游戏已经处于开始状态时，才恢复计分板和保持 GlassPane 显示 (为了 Pause 按钮)
+            if (gameStarted) {
+                if (scoreBoard != null) {
+                    scoreBoard.setVisible(true);
+                }
+            } else {
+                setVisible(false);
+            }
             repaint();
+        }
+
+        public void closeSettings() {
+            hideOverlay(); // 复用相同逻辑
+        }
+
+        private int getCurrentOffsetY(int h) {
+            if (!animating) return 0;
+            long elapsed = System.currentTimeMillis() - animStartTime;
+            double t = Math.min(1.0, (double) elapsed / ANIM_DURATION);
+            if (t < 0.7) {
+                t = t / 0.7;
+                t = 1 - Math.pow(1 - t, 2); // ease out
+                return (int)(-h * (1 - t));
+            } else {
+                t = (t - 0.7) / 0.3;
+                t = 1 - Math.pow(1 - t, 3); // ease out bounce
+                return (int)(-h * ANIM_OVERSHOOT * (1 - t));
+            }
         }
 
         @Override
@@ -485,52 +600,57 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             int h = getHeight();
             if (w == 0 || h == 0) return;
 
-            // 绘制左侧区域的渐变底色
-            LinearGradientPaint leftBg = new LinearGradientPaint(
-                    0, 0, LEFT_ZONE_WIDTH, 0,
-                    new float[]{0f, 1f},
-                    new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
-            );
-            g2d.setPaint(leftBg);
-            g2d.fillRect(0, 0, LEFT_ZONE_WIDTH, h);
+            // [核心修复] - 无论何种模式，只要在游戏进行界面中，玻璃面板都必须垫绘左侧背景
+            // 避免 overlayMode != 0 时左侧出现图形绘制空白或造成背景撕裂崩溃
+            if (gameStarted) {
+                // 绘制左侧区域的渐变底色
+                LinearGradientPaint leftBg = new LinearGradientPaint(
+                        0, 0, LEFT_ZONE_WIDTH, 0,
+                        new float[]{0f, 1f},
+                        new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
+                );
+                g2d.setPaint(leftBg);
+                g2d.fillRect(0, 0, LEFT_ZONE_WIDTH, h);
 
-            // 绘制左侧装饰分隔线条
-            g2d.setColor(new Color(180, 205, 235));
-            g2d.setStroke(new BasicStroke(1.5f));
-            g2d.drawLine(LEFT_ZONE_WIDTH - 2, 0, LEFT_ZONE_WIDTH - 2, h);
+                // 绘制左侧装饰分隔线条
+                g2d.setColor(new Color(180, 205, 235));
+                g2d.setStroke(new BasicStroke(1.5f));
+                g2d.drawLine(LEFT_ZONE_WIDTH - 2, 0, LEFT_ZONE_WIDTH - 2, h);
+            }
 
-            // 绘制暂停按钮 (放置在左侧空白区下方)
             if (overlayMode == 0) {
-                int btnW = 180;
-                int btnH = 55;
-                int btnX = (LEFT_ZONE_WIDTH - btnW) / 2;
-                int btnY = h - btnH - 30;
-                pauseButtonRect = new Rectangle(btnX, btnY, btnW, btnH);
+                // 非遮罩状态下，且只有游戏开始时才显示 Pause 按钮
+                if (gameStarted) {
+                    int btnW = 180;
+                    int btnH = 55;
+                    int btnX = (LEFT_ZONE_WIDTH - btnW) / 2;
+                    int btnY = h - btnH - 30;
+                    pauseButtonRect = new Rectangle(btnX, btnY, btnW, btnH);
 
-                RoundRectangle2D btnShape = new RoundRectangle2D.Double(btnX, btnY, btnW, btnH, 18, 18);
-                if (pausePressed) {
-                    g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
-                            new Color[]{new Color(50, 130, 240, 230), new Color(30, 100, 220, 230)}));
-                } else if (pauseHover) {
-                    g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
-                            new Color[]{new Color(100, 180, 255, 230), new Color(50, 130, 240, 230)}));
-                } else {
-                    g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
-                            new Color[]{new Color(120, 190, 255, 180), new Color(70, 140, 240, 180)}));
+                    RoundRectangle2D btnShape = new RoundRectangle2D.Double(btnX, btnY, btnW, btnH, 18, 18);
+                    if (pausePressed) {
+                        g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
+                                new Color[]{new Color(50, 130, 240, 230), new Color(30, 100, 220, 230)}));
+                    } else if (pauseHover) {
+                        g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
+                                new Color[]{new Color(100, 180, 255, 230), new Color(50, 130, 240, 230)}));
+                    } else {
+                        g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
+                                new Color[]{new Color(120, 190, 255, 180), new Color(70, 140, 240, 180)}));
+                    }
+                    g2d.fill(btnShape);
+
+                    g2d.setColor(Color.WHITE);
+                    g2d.setStroke(new BasicStroke(2f));
+                    g2d.draw(btnShape);
+
+                    g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
+                    String btnText = "PAUSE";
+                    FontMetrics fm = g2d.getFontMetrics();
+                    int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
+                    int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
+                    g2d.drawString(btnText, tx, ty);
                 }
-                g2d.fill(btnShape);
-
-                g2d.setColor(Color.WHITE);
-                g2d.setStroke(new BasicStroke(2f));
-                g2d.draw(btnShape);
-
-                // 绘制按钮文字
-                g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
-                String btnText = "PAUSE";
-                FontMetrics fm = g2d.getFontMetrics();
-                int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
-                int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
-                g2d.drawString(btnText, tx, ty);
             } else {
                 drawOverlayContent(g2d, w, h);
             }
@@ -540,6 +660,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             g2d.setColor(new Color(0, 0, 0, 190));
             g2d.fillRect(0, 0, w, h);
 
+            int offsetY = getCurrentOffsetY(h);
+            g2d.translate(0, offsetY);
+
             int centerX = w / 2;
             int centerY = h / 2;
 
@@ -547,7 +670,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 drawPauseMenuOverlay(g2d, centerX, centerY);
             } else if (overlayMode == 2) {
                 drawScreenGameOverOverlay(g2d, centerX, centerY);
+            } else if (overlayMode == 3) {
+                drawSettingsOverlay(g2d, centerX, centerY);
             }
+
+            g2d.translate(0, -offsetY);
         }
 
         private void drawPauseMenuOverlay(Graphics2D g2d, int cx, int cy) {
@@ -612,6 +739,31 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             lastMenuBtn = menuBtn;
         }
 
+        private void drawSettingsOverlay(Graphics2D g2d, int cx, int cy) {
+            g2d.setFont(new Font("Arial Black", Font.BOLD, 36));
+            g2d.setColor(new Color(70, 150, 255));
+            String title = "SETTINGS";
+            FontMetrics fm = g2d.getFontMetrics();
+            g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 100);
+
+            int btnWidth = 220;
+            int btnHeight = 55;
+            int btnSpacing = 20;
+            int startY = cy - 20;
+
+            Rectangle soundBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
+            drawOverlayButton(g2d, soundBtn, ScreenStart.isSoundOnStatic ? "Sound: ON" : "Sound: OFF", new Color(70, 150, 255));
+            lastSettingsBtn = soundBtn;
+
+            Rectangle helpBtn = new Rectangle(cx - btnWidth / 2, startY + btnHeight + btnSpacing, btnWidth, btnHeight);
+            drawOverlayButton(g2d, helpBtn, "How to play", new Color(100, 190, 255));
+            lastHelpBtn = helpBtn;
+
+            Rectangle backBtn = new Rectangle(cx - btnWidth / 2, startY + 2 * (btnHeight + btnSpacing), btnWidth, btnHeight);
+            drawOverlayButton(g2d, backBtn, "Back", new Color(220, 70, 70));
+            lastQuitBtn = backBtn;
+        }
+
         private void drawOverlayButton(Graphics2D g2d, Rectangle rect, String text, Color baseColor) {
             LinearGradientPaint grad = new LinearGradientPaint(
                 rect.x, rect.y, rect.x, rect.y + rect.height,
@@ -634,21 +786,17 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         private Rectangle lastQuitBtn = null;
         private Rectangle lastRestartBtn = null;
         private Rectangle lastMenuBtn = null;
+        private Rectangle lastSettingsBtn = null;
 
         @Override
         public boolean contains(int x, int y) {
+            if (animating) return true;
+
             if (overlayMode == 0) {
-                return pauseButtonRect != null && pauseButtonRect.contains(x, y);
+                return gameStarted && pauseButtonRect != null && pauseButtonRect.contains(x, y);
             }
-            if (overlayMode == 1) {
-                if (lastResumeBtn != null && lastResumeBtn.contains(x, y)) return true;
-                if (lastHelpBtn != null && lastHelpBtn.contains(x, y)) return true;
-                if (lastQuitBtn != null && lastQuitBtn.contains(x, y)) return true;
-            } else if (overlayMode == 2) {
-                if (!isScreenGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(x, y)) return true;
-                if (lastMenuBtn != null && lastMenuBtn.contains(x, y)) return true;
-            }
-            return false;
+            
+            return true;
         }
 
         public void updateScores(int score, int high) {

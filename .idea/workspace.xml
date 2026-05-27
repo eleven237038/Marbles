@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="精简代码">
-      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化警告效果">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,15 +120,7 @@
       <workItem from="1779813084312" duration="424000" />
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
-      <workItem from="1779851862495" duration="4828000" />
-    </task>
-    <task id="LOCAL-00003" summary="更新弹珠行生成规则">
-      <option name="closed" value="true" />
-      <created>1779437580812</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1779437580812</updated>
+      <workItem from="1779851862495" duration="6767000" />
     </task>
     <task id="LOCAL-00004" summary="更新弹珠行生成规则">
       <option name="closed" value="true" />
@@ -513,7 +506,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779858995297</updated>
     </task>
-    <option name="localTasksCounter" value="52" />
+    <task id="LOCAL-00052" summary="优化警告效果">
+      <option name="closed" value="true" />
+      <created>1779859451942</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1779859451943</updated>
+    </task>
+    <option name="localTasksCounter" value="53" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -531,7 +532,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="合并UI分支" />
     <MESSAGE value="优化代码,修复bug" />
     <MESSAGE value="合并碰撞后消除逻辑" />
     <MESSAGE value="合并UI,优化代码" />
@@ -556,6 +556,7 @@
     <MESSAGE value="合并LaunchPad至BoardGame" />
     <MESSAGE value="添加警告动画" />
     <MESSAGE value="精简代码" />
-    <option name="LAST_COMMIT_MESSAGE" value="精简代码" />
+    <MESSAGE value="优化警告效果" />
+    <option name="LAST_COMMIT_MESSAGE" value="优化警告效果" />
   </component>
 </project>

@@ -9,13 +9,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import javax.imageio.ImageIO;
 
 public class ScreenStart extends JPanel {
     public interface ScreenStartListener {
         void onStartGame();
+        void onOpenSettings();
     }
 
     private final ScreenStartListener listener;
@@ -59,7 +58,9 @@ public class ScreenStart extends JPanel {
     private final int SETTING_SIZE = 60;
 
     private int fallOffset = -300;
-    private final Timer animationTimer = new Timer();
+    
+    // [核心修复] - 使用 javax.swing.Timer，安全介入 Swing EDT 防止跨线程卡死与锁竞争
+    private javax.swing.Timer animationTimer; 
     private BufferedImage settingsIcon;
 
     public ScreenStart(ScreenStartListener listener) {
@@ -76,6 +77,18 @@ public class ScreenStart extends JPanel {
         }
 
         initDecorMarbles();
+        
+        // 初始化动画定时器
+        animationTimer = new javax.swing.Timer(16, e -> {
+            if (fallOffset < 0) {
+                fallOffset += 8; // 更顺滑流畅的速度
+                if (fallOffset > 0) fallOffset = 0;
+                repaint();
+            } else {
+                animationTimer.stop();
+            }
+        });
+        
         startAnimation();
 
         MouseAdapter mouseAdapter = new MouseAdapter() {
@@ -157,23 +170,24 @@ public class ScreenStart extends JPanel {
     }
 
     private void startAnimation() {
-        animationTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (fallOffset < 0) {
-                    fallOffset += 4;
-                    repaint();
-                } else {
-                    this.cancel();
-                }
-            }
-        }, 0, 16);
+        fallOffset = -300;
+        if (!animationTimer.isRunning()) {
+            animationTimer.start();
+        }
+    }
+    
+    // [核心修复] - 允许从其他界面返回到本界面时重新激活下降动画
+    public void restartAnimation() {
+        fallOffset = -300;
+        if (!animationTimer.isRunning()) {
+            animationTimer.start();
+        }
+        repaint();
     }
 
     public void stopAnimation() {
         if (animationTimer != null) {
-            animationTimer.cancel();
-            animationTimer.purge();
+            animationTimer.stop();
         }
     }
 
@@ -337,45 +351,7 @@ public class ScreenStart extends JPanel {
     }
 
     private void openSettings() {
-        JDialog settingsDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Settings", Dialog.ModalityType.APPLICATION_MODAL);
-        settingsDialog.setSize(350, 250);
-        settingsDialog.setLocationRelativeTo(this);
-        settingsDialog.setResizable(false);
-        settingsDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 20));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
-        mainPanel.setBackground(new Color(188, 195, 255));
-
-        JLabel titleLabel = new JLabel("Settings", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial Black", Font.BOLD, 28));
-        titleLabel.setForeground(new Color(70, 150, 255));
-        mainPanel.add(titleLabel, BorderLayout.NORTH);
-
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 20));
-        buttonPanel.setBackground(new Color(188, 195, 255));
-
-        JButton soundButton = createStyledButtonStatic(isSoundOnStatic ? "Sound on" : "Sound off", true, "sound.png");
-        soundButton.addActionListener(e -> {
-            isSoundOnStatic = !isSoundOnStatic;
-            soundButton.setText(isSoundOnStatic ? "Sound on" : "Sound off");
-        });
-
-        JButton helpButton = createStyledButtonStatic("How to play", true, "help.png");
-        helpButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(settingsDialog,
-                    "游戏玩法：\n1. 点击/空格发射弹珠\n2. 3个同色相连即消除\n3. 不要让弹珠碰到底部红线",
-                    "How to play", JOptionPane.INFORMATION_MESSAGE);
-        });
-
-        buttonPanel.add(soundButton);
-        buttonPanel.add(helpButton);
-
-        mainPanel.add(buttonPanel, BorderLayout.CENTER);
-
-        settingsDialog.setContentPane(mainPanel);
-        settingsDialog.setVisible(true);
-
+        listener.onOpenSettings();
         settingPressed = false;
         repaint();
     }
