@@ -18,8 +18,21 @@ public class Marbles {
     private int maxRowCount;
     private double side;
 
-    // 得分监听器
     private BiConsumer<Marble, Integer> scoreListener;
+
+    private List<ScoreNumber> scoreNumbers = new ArrayList<>();
+    private int lastRoundTotalScore = 0;
+    private double lastLaunchX = 0;
+    private double lastLaunchY = 0;
+
+    // 弹珠颜色映射（与Marble类中的颜色保持一致）
+    private static final Color[] MARBLE_BASE_COLORS = {
+            null,
+            new Color(220, 30, 30),   // 红色
+            new Color(20, 80, 220),   // 蓝色
+            new Color(240, 200, 20),  // 黄色
+            new Color(160, 30, 200)   // 紫色
+    };
 
     public Marbles() {
         this.marbles = null;
@@ -27,7 +40,6 @@ public class Marbles {
         this.ySpacing = 0;
         this.baseX = 0;
         this.accumulatedY = 0;
-        // 统一设定大小，避免在其他类硬编码导致不一致
         this.side = 24.22;
     }
 
@@ -40,6 +52,37 @@ public class Marbles {
 
     public void setMaxRowCount(int maxRowCount) {
         this.maxRowCount = maxRowCount;
+    }
+
+    public void setLastLaunchPosition(double x, double y) {
+        this.lastLaunchX = x;
+        this.lastLaunchY = y;
+        this.lastRoundTotalScore = 0;
+    }
+
+    public void addRoundTotalScore() {
+        if (lastRoundTotalScore > 0) {
+            scoreNumbers.add(new ScoreNumber(lastLaunchX, lastLaunchY - 60, lastRoundTotalScore));
+            lastRoundTotalScore = 0;
+        }
+    }
+
+    public void updateScoreNumbers() {
+        scoreNumbers.removeIf(score -> !score.update());
+    }
+
+    private void drawScoreNumbers(Graphics2D g) {
+        for (ScoreNumber sn : scoreNumbers) {
+            sn.draw(g);
+        }
+    }
+
+    // 根据颜色类型获取弹珠颜色
+    private Color getMarbleColor(int colorType) {
+        if (colorType >= 1 && colorType <= 4) {
+            return MARBLE_BASE_COLORS[colorType];
+        }
+        return Color.WHITE;
     }
 
     public void StartMarbles(int screenWidth, int screenHeight, int initialRowCount) {
@@ -98,22 +141,21 @@ public class Marbles {
     public void update(double dt, double deadline) {
         if (marbles == null) return;
 
+        updateScoreNumbers();
+
         double yMove = side * 0.4 * dt;
 
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
-            // 使用索引遍历，便于将销毁的弹珠设为 null
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble hex = marbles[r][c];
                 if (hex != null) {
-                    // 只对非掉落状态的弹珠应用向下的平移，掉落弹珠应用自己的物理引擎
                     if (!hex.isFalling()) {
                         hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
                     }
-                    hex.update(dt); // 处理弹珠内部可能存在的动画更新
+                    hex.update(dt);
                     hex.recalculateVerticesIfDirty();
 
-                    // 如果弹珠消除动画或掉落动画播放完毕并标记死亡，从网格中移除
                     if (hex.isDead()) {
                         marbles[r][c] = null;
                     }
@@ -163,7 +205,6 @@ public class Marbles {
         double ly = launchMarble.getCenterY();
         double xSpacing = side * SQRT3;
 
-        // 1. 寻找网格中的一个参考球，用来推算当前动态网格的绝对坐标偏移 (忽略消除和掉落中的弹珠)
         Marble ref = null;
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] != null) {
@@ -179,14 +220,11 @@ public class Marbles {
 
         if (ref == null) return;
 
-        // 根据 Y 坐标差异推算目标行
         int rowOffset = (int) Math.round((ref.getCenterY() - ly) / ySpacing);
         int targetRow = ref.getRow() + rowOffset;
 
-        // 预留的 0~17 空间兜底防越界
         if (targetRow < 0) targetRow = 0;
 
-        // 3. 计算这一行的基础 X 偏移量 (处理交错排列 - 健壮的整型状态判断)
         double refBaseX = ref.getCenterX() - ref.getCol() * xSpacing;
         double targetBaseX = refBaseX;
 
@@ -195,19 +233,16 @@ public class Marbles {
             targetBaseX = (refBaseState == 1) ? xSpacing : (xSpacing / 2.0);
         }
 
-        // 4. 根据 X 坐标推算应该吸附在第几列
         int targetCol = (int) Math.round((lx - targetBaseX) / xSpacing);
         int maxCols = (int) (screenWidth / xSpacing);
         if (targetCol < 0) targetCol = 0;
         if (targetCol > maxCols) targetCol = maxCols;
 
-        // 检测目标网格是否被占用
         boolean isOccupied = false;
         if (targetRow < marbles.length && marbles[targetRow] != null && targetCol < marbles[targetRow].length) {
             isOccupied = isMarbleActive(marbles[targetRow][targetCol]);
         }
 
-        // 如果计算出的完美位置被占用，启用邻域搜索
         if (isOccupied) {
             int bestRow = targetRow;
             int bestCol = targetCol;
@@ -242,14 +277,12 @@ public class Marbles {
             targetRow = bestRow;
             targetCol = bestCol;
 
-            // 根据新找到的安全行重新校正 BaseX
             targetBaseX = refBaseX;
             if (Math.abs(targetRow - ref.getRow()) % 2 == 1) {
                 targetBaseX = (refBaseState == 1) ? xSpacing : (xSpacing / 2.0);
             }
         }
 
-        // 扩容处理
         if (targetRow >= marbles.length) {
             Marble[][] newMarbles = new Marble[targetRow + 2][];
             System.arraycopy(marbles, 0, newMarbles, 0, marbles.length);
@@ -266,7 +299,6 @@ public class Marbles {
             marbles[targetRow] = newRow;
         }
 
-        // 5. 实例化球体，赋予绝对坐标，并继承发射球的颜色
         double exactX = targetBaseX + targetCol * xSpacing;
         double exactY = ref.getCenterY() - (targetRow - ref.getRow()) * ySpacing;
 
@@ -289,13 +321,20 @@ public class Marbles {
         dfs(launchRow, launchCol, launchColor, visited, connectedGroup);
 
         if (connectedGroup.size() >= MIN_GROUP_SIZE) {
-            // 获取发出的源头球绝对坐标
             Marble launchM = marbles[launchRow][launchCol];
             double originX = launchM != null ? launchM.getCenterX() : 0;
             double originY = launchM != null ? launchM.getCenterY() : 0;
 
-            // 根据消除数量计算每个球的分数
             int groupSize = connectedGroup.size();
+
+            if (groupSize == 3) {
+                SoundManager.getInstance().playThreeClear();
+            } else if (groupSize == 4) {
+                SoundManager.getInstance().playFourClear();
+            } else if (groupSize > 4) {
+                SoundManager.getInstance().playMassiveClear();
+            }
+
             int pointsPerMarble;
             if (groupSize <= 3) {
                 pointsPerMarble = 10;
@@ -309,22 +348,25 @@ public class Marbles {
                 if (!m.isScored() && scoreListener != null) {
                     scoreListener.accept(m, pointsPerMarble);
                     m.setScored(true);
+                    lastRoundTotalScore += pointsPerMarble;
+                    // 使用弹珠本身的颜色创建得分数字
+                    Color marbleColor = getMarbleColor(m.getColorType());
+                    scoreNumbers.add(new ScoreNumber(m.getCenterX(), m.getCenterY() - 15, pointsPerMarble, marbleColor));
                 }
-                // 计算每个弹珠到发射点的物理距离，以产生由近及远的递进式延迟
                 double dist = 0;
                 if (launchM != null) {
                     dist = Math.sqrt(Math.pow(m.getCenterX() - originX, 2) + Math.pow(m.getCenterY() - originY, 2));
                 }
-
-                // 距离除以传播速度常数得到延迟(单位为秒)
                 double delay = dist / 600.0;
                 m.startPop(delay);
             }
 
-            // 消除完成后检测是否有失去附着的悬空弹珠
             checkFloatingMarbles();
+            addRoundTotalScore();
+
         } else {
-            // 未触发消除，对附近弹珠触发碰撞动画
+            SoundManager.getInstance().playNoClear();
+
             Marble launchM = marbles[launchRow][launchCol];
             if (launchM != null) {
                 double collisionX = launchM.getCenterX();
@@ -334,10 +376,9 @@ public class Marbles {
         }
     }
 
-    // 对碰撞点周围的弹珠触发碰撞动画
     private void triggerCollisionAnimation(int launchRow, int launchCol, double collisionX, double collisionY) {
         if (marbles == null) return;
-        double threshold = side * SQRT3 * 1.05; // 仅紧相邻一圈
+        double threshold = side * SQRT3 * 1.05;
         double thresholdSq = threshold * threshold;
         for (int dr = -1; dr <= 1; dr++) {
             int nr = launchRow + dr;
@@ -351,7 +392,6 @@ public class Marbles {
                 double dx = m.getCenterX() - collisionX;
                 double dy = m.getCenterY() - collisionY;
                 if (dx * dx + dy * dy <= thresholdSq) {
-                    // 距离越近延迟越短，距离越远延迟越长
                     double dist = Math.sqrt(dx * dx + dy * dy);
                     double delay = (dist / threshold) * 0.02;
                     m.startCollision(collisionX, collisionY, delay);
@@ -360,17 +400,14 @@ public class Marbles {
         }
     }
 
-    // 检测并处理失去附着的悬空弹珠
     private void checkFloatingMarbles() {
         if (marbles == null) return;
 
-        // 1. 寻找当前活体弹珠的最高位置（代表主体的天花板边界）
         double minY = Double.MAX_VALUE;
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
-                // 忽略已经消除或已经在掉落的弹珠
                 if (isMarbleActive(m)) {
                     if (m.getCenterY() < minY) {
                         minY = m.getCenterY();
@@ -379,9 +416,8 @@ public class Marbles {
             }
         }
 
-        if (minY == Double.MAX_VALUE) return; // 没有活体弹珠了
+        if (minY == Double.MAX_VALUE) return;
 
-        // 2. 将位于最高处的一层弹珠作为附着的“根节点”
         List<Marble> ceilingMarbles = new ArrayList<>();
         boolean[][] visited = new boolean[marbles.length][];
         for (int i = 0; i < marbles.length; i++) {
@@ -400,14 +436,12 @@ public class Marbles {
             }
         }
 
-        // 3. 从天花板节点出发，进行遍历连接测试
         for (Marble cm : ceilingMarbles) {
             if (!visited[cm.getRow()][cm.getCol()]) {
                 dfsFloating(cm.getRow(), cm.getCol(), visited);
             }
         }
 
-        // 4. 所有遍历不到的弹珠视为失去附着，开始掉落！
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
             for (int c = 0; c < marbles[r].length; c++) {
@@ -416,15 +450,18 @@ public class Marbles {
                     if (!m.isScored() && scoreListener != null) {
                         scoreListener.accept(m, 20);
                         m.setScored(true);
+                        // 掉落弹珠使用其本身的颜色
+                        Color marbleColor = getMarbleColor(m.getColorType());
+                        scoreNumbers.add(new ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
+                        lastRoundTotalScore += 20;
+                        SoundManager.getInstance().playDropAndScore();
                     }
-                    // 加入极小随机延迟以达到错落掉落视觉感
                     m.startFalling(random.nextDouble() * 0.1);
                 }
             }
         }
     }
 
-    // 用于悬空检测的物理距离 DFS (忽略颜色匹配)
     private void dfsFloating(int r, int c, boolean[][] visited) {
         if (r < 0 || r >= marbles.length || marbles[r] == null || c < 0 || c >= marbles[r].length) return;
         if (visited[r][c]) return;
@@ -434,7 +471,6 @@ public class Marbles {
 
         visited[r][c] = true;
 
-        // 物理距离判断容错系数
         double thresholdSq = (side * SQRT3 * 1.2) * (side * SQRT3 * 1.2);
 
         for (int dr = -2; dr <= 2; dr++) {
@@ -463,14 +499,12 @@ public class Marbles {
         if (visited[r][c]) return;
 
         Marble current = marbles[r][c];
-        // 忽略处于动画状态（即将死亡/掉落）的弹珠
         if (current == null || !current.isInitialized() || current.isPopping() || current.isFalling()) return;
         if (current.getColorType() != targetColor) return;
 
         visited[r][c] = true;
         res.add(current);
 
-        // 物理距离判断，容错系数取 1.1（允许 10% 左右像素偏移）
         double thresholdSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);
 
         for (int dr = -1; dr <= 1; dr++) {
@@ -497,7 +531,6 @@ public class Marbles {
         return ySpacing;
     }
 
-    // 更新警戒状态：距离deadline不足1.5*side时触发红色闪烁
     public void updateWarnState(double deadline, double dt) {
         if (marbles == null) return;
         double warnDist = side * 5.2;
@@ -526,6 +559,7 @@ public class Marbles {
                 if (hex != null) hex.draw(g);
             }
         }
+        drawScoreNumbers(g);
     }
 
     public void resetRow() {
@@ -540,5 +574,7 @@ public class Marbles {
         marbles = null;
         rowCount = 0;
         ySpacing = 0;
+        scoreNumbers.clear();
+        lastRoundTotalScore = 0;
     }
 }

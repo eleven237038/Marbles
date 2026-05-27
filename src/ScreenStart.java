@@ -57,19 +57,17 @@ public class ScreenStart extends JPanel {
     private int settingX, settingY;
     private final int SETTING_SIZE = 60;
 
-    // PLAY按钮精灵图动画
     private BufferedImage[] playSprites;
     private int playSpriteIndex = 0;
     private static final int PLAY_SPRITE_COUNT = 4;
-    private static final int PLAY_ANIM_DELAY = 10; // 0.01秒(10毫秒)
+    private static final int PLAY_ANIM_DELAY = 10;
     private boolean playAnimating = false;
     private boolean playAnimStarted = false;
     private javax.swing.Timer playSpriteTimer;
 
     private int fallOffset = -300;
-    
-    // 动画定时器
-    private javax.swing.Timer animationTimer; 
+
+    private javax.swing.Timer animationTimer;
     private BufferedImage settingsIcon;
 
     public ScreenStart(ScreenStartListener listener) {
@@ -77,13 +75,14 @@ public class ScreenStart extends JPanel {
         setBackground(new Color(188, 195, 255));
         setPreferredSize(new Dimension(Main.TOTAL_WIDTH, Main.GAME_HEIGHT));
 
+        SoundManager.getInstance().setSoundEnabled(isSoundOnStatic);
+
         try {
             settingsIcon = ImageIO.read(new File("resources/settings.png"));
         } catch (IOException e) {
             settingsIcon = null;
         }
 
-        // 加载PLAY按钮精灵图 (PLAY-1 到 PLAY-4)
         playSprites = new BufferedImage[PLAY_SPRITE_COUNT];
         for (int i = 0; i < PLAY_SPRITE_COUNT; i++) {
             try {
@@ -96,13 +95,11 @@ public class ScreenStart extends JPanel {
             }
         }
 
-        // 初始化PLAY精灵动画定时器 - 每0.01秒切换一帧
         playSpriteTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
             if (playAnimating && playSpriteIndex < PLAY_SPRITE_COUNT - 1) {
                 playSpriteIndex++;
                 repaint();
             } else if (playSpriteIndex >= PLAY_SPRITE_COUNT - 1) {
-                // 最后一帧(PLAY-4)停止动画，恒定显示
                 playAnimating = false;
                 playSpriteTimer.stop();
                 repaint();
@@ -111,10 +108,9 @@ public class ScreenStart extends JPanel {
 
         initDecorMarbles();
 
-        // 界面初始下降动画
         animationTimer = new javax.swing.Timer(16, e -> {
             if (fallOffset < 0) {
-                fallOffset += 8; 
+                fallOffset += 8;
                 if (fallOffset > 0) fallOffset = 0;
                 repaint();
             } else {
@@ -124,12 +120,11 @@ public class ScreenStart extends JPanel {
 
         startAnimation();
 
-        // 启动时0.01秒不显示PLAY，随后开始动画播放
         javax.swing.Timer startDelayTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
             playAnimStarted = true;
             playAnimating = true;
             playSpriteTimer.start();
-            repaint(); // 立即渲染第一帧 PLAY-1
+            repaint();
             ((javax.swing.Timer)e.getSource()).stop();
         });
         startDelayTimer.setRepeats(false);
@@ -149,7 +144,6 @@ public class ScreenStart extends JPanel {
                 } else if (settingPressed) {
                     openSettings();
                 } else {
-                    // 如果点击了除PLAY和settings外的区域，从PLAY-1重新播放一遍
                     restartPlayAnimation();
                 }
             }
@@ -189,7 +183,6 @@ public class ScreenStart extends JPanel {
         addMouseMotionListener(mouseAdapter);
     }
 
-    // 从PLAY-1重新播放动画
     private void restartPlayAnimation() {
         playSpriteIndex = 0;
         playAnimating = true;
@@ -199,12 +192,10 @@ public class ScreenStart extends JPanel {
         repaint();
     }
 
-    // 获取当前PLAY按钮的实际边界（考虑精灵图尺寸动态变化时的中心锚定）
     private Rectangle getPlayButtonBounds() {
         if (playSprites != null && playSprites[playSpriteIndex] != null) {
             int imgW = playSprites[playSpriteIndex].getWidth();
             int imgH = playSprites[playSpriteIndex].getHeight();
-            // 始终以原先设定的位置作为中心点
             int centerX = startX + BTN_WIDTH / 2;
             int centerY = startY + BTN_HEIGHT / 2;
             return new Rectangle(centerX - imgW / 2, centerY - imgH / 2, imgW, imgH);
@@ -216,8 +207,7 @@ public class ScreenStart extends JPanel {
         boolean oldStartHover = startHover;
         boolean oldSettingHover = settingHover;
 
-        // 根据图片实际渲染尺寸计算悬停边界
-        startHover = getPlayButtonBounds().contains(mx, my) && playAnimStarted; 
+        startHover = getPlayButtonBounds().contains(mx, my) && playAnimStarted;
         settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
 
         if (startHover || settingHover) {
@@ -245,14 +235,12 @@ public class ScreenStart extends JPanel {
             animationTimer.start();
         }
     }
-    
-    // 从其他界面返回菜单时的重置
+
     public void restartAnimation() {
         fallOffset = -300;
         if (!animationTimer.isRunning()) {
             animationTimer.start();
         }
-        // 重播PLAY按钮动画 - 先停止并隐藏
         if (playSpriteTimer.isRunning()) {
             playSpriteTimer.stop();
         }
@@ -261,7 +249,6 @@ public class ScreenStart extends JPanel {
         playSpriteIndex = 0;
         repaint();
 
-        // 延迟0.01秒后开始播放
         javax.swing.Timer restartDelayTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
             playAnimStarted = true;
             playAnimating = true;
@@ -282,6 +269,13 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    private void openSettings() {
+        // 只打开设置面板，不切换音效
+        listener.onOpenSettings();
+        settingPressed = false;
+        repaint();
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -291,7 +285,6 @@ public class ScreenStart extends JPanel {
         int w = getWidth();
         int h = getHeight();
 
-        // 计算基础锚点坐标
         startX = w / 2 - BTN_WIDTH / 2;
         startY = h / 2 - BTN_HEIGHT / 2 + 60;
 
@@ -327,7 +320,7 @@ public class ScreenStart extends JPanel {
         FontMetrics fm = g2d.getFontMetrics();
         int titleWidth = fm.stringWidth(title);
         int baseX = w / 2 - titleWidth / 2;
-        int baseY = h / 4 + offset; // 将标题略微下移，更显平衡
+        int baseY = h / 4 + offset;
 
         g2d.setColor(TITLE_SHADOW_COLOR_1);
         g2d.drawString(title, baseX + 6, baseY + 6);
@@ -374,25 +367,21 @@ public class ScreenStart extends JPanel {
     }
 
     private void drawStartButton(Graphics2D g2d) {
-        // 启动时最初的 0.01秒 不显示PLAY按钮
         if (!playAnimStarted) {
             return;
         }
 
-        // 使用精灵图绘制PLAY按钮
         BufferedImage sprite = playSprites[playSpriteIndex];
         if (sprite != null) {
             int imgW = sprite.getWidth();
             int imgH = sprite.getHeight();
-            // 以设定坐标为中心点进行渲染，自动适配图片弹性变化 (240~280 变化)
             int centerX = startX + BTN_WIDTH / 2;
             int centerY = startY + BTN_HEIGHT / 2;
             int drawX = centerX - imgW / 2;
             int drawY = centerY - imgH / 2;
-            
+
             g2d.drawImage(sprite, drawX, drawY, null);
         } else {
-            // Fallback: 如果图片未找到则绘制纯代码按钮样式
             RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
 
             Color c1 = startPressed ? new Color(50, 140, 255) :
@@ -459,12 +448,6 @@ public class ScreenStart extends JPanel {
         g2d.fill(gear);
         g2d.setColor(Color.WHITE);
         g2d.fillOval((int) cx - 6, (int) cy - 6, 12, 12);
-    }
-
-    private void openSettings() {
-        listener.onOpenSettings();
-        settingPressed = false;
-        repaint();
     }
 
     public static BufferedImage loadIcon(String iconName) {
