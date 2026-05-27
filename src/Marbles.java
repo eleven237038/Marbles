@@ -95,7 +95,7 @@ public class Marbles {
         StartMarbles(screenWidth, screenHeight, 4);
     }
 
-    public void update(double dt) {
+    public void update(double dt, double deadline) {
         if (marbles == null) return;
 
         double yMove = side * 0.4 * dt;
@@ -112,7 +112,7 @@ public class Marbles {
                     }
                     hex.update(dt); // 处理弹珠内部可能存在的动画更新
                     hex.recalculateVerticesIfDirty();
-                    
+
                     // 如果弹珠消除动画或掉落动画播放完毕并标记死亡，从网格中移除
                     if (hex.isDead()) {
                         marbles[r][c] = null;
@@ -128,6 +128,8 @@ public class Marbles {
             AddMarbleRow(newRow, screenWidth, this.rowCount);
             accumulatedY -= ySpacing;
         }
+
+        updateWarnState(deadline, dt);
     }
 
     public Marble getHex(int row, int col) {
@@ -491,6 +493,22 @@ public class Marbles {
 
     public double getVerticalSpacing() {
         return ySpacing;
+    }
+
+    // 更新警戒状态：距离deadline不足1.5*side时触发红色闪烁
+    public void updateWarnState(double deadline, double dt) {
+        if (marbles == null) return;
+        double warnDist = side * 5.2;
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone()) {
+                    m.setWarn(m.getCenterY() >= deadline - warnDist);
+                    m.updateWarn(dt);
+                }
+            }
+        }
     }
 
     public void draw(Graphics2D g) {

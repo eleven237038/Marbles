@@ -170,10 +170,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
         launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
     }
 
+
     @Override
     public void update(double dt) {
         if (frozen || gamePaused) return;
-        if (hexGrid != null) hexGrid.update(dt);
+        if (hexGrid != null) hexGrid.update(dt, deadline);
         if (launchMarble != null) launchMarble.update(dt);
         checkCollisions();
         collisionWithDeadline();

@@ -63,6 +63,10 @@ public class Marble {
     private boolean markedForRemove = false;
     private boolean scored = false;
 
+    // 警戒状态：靠近deadline时闪烁
+    private boolean warn = false;
+    private double warnProgress = 0;
+
     public Marble() {
         this.cx = 0;
         this.cy = 0;
@@ -191,8 +195,16 @@ public class Marble {
 
     public void markForRemove(boolean b) { markedForRemove = b; }
     public boolean isMarkedForRemove() { return markedForRemove; }
-    public boolean isScored() { return scored; }
     public void setScored(boolean scored) { this.scored = scored; }
+    public boolean isScored() { return scored; }
+    public boolean isWarn() { return warn; }
+    public void setWarn(boolean warn) { this.warn = warn; }
+
+    public void updateWarn(double dt) {
+        if (warn) {
+            warnProgress += dt * 8.0;
+        }
+    }
 
     public void draw(Graphics2D g) {
         // 如果未初始化或动画已经播放完成完全消失，则不绘制
@@ -265,6 +277,20 @@ public class Marble {
         if (alpha < 1.0f) {
             g.setComposite(originalComposite);
         }
+
+        // 警戒闪烁：靠近deadline时，弹珠周围散发红色光芒闪烁
+        if (warn) {
+            double t = (Math.sin(warnProgress) + 1.0) * 0.5;
+            int alphaVal = (int)(60 * t);
+            double radius2 = side * 0.866 * 1.2;
+            g.setColor(new Color(255, 30, 30, alphaVal));
+            g.fillOval((int)(cx - radius2), (int)(cy - radius2), (int)(radius2 * 2), (int)(radius2 * 2));
+            if (t > 0.3) {
+                g.setColor(new Color(255, 80, 80, (int)(120 * t)));
+                g.setStroke(new BasicStroke(2.5f));
+                g.drawOval((int)(cx - radius2 * 0.85), (int)(cy - radius2 * 0.85), (int)(radius2 * 1.7), (int)(radius2 * 1.7));
+            }
+        }
     }
 
     public void reset() {
@@ -283,5 +309,7 @@ public class Marble {
         this.fallVy = 0;
         this.aloneDelay = 0;
         this.scored = false;
+        this.warn = false;
+        this.warnProgress = 0;
     }
 }

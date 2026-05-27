@@ -207,6 +207,8 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 	// The GameEngine main Panel
 	protected class GamePanel extends JPanel {
 		private static final long serialVersionUID = 1L;
+		private static final RenderingHints ANTIALIAS_HINTS = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		private Shape mClipShape = new RoundRectangle2D.Double(0, 0, 1, 1, 20, 20);
 
 		// This gets called any time the Operating System
 		// tells the program to paint itself
@@ -219,7 +221,10 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 			mTransforms.push(mGraphics.getTransform());
 
 			// Rendering settings
-			mGraphics.setRenderingHints(new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON));
+			mGraphics.setRenderingHints(ANTIALIAS_HINTS);
+
+			mClipShape = new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 20, 20);
+			mGraphics.setClip(mClipShape);
 
 			// Paint the game
 			if (initialised) {
