@@ -1,5 +1,4 @@
 import java.awt.*;
-import javax.swing.Timer;
 
 /**
  * 独立计分板组件 (左侧空白区)
@@ -8,9 +7,6 @@ import javax.swing.Timer;
 public class BoardScore extends javax.swing.JComponent {
     private int currentScore = 0;
     private int highScore = 0;
-
-    private double starRotation = 0;
-    private Timer animationTimer;
 
     // 适配左侧 250 宽度的计分板尺寸
     private int boardX = 25, boardY = 30;
@@ -21,7 +17,6 @@ public class BoardScore extends javax.swing.JComponent {
         setFocusable(false);
         // 定位并限定组件尺寸
         setBounds(0, 0, boardX + boardWidth + 35, boardY + boardHeight + 35);
-        startAnimation();
     }
 
     public void updateScore(int score) {
@@ -98,38 +93,5 @@ public class BoardScore extends javax.swing.JComponent {
         g2d.setPaint(numGrad);
         g2d.drawString(sVal, valStartX, boardY + 78);
         g2d.drawString(bVal, valStartX + svW + 30, boardY + 78);
-
-        drawStar(g2d, boardX + boardWidth - 18, boardY + 18, 11, starRotation);
-    }
-
-    private static final int[] STAR_X = new int[10];
-    private static final int[] STAR_Y = new int[10];
-
-    private void drawStar(Graphics2D g, double x, double y, int size, double angle) {
-        for (int i = 0; i < 10; i++) {
-            double rad = Math.PI * 2 * i / 10 + angle;
-            double r = (i % 2 == 0) ? size : size * 0.4;
-            STAR_X[i] = (int) (x + Math.cos(rad) * r);
-            STAR_Y[i] = (int) (y + Math.sin(rad) * r);
-        }
-        g.setColor(new Color(255, 215, 0, 220));
-        g.fillPolygon(STAR_X, STAR_Y, 10);
-        g.setColor(new Color(255, 100, 0, 180));
-        g.drawPolygon(STAR_X, STAR_Y, 10);
-    }
-
-    public void stopAnimation() {
-        if (animationTimer != null) {
-            animationTimer.stop();
-            animationTimer = null;
-        }
-    }
-
-    private void startAnimation() {
-        animationTimer = new Timer(30, e -> {
-            starRotation += 0.05;
-            repaint();
-        });
-        animationTimer.start();
     }
 }

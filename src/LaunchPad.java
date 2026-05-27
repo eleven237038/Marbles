@@ -108,10 +108,6 @@ public class LaunchPad {
         g.setStroke(new BasicStroke((int)(2 * SCALE)));
         g.drawOval(baseX + (int)(2 * SCALE), baseY + (int)(2 * SCALE), currentBaseWidth - (int)(4 * SCALE), currentBaseHeight - (int)(4 * SCALE));
 
-        g.setColor(new Color(255, 255, 180));
-        drawStar(g, cannon.x - currentBaseWidth/2 - (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
-        drawStar(g, cannon.x + currentBaseWidth/2 + (int)(5 * SCALE), cannon.y - (int)(5 * SCALE), (int)(6 * SCALE));
-
         int turretWidth = (int)(currentBaseWidth * 0.75);
         int turretHeight = (int)(turretWidth * BASE_RATIO_H);
         int turretX = (int)(cannon.x - turretWidth/2);
@@ -226,11 +222,6 @@ public class LaunchPad {
             g.fillOval(slotX - marbleRadius/2, slotY - marbleRadius/2, marbleRadius/2, marbleRadius/2);
         }
 
-        long time = System.currentTimeMillis();
-        float angle1 = (time % 1000) / 1000f * (float)Math.PI * 2;
-        drawStar(g, slotX + (int)(Math.cos(angle1) * 10 * SCALE), slotY + (int)(Math.sin(angle1) * 10 * SCALE), (int)(2 * SCALE));
-        drawStar(g, slotX - (int)(Math.cos(angle1+2) * 8 * SCALE), slotY + (int)(Math.sin(angle1+1.5) * 8 * SCALE), (int)(2 * SCALE));
-
         double dyToLine = cannon.y - topY;
         double sinTheta = Math.sin(headAngle);
         double distanceToLine = dyToLine / (-sinTheta);
@@ -257,24 +248,6 @@ public class LaunchPad {
 
         g.setStroke(new BasicStroke(1));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-    }
-
-    private static final int[] STAR_X_POINTS = new int[10];
-    private static final int[] STAR_Y_POINTS = new int[10];
-
-    private void drawStar(Graphics2D g, double x, double y, int size) {
-        double outerR = size;
-        double innerR = size * 0.4;
-        for (int i = 0; i < 10; i++) {
-            double angle = Math.PI * 2 * i / 10 - Math.PI / 2;
-            double r = (i % 2 == 0) ? outerR : innerR;
-            STAR_X_POINTS[i] = (int)(x + Math.cos(angle) * r);
-            STAR_Y_POINTS[i] = (int)(y + Math.sin(angle) * r);
-        }
-        g.setColor(new Color(255, 255, 200, 200));
-        g.fillPolygon(STAR_X_POINTS, STAR_Y_POINTS, 10);
-        g.setColor(new Color(255, 200, 50));
-        g.drawPolygon(STAR_X_POINTS, STAR_Y_POINTS, 10);
     }
 
     public void setNextMarbleColorType(int type) {
