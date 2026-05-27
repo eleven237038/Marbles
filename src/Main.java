@@ -409,6 +409,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         private static final long ANIM_DURATION = 350; // 动画时长350ms
         private static final double ANIM_OVERSHOOT = 0.12;
         private javax.swing.Timer animTimer; // 专用刷新定时器，杜绝卡死
+        private int returnToMode = 0; // Help按Back后返回的overlayMode
 
         public CustomGlassPane() {
             setOpaque(false);
@@ -483,9 +484,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 if (lastResumeBtn != null && lastResumeBtn.contains(p)) {
                     closePauseMenu();
                 } else if (lastHelpBtn != null && lastHelpBtn.contains(p)) {
-                    JOptionPane.showMessageDialog(mPanel,
-                            "游戏玩法：\n1. 移动鼠标瞄准，点击/按空格键发射弹珠。\n2. 3个或更多同色相连即可消除。\n3. 不要让弹珠越过底部虚线！",
-                            "How to play", JOptionPane.INFORMATION_MESSAGE);
+                    showHelp();
                 } else if (lastQuitBtn != null && lastQuitBtn.contains(p)) {
                     closePauseMenu();
                     returnToMenu();
@@ -501,11 +500,13 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     ScreenStart.isSoundOnStatic = !ScreenStart.isSoundOnStatic;
                     repaint();
                 } else if (lastHelpBtn != null && lastHelpBtn.contains(p)) {
-                    JOptionPane.showMessageDialog(mPanel,
-                            "游戏玩法：\n1. 移动鼠标瞄准，点击/按空格键发射弹珠。\n2. 3个或更多同色相连即可消除。\n3. 不要让弹珠越过底部虚线！",
-                            "How to play", JOptionPane.INFORMATION_MESSAGE);
+                    showHelp();
                 } else if (lastQuitBtn != null && lastQuitBtn.contains(p)) {
                     closeSettings();
+                }
+            } else if (overlayMode == 4) {
+                if (lastQuitBtn != null && lastQuitBtn.contains(p)) {
+                    hideHelp();
                 }
             }
         }
@@ -524,6 +525,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     hoveringAny = (lastSettingsBtn != null && lastSettingsBtn.contains(p)) ||
                                   (lastHelpBtn != null && lastHelpBtn.contains(p)) ||
                                   (lastQuitBtn != null && lastQuitBtn.contains(p));
+                } else if (overlayMode == 4) {
+                    hoveringAny = (lastQuitBtn != null && lastQuitBtn.contains(p));
                 }
                 setCursor(hoveringAny ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
             }
@@ -550,6 +553,28 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 scoreBoard.setVisible(false);
             }
             setVisible(true);
+            animating = true;
+            animStartTime = System.currentTimeMillis();
+            if (!animTimer.isRunning()) animTimer.start();
+            repaint();
+        }
+
+        public void showHelp() {
+            returnToMode = overlayMode; // 保存从哪里来的，以便Back时回去
+            overlayMode = 4;
+            isScreenGameOverWin = false;
+            if (scoreBoard != null) {
+                scoreBoard.setVisible(false);
+            }
+            setVisible(true);
+            animating = true;
+            animStartTime = System.currentTimeMillis();
+            if (!animTimer.isRunning()) animTimer.start();
+            repaint();
+        }
+
+        public void hideHelp() {
+            overlayMode = returnToMode;
             animating = true;
             animStartTime = System.currentTimeMillis();
             if (!animTimer.isRunning()) animTimer.start();
@@ -672,6 +697,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 drawScreenGameOverOverlay(g2d, centerX, centerY);
             } else if (overlayMode == 3) {
                 drawSettingsOverlay(g2d, centerX, centerY);
+            } else if (overlayMode == 4) {
+                drawHelpOverlay(g2d, centerX, centerY);
             }
 
             g2d.translate(0, -offsetY);
@@ -760,6 +787,39 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             lastHelpBtn = helpBtn;
 
             Rectangle backBtn = new Rectangle(cx - btnWidth / 2, startY + 2 * (btnHeight + btnSpacing), btnWidth, btnHeight);
+            drawOverlayButton(g2d, backBtn, "Back", new Color(220, 70, 70));
+            lastQuitBtn = backBtn;
+        }
+
+        private void drawHelpOverlay(Graphics2D g2d, int cx, int cy) {
+            String[] lines = {
+                "1. Move mouse to aim, click or press SPACE to launch marble",
+                "2. 3 or more same-color connected marbles will be eliminated",
+                "3. Do not let marbles cross the bottom dashed line!"
+            };
+
+            // Title
+            g2d.setFont(new Font("Arial Black", Font.BOLD, 36));
+            g2d.setColor(new Color(70, 150, 255));
+            String title = "HOW TO PLAY";
+            FontMetrics fm = g2d.getFontMetrics();
+            g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 100);
+
+            // Help text
+            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
+            g2d.setColor(Color.WHITE);
+            int lineHeight = 36;
+            int startY = cy - 20;
+            for (int i = 0; i < lines.length; i++) {
+                fm = g2d.getFontMetrics();
+                g2d.drawString(lines[i], cx - fm.stringWidth(lines[i]) / 2, startY + i * lineHeight);
+            }
+
+            // Back button
+            int btnWidth = 220;
+            int btnHeight = 55;
+            int btnY = startY + lines.length * lineHeight + 30;
+            Rectangle backBtn = new Rectangle(cx - btnWidth / 2, btnY, btnWidth, btnHeight);
             drawOverlayButton(g2d, backBtn, "Back", new Color(220, 70, 70));
             lastQuitBtn = backBtn;
         }
