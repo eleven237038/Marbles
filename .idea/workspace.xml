@@ -4,27 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化炮台代码">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化代码">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/How-to-play.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/PLAY.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/Pause/again.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/Pause/exit.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/Pause/pause.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/Quit.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/Resume.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/Sound-on.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/StartMenu/PLAY.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/StartMenu/settings.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/again.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/begin.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/exit.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/help.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/pause.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/settings.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/sound.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ScreenGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenGame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,15 +119,7 @@
       <workItem from="1779813084312" duration="424000" />
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
-      <workItem from="1779851862495" duration="16801000" />
-    </task>
-    <task id="LOCAL-00014" summary="更正下降规则">
-      <option name="closed" value="true" />
-      <created>1779538744959</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1779538744959</updated>
+      <workItem from="1779851862495" duration="18044000" />
     </task>
     <task id="LOCAL-00015" summary="添加LaunchMarble实体">
       <option name="closed" value="true" />
@@ -531,7 +505,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779877396280</updated>
     </task>
-    <option name="localTasksCounter" value="63" />
+    <task id="LOCAL-00063" summary="优化代码">
+      <option name="closed" value="true" />
+      <created>1779880208539</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1779880208539</updated>
+    </task>
+    <option name="localTasksCounter" value="64" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -549,7 +531,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="优化代码" />
     <MESSAGE value="优化下落动画" />
     <MESSAGE value="将游戏界面作为独立文件提取,方便布局" />
     <MESSAGE value="更名,统一格式" />
@@ -574,6 +555,7 @@
     <MESSAGE value="修改计分规则" />
     <MESSAGE value="添加碰撞效果" />
     <MESSAGE value="优化炮台代码" />
-    <option name="LAST_COMMIT_MESSAGE" value="优化炮台代码" />
+    <MESSAGE value="优化代码" />
+    <option name="LAST_COMMIT_MESSAGE" value="优化代码" />
   </component>
 </project>

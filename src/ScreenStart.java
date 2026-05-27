@@ -57,17 +57,24 @@ public class ScreenStart extends JPanel {
     private int settingX, settingY;
     private final int SETTING_SIZE = 60;
 
+    // PLAY按钮精灵图动画
+    private BufferedImage[] playSprites;
+    private int playSpriteIndex = 0;
+    private static final int PLAY_SPRITE_COUNT = 4;
+    private static final int PLAY_ANIM_DELAY = 10; // 0.01秒(10毫秒)
+    private boolean playAnimating = false;
+    private boolean playAnimStarted = false;
+    private javax.swing.Timer playSpriteTimer;
+
     private int fallOffset = -300;
     
-    // [核心修复] - 使用 javax.swing.Timer，安全介入 Swing EDT 防止跨线程卡死与锁竞争
+    // 动画定时器
     private javax.swing.Timer animationTimer; 
     private BufferedImage settingsIcon;
 
     public ScreenStart(ScreenStartListener listener) {
         this.listener = listener;
         setBackground(new Color(188, 195, 255));
-        
-        // 动态适配总宽度，无需硬编码
         setPreferredSize(new Dimension(Main.TOTAL_WIDTH, Main.GAME_HEIGHT));
 
         try {
@@ -76,35 +83,74 @@ public class ScreenStart extends JPanel {
             settingsIcon = null;
         }
 
+        // 加载PLAY按钮精灵图 (PLAY-1 到 PLAY-4)
+        playSprites = new BufferedImage[PLAY_SPRITE_COUNT];
+        for (int i = 0; i < PLAY_SPRITE_COUNT; i++) {
+            try {
+                File f = new File("resources/image/PLAY/PLAY-" + (i + 1) + ".png");
+                if (f.exists()) {
+                    playSprites[i] = ImageIO.read(f);
+                }
+            } catch (IOException e) {
+                playSprites[i] = null;
+            }
+        }
+
+        // 初始化PLAY精灵动画定时器 - 每0.01秒切换一帧
+        playSpriteTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
+            if (playAnimating && playSpriteIndex < PLAY_SPRITE_COUNT - 1) {
+                playSpriteIndex++;
+                repaint();
+            } else if (playSpriteIndex >= PLAY_SPRITE_COUNT - 1) {
+                // 最后一帧(PLAY-4)停止动画，恒定显示
+                playAnimating = false;
+                playSpriteTimer.stop();
+                repaint();
+            }
+        });
+
         initDecorMarbles();
-        
-        // 初始化动画定时器
+
+        // 界面初始下降动画
         animationTimer = new javax.swing.Timer(16, e -> {
             if (fallOffset < 0) {
-                fallOffset += 8; // 更顺滑流畅的速度
+                fallOffset += 8; 
                 if (fallOffset > 0) fallOffset = 0;
                 repaint();
             } else {
                 animationTimer.stop();
             }
         });
-        
+
         startAnimation();
+
+        // 启动时0.01秒不显示PLAY，随后开始动画播放
+        javax.swing.Timer startDelayTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
+            playAnimStarted = true;
+            playAnimating = true;
+            playSpriteTimer.start();
+            repaint(); // 立即渲染第一帧 PLAY-1
+            ((javax.swing.Timer)e.getSource()).stop();
+        });
+        startDelayTimer.setRepeats(false);
+        startDelayTimer.start();
 
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 int mx = e.getPoint().x;
                 int my = e.getPoint().y;
-                startPressed = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
+                startPressed = getPlayButtonBounds().contains(mx, my);
                 settingPressed = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
                 repaint();
 
                 if (startPressed) {
                     listener.onStartGame();
-                }
-                if (settingPressed) {
+                } else if (settingPressed) {
                     openSettings();
+                } else {
+                    // 如果点击了除PLAY和settings外的区域，从PLAY-1重新播放一遍
+                    restartPlayAnimation();
                 }
             }
 
@@ -143,11 +189,35 @@ public class ScreenStart extends JPanel {
         addMouseMotionListener(mouseAdapter);
     }
 
+    // 从PLAY-1重新播放动画
+    private void restartPlayAnimation() {
+        playSpriteIndex = 0;
+        playAnimating = true;
+        if (!playSpriteTimer.isRunning()) {
+            playSpriteTimer.start();
+        }
+        repaint();
+    }
+
+    // 获取当前PLAY按钮的实际边界（考虑精灵图尺寸动态变化时的中心锚定）
+    private Rectangle getPlayButtonBounds() {
+        if (playSprites != null && playSprites[playSpriteIndex] != null) {
+            int imgW = playSprites[playSpriteIndex].getWidth();
+            int imgH = playSprites[playSpriteIndex].getHeight();
+            // 始终以原先设定的位置作为中心点
+            int centerX = startX + BTN_WIDTH / 2;
+            int centerY = startY + BTN_HEIGHT / 2;
+            return new Rectangle(centerX - imgW / 2, centerY - imgH / 2, imgW, imgH);
+        }
+        return new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT);
+    }
+
     private void updateHoverState(int mx, int my) {
         boolean oldStartHover = startHover;
         boolean oldSettingHover = settingHover;
 
-        startHover = new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT).contains(mx, my);
+        // 根据图片实际渲染尺寸计算悬停边界
+        startHover = getPlayButtonBounds().contains(mx, my) && playAnimStarted; 
         settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
 
         if (startHover || settingHover) {
@@ -176,18 +246,39 @@ public class ScreenStart extends JPanel {
         }
     }
     
-    // [核心修复] - 允许从其他界面返回到本界面时重新激活下降动画
+    // 从其他界面返回菜单时的重置
     public void restartAnimation() {
         fallOffset = -300;
         if (!animationTimer.isRunning()) {
             animationTimer.start();
         }
+        // 重播PLAY按钮动画 - 先停止并隐藏
+        if (playSpriteTimer.isRunning()) {
+            playSpriteTimer.stop();
+        }
+        playAnimStarted = false;
+        playAnimating = false;
+        playSpriteIndex = 0;
         repaint();
+
+        // 延迟0.01秒后开始播放
+        javax.swing.Timer restartDelayTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
+            playAnimStarted = true;
+            playAnimating = true;
+            playSpriteTimer.start();
+            repaint();
+            ((javax.swing.Timer)e.getSource()).stop();
+        });
+        restartDelayTimer.setRepeats(false);
+        restartDelayTimer.start();
     }
 
     public void stopAnimation() {
         if (animationTimer != null) {
             animationTimer.stop();
+        }
+        if (playSpriteTimer != null) {
+            playSpriteTimer.stop();
         }
     }
 
@@ -200,7 +291,7 @@ public class ScreenStart extends JPanel {
         int w = getWidth();
         int h = getHeight();
 
-        // 重新适配新尺寸下的正中心位置
+        // 计算基础锚点坐标
         startX = w / 2 - BTN_WIDTH / 2;
         startY = h / 2 - BTN_HEIGHT / 2 + 60;
 
@@ -283,27 +374,47 @@ public class ScreenStart extends JPanel {
     }
 
     private void drawStartButton(Graphics2D g2d) {
-        RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
+        // 启动时最初的 0.01秒 不显示PLAY按钮
+        if (!playAnimStarted) {
+            return;
+        }
 
-        Color c1 = startPressed ? new Color(50, 140, 255) :
-                startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
-        Color c2 = startPressed ? new Color(30, 110, 255) :
-                startHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
+        // 使用精灵图绘制PLAY按钮
+        BufferedImage sprite = playSprites[playSpriteIndex];
+        if (sprite != null) {
+            int imgW = sprite.getWidth();
+            int imgH = sprite.getHeight();
+            // 以设定坐标为中心点进行渲染，自动适配图片弹性变化 (240~280 变化)
+            int centerX = startX + BTN_WIDTH / 2;
+            int centerY = startY + BTN_HEIGHT / 2;
+            int drawX = centerX - imgW / 2;
+            int drawY = centerY - imgH / 2;
+            
+            g2d.drawImage(sprite, drawX, drawY, null);
+        } else {
+            // Fallback: 如果图片未找到则绘制纯代码按钮样式
+            RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
 
-        LinearGradientPaint btnGrad = new LinearGradientPaint(startX, startY, startX, startY + BTN_HEIGHT,
-                new float[]{0, 1}, new Color[]{c1, c2});
-        g2d.setPaint(btnGrad);
-        g2d.fill(btn);
+            Color c1 = startPressed ? new Color(50, 140, 255) :
+                    startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
+            Color c2 = startPressed ? new Color(30, 110, 255) :
+                    startHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
 
-        g2d.setStroke(new BasicStroke(2.5f));
-        g2d.setColor(Color.WHITE);
-        g2d.draw(btn);
+            LinearGradientPaint btnGrad = new LinearGradientPaint(startX, startY, startX, startY + BTN_HEIGHT,
+                    new float[]{0, 1}, new Color[]{c1, c2});
+            g2d.setPaint(btnGrad);
+            g2d.fill(btn);
 
-        int x = startX + BTN_WIDTH / 2;
-        int y = startY + BTN_HEIGHT / 2;
-        int[] xP = {x - 18, x + 18, x - 18};
-        int[] yP = {y - 18, y, y + 18};
-        g2d.fillPolygon(xP, yP, 3);
+            g2d.setStroke(new BasicStroke(2.5f));
+            g2d.setColor(Color.WHITE);
+            g2d.draw(btn);
+
+            int x = startX + BTN_WIDTH / 2;
+            int y = startY + BTN_HEIGHT / 2;
+            int[] xP = {x - 18, x + 18, x - 18};
+            int[] yP = {y - 18, y, y + 18};
+            g2d.fillPolygon(xP, yP, 3);
+        }
     }
 
     private void drawStandardGearButton(Graphics2D g2d, int h) {
@@ -365,57 +476,5 @@ public class ScreenStart extends JPanel {
                 return null;
             }
         });
-    }
-
-    public static JButton createStyledButtonStatic(String text, boolean hasIcon, String iconName) {
-        JButton button = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                int width = getWidth();
-                int height = getHeight();
-
-                Color c1 = getModel().isPressed() ? new Color(50, 140, 255) :
-                        getModel().isRollover() ? new Color(100, 190, 255) : new Color(70, 150, 255);
-                Color c2 = getModel().isPressed() ? new Color(30, 110, 255) :
-                        getModel().isRollover() ? new Color(50, 140, 255) : new Color(30, 110, 255);
-
-                LinearGradientPaint grad = new LinearGradientPaint(0, 0, 0, height,
-                        new float[]{0, 1}, new Color[]{c1, c2});
-                g2d.setPaint(grad);
-                g2d.fillRoundRect(0, 0, width, height, 25, 25);
-
-                g2d.setStroke(new BasicStroke(2f));
-                g2d.setColor(Color.WHITE);
-                g2d.drawRoundRect(0, 0, width - 1, height - 1, 25, 25);
-
-                g2d.setColor(Color.WHITE);
-                g2d.setFont(new Font("Arial", Font.BOLD, 18));
-                FontMetrics fm = g2d.getFontMetrics();
-                String btnText = getText();
-                int textWidth = fm.stringWidth(btnText);
-                int textY = (height + fm.getAscent() - fm.getDescent()) / 2;
-                int textX = (width - textWidth) / 2;
-
-                if (hasIcon) {
-                    BufferedImage icon = loadIcon(iconName);
-                    if (icon != null) {
-                        g2d.drawImage(icon, 15, (height - 32) / 2, 32, 32, null);
-                    }
-                }
-
-                g2d.drawString(btnText, textX, textY);
-                g2d.dispose();
-            }
-        };
-
-        button.setPreferredSize(new Dimension(250, 55));
-        button.setContentAreaFilled(false);
-        button.setBorderPainted(false);
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        return button;
     }
 }
