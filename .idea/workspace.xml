@@ -6,25 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="合并UI,音效">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/How-to-play.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/PLAY-1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/PLAY-2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/PLAY-3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/PLAY-4.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/新建 文本文档.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Quit.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Resume.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Sound-on.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/again.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/begin.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/exit.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/help.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/pause.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/settings.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/sound.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ScoreNumber.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ScreenGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenGame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -151,14 +133,6 @@
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
       <workItem from="1779851862495" duration="18044000" />
-    </task>
-    <task id="LOCAL-00016" summary="为碰撞设置做准备">
-      <option name="closed" value="true" />
-      <created>1779545841723</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1779545841723</updated>
     </task>
     <task id="LOCAL-00017" summary="代码优化">
       <option name="closed" value="true" />
@@ -544,7 +518,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779895890492</updated>
     </task>
-    <option name="localTasksCounter" value="65" />
+    <task id="LOCAL-00065" summary="合并UI,音效">
+      <option name="closed" value="true" />
+      <created>1779897360463</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1779897360463</updated>
+    </task>
+    <option name="localTasksCounter" value="66" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

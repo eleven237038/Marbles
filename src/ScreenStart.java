@@ -25,7 +25,6 @@ public class ScreenStart extends JPanel {
     private boolean settingPressed = false;
     public static boolean isSoundOnStatic = true;
 
-    private static final LinearGradientPaint BG_GRADIENT;
     private static final Font TITLE_FONT;
     private static final Color TITLE_SHADOW_COLOR_1 = new Color(0, 0, 0, 50);
     private static final Color TITLE_SHADOW_COLOR_2 = new Color(0, 0, 0, 30);
@@ -41,13 +40,11 @@ public class ScreenStart extends JPanel {
     };
 
     static {
-        BG_GRADIENT = new LinearGradientPaint(
-                0, 0, 0, 1,
-                new float[]{0, 1},
-                new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
-        );
         TITLE_FONT = new Font("Arial Black", Font.BOLD, 75);
     }
+
+    private final Rectangle startBtnBounds = new Rectangle();
+    private final Rectangle settingBtnBounds = new Rectangle();
 
     private static final Map<String, BufferedImage> ICON_CACHE = new HashMap<>();
 
@@ -56,14 +53,6 @@ public class ScreenStart extends JPanel {
     private int startX, startY;
     private int settingX, settingY;
     private final int SETTING_SIZE = 60;
-
-    private BufferedImage[] playSprites;
-    private int playSpriteIndex = 0;
-    private static final int PLAY_SPRITE_COUNT = 4;
-    private static final int PLAY_ANIM_DELAY = 10;
-    private boolean playAnimating = false;
-    private boolean playAnimStarted = false;
-    private javax.swing.Timer playSpriteTimer;
 
     private int fallOffset = -300;
 
@@ -78,33 +67,10 @@ public class ScreenStart extends JPanel {
         SoundManager.getInstance().setSoundEnabled(isSoundOnStatic);
 
         try {
-            settingsIcon = ImageIO.read(new File("resources/settings.png"));
-        } catch (IOException e) {
+            settingsIcon = loadIcon("settings.png");
+        } catch (Exception e) {
             settingsIcon = null;
         }
-
-        playSprites = new BufferedImage[PLAY_SPRITE_COUNT];
-        for (int i = 0; i < PLAY_SPRITE_COUNT; i++) {
-            try {
-                File f = new File("resources/image/PLAY/PLAY-" + (i + 1) + ".png");
-                if (f.exists()) {
-                    playSprites[i] = ImageIO.read(f);
-                }
-            } catch (IOException e) {
-                playSprites[i] = null;
-            }
-        }
-
-        playSpriteTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
-            if (playAnimating && playSpriteIndex < PLAY_SPRITE_COUNT - 1) {
-                playSpriteIndex++;
-                repaint();
-            } else if (playSpriteIndex >= PLAY_SPRITE_COUNT - 1) {
-                playAnimating = false;
-                playSpriteTimer.stop();
-                repaint();
-            }
-        });
 
         initDecorMarbles();
 
@@ -120,31 +86,19 @@ public class ScreenStart extends JPanel {
 
         startAnimation();
 
-        javax.swing.Timer startDelayTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
-            playAnimStarted = true;
-            playAnimating = true;
-            playSpriteTimer.start();
-            repaint();
-            ((javax.swing.Timer)e.getSource()).stop();
-        });
-        startDelayTimer.setRepeats(false);
-        startDelayTimer.start();
-
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 int mx = e.getPoint().x;
                 int my = e.getPoint().y;
-                startPressed = getPlayButtonBounds().contains(mx, my);
-                settingPressed = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
+                startPressed = startBtnBounds.contains(mx, my);
+                settingPressed = settingBtnBounds.contains(mx, my);
                 repaint();
 
                 if (startPressed) {
                     listener.onStartGame();
                 } else if (settingPressed) {
                     openSettings();
-                } else {
-                    restartPlayAnimation();
                 }
             }
 
@@ -183,32 +137,12 @@ public class ScreenStart extends JPanel {
         addMouseMotionListener(mouseAdapter);
     }
 
-    private void restartPlayAnimation() {
-        playSpriteIndex = 0;
-        playAnimating = true;
-        if (!playSpriteTimer.isRunning()) {
-            playSpriteTimer.start();
-        }
-        repaint();
-    }
-
-    private Rectangle getPlayButtonBounds() {
-        if (playSprites != null && playSprites[playSpriteIndex] != null) {
-            int imgW = playSprites[playSpriteIndex].getWidth();
-            int imgH = playSprites[playSpriteIndex].getHeight();
-            int centerX = startX + BTN_WIDTH / 2;
-            int centerY = startY + BTN_HEIGHT / 2;
-            return new Rectangle(centerX - imgW / 2, centerY - imgH / 2, imgW, imgH);
-        }
-        return new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT);
-    }
-
     private void updateHoverState(int mx, int my) {
         boolean oldStartHover = startHover;
         boolean oldSettingHover = settingHover;
 
-        startHover = getPlayButtonBounds().contains(mx, my) && playAnimStarted;
-        settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
+        startHover = startBtnBounds.contains(mx, my);
+        settingHover = settingBtnBounds.contains(mx, my);
 
         if (startHover || settingHover) {
             setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -241,31 +175,12 @@ public class ScreenStart extends JPanel {
         if (!animationTimer.isRunning()) {
             animationTimer.start();
         }
-        if (playSpriteTimer.isRunning()) {
-            playSpriteTimer.stop();
-        }
-        playAnimStarted = false;
-        playAnimating = false;
-        playSpriteIndex = 0;
         repaint();
-
-        javax.swing.Timer restartDelayTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
-            playAnimStarted = true;
-            playAnimating = true;
-            playSpriteTimer.start();
-            repaint();
-            ((javax.swing.Timer)e.getSource()).stop();
-        });
-        restartDelayTimer.setRepeats(false);
-        restartDelayTimer.start();
     }
 
     public void stopAnimation() {
         if (animationTimer != null) {
             animationTimer.stop();
-        }
-        if (playSpriteTimer != null) {
-            playSpriteTimer.stop();
         }
     }
 
@@ -290,6 +205,9 @@ public class ScreenStart extends JPanel {
 
         settingX = 30;
         settingY = h - SETTING_SIZE - 30;
+
+        startBtnBounds.setBounds(startX, startY, BTN_WIDTH, BTN_HEIGHT);
+        settingBtnBounds.setBounds(settingX, settingY, SETTING_SIZE, SETTING_SIZE);
 
         drawBackground(g2d, w, h);
         drawLuxuryTitle(g2d, w, h, fallOffset);
@@ -367,43 +285,27 @@ public class ScreenStart extends JPanel {
     }
 
     private void drawStartButton(Graphics2D g2d) {
-        if (!playAnimStarted) {
-            return;
-        }
+        RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
 
-        BufferedImage sprite = playSprites[playSpriteIndex];
-        if (sprite != null) {
-            int imgW = sprite.getWidth();
-            int imgH = sprite.getHeight();
-            int centerX = startX + BTN_WIDTH / 2;
-            int centerY = startY + BTN_HEIGHT / 2;
-            int drawX = centerX - imgW / 2;
-            int drawY = centerY - imgH / 2;
+        Color c1 = startPressed ? new Color(50, 140, 255) :
+                startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
+        Color c2 = startPressed ? new Color(30, 110, 255) :
+                startHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
 
-            g2d.drawImage(sprite, drawX, drawY, null);
-        } else {
-            RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
+        LinearGradientPaint btnGrad = new LinearGradientPaint(startX, startY, startX, startY + BTN_HEIGHT,
+                new float[]{0, 1}, new Color[]{c1, c2});
+        g2d.setPaint(btnGrad);
+        g2d.fill(btn);
 
-            Color c1 = startPressed ? new Color(50, 140, 255) :
-                    startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
-            Color c2 = startPressed ? new Color(30, 110, 255) :
-                    startHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
+        g2d.setStroke(new BasicStroke(2.5f));
+        g2d.setColor(Color.WHITE);
+        g2d.draw(btn);
 
-            LinearGradientPaint btnGrad = new LinearGradientPaint(startX, startY, startX, startY + BTN_HEIGHT,
-                    new float[]{0, 1}, new Color[]{c1, c2});
-            g2d.setPaint(btnGrad);
-            g2d.fill(btn);
-
-            g2d.setStroke(new BasicStroke(2.5f));
-            g2d.setColor(Color.WHITE);
-            g2d.draw(btn);
-
-            int x = startX + BTN_WIDTH / 2;
-            int y = startY + BTN_HEIGHT / 2;
-            int[] xP = {x - 18, x + 18, x - 18};
-            int[] yP = {y - 18, y, y + 18};
-            g2d.fillPolygon(xP, yP, 3);
-        }
+        int x = startX + BTN_WIDTH / 2;
+        int y = startY + BTN_HEIGHT / 2;
+        int[] xP = {x - 18, x + 18, x - 18};
+        int[] yP = {y - 18, y, y + 18};
+        g2d.fillPolygon(xP, yP, 3);
     }
 
     private void drawStandardGearButton(Graphics2D g2d, int h) {
