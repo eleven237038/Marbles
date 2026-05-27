@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更改装饰" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更改装饰">
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -116,7 +119,7 @@
       <workItem from="1779813084312" duration="424000" />
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
-      <workItem from="1779851862495" duration="562000" />
+      <workItem from="1779851862495" duration="992000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -486,7 +489,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779852240901</updated>
     </task>
-    <option name="localTasksCounter" value="47" />
+    <task id="LOCAL-00047" summary="更改装饰">
+      <option name="closed" value="true" />
+      <created>1779852566631</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1779852566631</updated>
+    </task>
+    <option name="localTasksCounter" value="48" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

@@ -45,7 +45,7 @@ public class ScreenStart extends JPanel {
         BG_GRADIENT = new LinearGradientPaint(
                 0, 0, 0, 1,
                 new float[]{0, 1},
-                new Color[]{new Color(230, 245, 255), new Color(190, 225, 255)}
+                new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
         );
         TITLE_FONT = new Font("Arial Black", Font.BOLD, 75);
     }
@@ -64,7 +64,7 @@ public class ScreenStart extends JPanel {
 
     public ScreenStart(ScreenStartListener listener) {
         this.listener = listener;
-        setBackground(new Color(240, 248, 255));
+        setBackground(new Color(188, 195, 255));
         
         // 动态适配总宽度，无需硬编码
         setPreferredSize(new Dimension(Main.TOTAL_WIDTH, Main.GAME_HEIGHT));
@@ -210,7 +210,7 @@ public class ScreenStart extends JPanel {
         LinearGradientPaint bg = new LinearGradientPaint(
                 0, 0, 0, h,
                 new float[]{0, 1},
-                new Color[]{new Color(230, 245, 255), new Color(190, 225, 255)}
+                new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
         );
         g2d.setPaint(bg);
         g2d.fillRect(0, 0, w, h);
@@ -345,7 +345,7 @@ public class ScreenStart extends JPanel {
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 20));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
-        mainPanel.setBackground(new Color(240, 248, 255));
+        mainPanel.setBackground(new Color(188, 195, 255));
 
         JLabel titleLabel = new JLabel("Settings", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial Black", Font.BOLD, 28));
@@ -353,7 +353,7 @@ public class ScreenStart extends JPanel {
         mainPanel.add(titleLabel, BorderLayout.NORTH);
 
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 20));
-        buttonPanel.setBackground(new Color(240, 248, 255));
+        buttonPanel.setBackground(new Color(188, 195, 255));
 
         JButton soundButton = createStyledButtonStatic(isSoundOnStatic ? "Sound on" : "Sound off", true, "sound.png");
         soundButton.addActionListener(e -> {

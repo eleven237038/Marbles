@@ -265,7 +265,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
         LinearGradientPaint bg = new LinearGradientPaint(
                 0, 0, 0, mHeight,
                 new float[]{0, 1},
-                new Color[]{new Color(245, 250, 255), new Color(210, 230, 255)}
+                new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
         );
         g2.setPaint(bg);
         g2.fillRect(0, 0, mWidth, mHeight);
@@ -491,7 +491,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
             LinearGradientPaint leftBg = new LinearGradientPaint(
                     0, 0, LEFT_ZONE_WIDTH, 0,
                     new float[]{0f, 1f},
-                    new Color[]{new Color(235, 243, 255), new Color(215, 230, 250)}
+                    new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
             );
             g2d.setPaint(leftBg);
             g2d.fillRect(0, 0, LEFT_ZONE_WIDTH, h);
