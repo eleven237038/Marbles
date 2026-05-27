@@ -9,7 +9,7 @@ import javax.swing.Timer;
  * 独立计分板组件（左上角）
  * SCORE 和 BEST 同行，分数在下方，带装饰弹珠和星星动画
  */
-public class ScoreBoard extends javax.swing.JComponent {
+public class BoardScore extends javax.swing.JComponent {
     private int currentScore = 0;
     private int highScore = 0;
 
@@ -22,7 +22,7 @@ public class ScoreBoard extends javax.swing.JComponent {
     private int boardX = 20, boardY = 20;
     private int boardWidth = 175, boardHeight = 85;
 
-    public ScoreBoard() {
+    public BoardScore() {
         setOpaque(false);
         setFocusable(false);
         setBounds(0, 0, boardX + boardWidth + 35, boardY + boardHeight + 35);

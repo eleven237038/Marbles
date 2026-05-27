@@ -39,7 +39,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
     // 计分相关
     private int currentScore = 0;
     private int highScore = 0;
-    private ScoreBoard scoreBoard;
+    private BoardScore scoreBoard;
     private CustomGlassPane glassPane;
 
     public static void main(String[] args) {
@@ -429,7 +429,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
             setLayout(null);
 
             // 添加计分板
-            scoreBoard = new ScoreBoard();
+            scoreBoard = new BoardScore();
             add(scoreBoard);
 
             // 鼠标事件处理
@@ -714,7 +714,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
             }
         }
 
-        public void stopScoreBoardAnimation() {
+        public void stopBoardScoreAnimation() {
             if (scoreBoard != null) scoreBoard.stopAnimation();
         }
 
