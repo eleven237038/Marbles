@@ -20,7 +20,7 @@ public class Marbles {
 
     private BiConsumer<Marble, Integer> scoreListener;
 
-    private List<ScoreNumber> scoreNumbers = new ArrayList<>();
+    private List<ScreenGame.ScoreNumber> scoreNumbers = new ArrayList<>();
     private int lastRoundTotalScore = 0;
     private double lastLaunchX = 0;
     private double lastLaunchY = 0;
@@ -62,7 +62,7 @@ public class Marbles {
 
     public void addRoundTotalScore() {
         if (lastRoundTotalScore > 0) {
-            scoreNumbers.add(new ScoreNumber(lastLaunchX, lastLaunchY - 60, lastRoundTotalScore));
+            scoreNumbers.add(new ScreenGame.ScoreNumber(lastLaunchX, lastLaunchY - 60, lastRoundTotalScore));
             lastRoundTotalScore = 0;
         }
     }
@@ -72,7 +72,7 @@ public class Marbles {
     }
 
     private void drawScoreNumbers(Graphics2D g) {
-        for (ScoreNumber sn : scoreNumbers) {
+        for (ScreenGame.ScoreNumber sn : scoreNumbers) {
             sn.draw(g);
         }
     }
@@ -351,7 +351,7 @@ public class Marbles {
                     lastRoundTotalScore += pointsPerMarble;
                     // 使用弹珠本身的颜色创建得分数字
                     Color marbleColor = getMarbleColor(m.getColorType());
-                    scoreNumbers.add(new ScoreNumber(m.getCenterX(), m.getCenterY() - 15, pointsPerMarble, marbleColor));
+                    scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, pointsPerMarble, marbleColor));
                 }
                 double dist = 0;
                 if (launchM != null) {
@@ -452,7 +452,7 @@ public class Marbles {
                         m.setScored(true);
                         // 掉落弹珠使用其本身的颜色
                         Color marbleColor = getMarbleColor(m.getColorType());
-                        scoreNumbers.add(new ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
+                        scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
                         lastRoundTotalScore += 20;
                         SoundManager.getInstance().playDropAndScore();
                     }

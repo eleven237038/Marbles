@@ -4,19 +4,27 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="删除退出按钮，居中暂停按钮">
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/project.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="合并UI,音效">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Marble.iml" beforeDir="false" afterPath="$PROJECT_DIR$/Marble.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/GameEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MarbleLaunch.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarbleLaunch.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/How-to-play.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/PLAY-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/PLAY-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/PLAY-3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/PLAY-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/PLAY/新建 文本文档.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Quit.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Resume.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Sound-on.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/again.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/begin.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/exit.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/help.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/pause.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/settings.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/sound.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScoreNumber.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenGame.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,7 +96,7 @@
     "settings.editor.selected.configurable": "proofread",
     "vue.rearranger.settings.migration": "true",
     "应用程序.HexGrid.executor": "Run",
-    "应用程序.Main.executor": "Run",
+    "应用程序.Main.executor": "Debug",
     "应用程序.Marble.executor": "Run",
     "应用程序.MarbleGame.executor": "Run"
   }
@@ -143,14 +151,6 @@
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
       <workItem from="1779851862495" duration="18044000" />
-    </task>
-    <task id="LOCAL-00015" summary="添加LaunchMarble实体">
-      <option name="closed" value="true" />
-      <created>1779544797192</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1779544797192</updated>
     </task>
     <task id="LOCAL-00016" summary="为碰撞设置做准备">
       <option name="closed" value="true" />
@@ -536,7 +536,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779880208539</updated>
     </task>
-    <option name="localTasksCounter" value="64" />
+    <task id="LOCAL-00064" summary="合并UI,音效">
+      <option name="closed" value="true" />
+      <created>1779895890492</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1779895890492</updated>
+    </task>
+    <option name="localTasksCounter" value="65" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -554,7 +562,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="优化下落动画" />
     <MESSAGE value="将游戏界面作为独立文件提取,方便布局" />
     <MESSAGE value="更名,统一格式" />
     <MESSAGE value="合并gameover" />
@@ -579,6 +586,7 @@
     <MESSAGE value="添加碰撞效果" />
     <MESSAGE value="优化炮台代码" />
     <MESSAGE value="优化代码" />
-    <option name="LAST_COMMIT_MESSAGE" value="优化代码" />
+    <MESSAGE value="合并UI,音效" />
+    <option name="LAST_COMMIT_MESSAGE" value="合并UI,音效" />
   </component>
 </project>
