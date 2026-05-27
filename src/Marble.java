@@ -65,6 +65,7 @@ public class Marble {
     // 警戒状态：靠近deadline时闪烁
     private boolean warn = false;
     private double warnProgress = 0;
+    private double warnIntensity = 0; // 0~1，越接近deadline值越大
 
     public Marble() {
         this.cx = 0;
@@ -196,9 +197,10 @@ public class Marble {
     public boolean isWarn() { return warn; }
     public void setWarn(boolean warn) { this.warn = warn; }
 
-    public void updateWarn(double dt) {
+    public void updateWarn(double dt, double intensity) {
         if (warn) {
-            warnProgress += dt * 8.0;
+            warnProgress += dt * (6.0 + intensity * 18.0);
+            warnIntensity = intensity;
         }
     }
 
@@ -278,11 +280,12 @@ public class Marble {
         if (warn) {
             double t = (Math.sin(warnProgress) + 1.0) * 0.5;
             int alphaVal = (int)(60 * t);
+            int borderAlpha = (int)(120 * t);
             double radius2 = side * 0.866 * 1.2;
             g.setColor(new Color(255, 30, 30, alphaVal));
             g.fillOval((int)(cx - radius2), (int)(cy - radius2), (int)(radius2 * 2), (int)(radius2 * 2));
             if (t > 0.3) {
-                g.setColor(new Color(255, 80, 80, (int)(120 * t)));
+                g.setColor(new Color(255, 80, 80, borderAlpha));
                 g.setStroke(new BasicStroke(2.5f));
                 g.drawOval((int)(cx - radius2 * 0.85), (int)(cy - radius2 * 0.85), (int)(radius2 * 1.7), (int)(radius2 * 1.7));
             }
@@ -307,5 +310,6 @@ public class Marble {
         this.scored = false;
         this.warn = false;
         this.warnProgress = 0;
+        this.warnIntensity = 0;
     }
 }

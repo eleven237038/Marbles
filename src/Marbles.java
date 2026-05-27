@@ -461,8 +461,13 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone()) {
-                    m.setWarn(m.getCenterY() >= deadline - warnDist);
-                    m.updateWarn(dt);
+                    double distToDeadline = m.getCenterY() - (deadline - warnDist);
+                    boolean inWarnZone = m.getCenterY() >= deadline - warnDist;
+                    m.setWarn(inWarnZone);
+                    if (inWarnZone) {
+                        double intensity = Math.min(1.0, distToDeadline / warnDist);
+                        m.updateWarn(dt, intensity);
+                    }
                 }
             }
         }
