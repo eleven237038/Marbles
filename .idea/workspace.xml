@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="合并LaunchPad至BoardGame">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/GameEngine.java" afterDir="false" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加警告动画">
+      <change beforePath="$PROJECT_DIR$/src/BoardGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BoardGame.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenGameOver.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,15 +122,7 @@
       <workItem from="1779813084312" duration="424000" />
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
-      <workItem from="1779851862495" duration="3967000" />
-    </task>
-    <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
-      <option name="closed" value="true" />
-      <created>1779420165661</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1779420165661</updated>
+      <workItem from="1779851862495" duration="4515000" />
     </task>
     <task id="LOCAL-00002" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -516,7 +508,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779853607221</updated>
     </task>
-    <option name="localTasksCounter" value="50" />
+    <task id="LOCAL-00050" summary="添加警告动画">
+      <option name="closed" value="true" />
+      <created>1779858418090</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1779858418090</updated>
+    </task>
+    <option name="localTasksCounter" value="51" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -534,7 +534,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="修正发射台参数" />
     <MESSAGE value="合并UI弹珠样式" />
     <MESSAGE value="合并UI分支" />
     <MESSAGE value="优化代码,修复bug" />
@@ -559,6 +558,7 @@
     <MESSAGE value="更改装饰" />
     <MESSAGE value="更改背景色调" />
     <MESSAGE value="合并LaunchPad至BoardGame" />
-    <option name="LAST_COMMIT_MESSAGE" value="合并LaunchPad至BoardGame" />
+    <MESSAGE value="添加警告动画" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加警告动画" />
   </component>
 </project>

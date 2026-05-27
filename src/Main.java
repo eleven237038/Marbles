@@ -9,7 +9,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.Random;
 import java.util.prefs.Preferences;
 
-public class Main extends GameEngine implements ScreenStart.ScreenStartListener, ScreenGameOver.ScreenGameOverListener {
+public class Main extends GameEngine implements ScreenStart.ScreenStartListener {
     private Marbles hexGrid;
     private BoardGame launchPad;
     private MarbleLaunch launchMarble;
@@ -317,7 +317,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
         cardLayout.show(mainPanel, "menu");
     }
 
-    @Override
     public void onBackToMenu() {
         if (glassPane != null) {
             glassPane.hideOverlay();
@@ -325,7 +324,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
         returnToMenu();
     }
 
-    @Override
     public void onRestart() {
         if (glassPane != null) {
             glassPane.hideOverlay();
@@ -340,7 +338,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener,
         mPanel.repaint();
     }
 
-    @Override
     public void onNextLevel() {
         onRestart();
     }

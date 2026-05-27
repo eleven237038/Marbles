@@ -59,7 +59,6 @@ public class Marble {
     private int colorType;
     private int row;
     private int col;
-    private int[][] edgeAttachment;
     private boolean markedForRemove = false;
     private boolean scored = false;
 
@@ -75,7 +74,6 @@ public class Marble {
         this.colorType = random.nextInt(4) + 1;
         this.row = 0;
         this.col = 0;
-        this.edgeAttachment = new int[6][2];
         this.verticesDirty = false;
     }
 
@@ -190,8 +188,6 @@ public class Marble {
     public void setColorType(int colorType) { this.colorType = colorType; }
     public int getRow() { return row; }
     public int getCol() { return col; }
-    public int[][] getEdgeAttachment() { return edgeAttachment; }
-    public void setEdgeAttachment(int[][] edgeAttachment) { this.edgeAttachment = edgeAttachment; }
 
     public void markForRemove(boolean b) { markedForRemove = b; }
     public boolean isMarkedForRemove() { return markedForRemove; }
