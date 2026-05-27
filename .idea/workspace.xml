@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="将ScreenBoard更名为BoardScreen">
-      <change beforePath="$PROJECT_DIR$/src/GameBoard.java" beforeDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="将GameOver更名为ScreenGameOver" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -117,7 +115,7 @@
       <workItem from="1779811973660" duration="399000" />
       <workItem from="1779813084312" duration="424000" />
       <workItem from="1779849180880" duration="6000" />
-      <workItem from="1779849203020" duration="849000" />
+      <workItem from="1779849203020" duration="1335000" />
     </task>
     <task id="LOCAL-00001" summary="将六边形边长,屏幕长宽设置为仅控制绘制的变量">
       <option name="closed" value="true" />
@@ -455,7 +453,23 @@
       <option name="project" value="LOCAL" />
       <updated>1779849965568</updated>
     </task>
-    <option name="localTasksCounter" value="43" />
+    <task id="LOCAL-00043" summary="将GameBoard更名为BoardGame">
+      <option name="closed" value="true" />
+      <created>1779850118119</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1779850118119</updated>
+    </task>
+    <task id="LOCAL-00044" summary="将GameOver更名为ScreenGameOver">
+      <option name="closed" value="true" />
+      <created>1779850255941</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1779850255941</updated>
+    </task>
+    <option name="localTasksCounter" value="45" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -473,8 +487,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="更正六边形生成规则,为下降规则做准备" />
-    <MESSAGE value="更正下降规则(有bug)" />
     <MESSAGE value="更正下降规则" />
     <MESSAGE value="添加LaunchMarble实体" />
     <MESSAGE value="为碰撞设置做准备" />
@@ -498,6 +510,8 @@
     <MESSAGE value="将StartScreen更名为ScreenStart" />
     <MESSAGE value="将LaunchMarble更名为MarbleLaunch" />
     <MESSAGE value="将ScreenBoard更名为BoardScreen" />
-    <option name="LAST_COMMIT_MESSAGE" value="将ScreenBoard更名为BoardScreen" />
+    <MESSAGE value="将GameBoard更名为BoardGame" />
+    <MESSAGE value="将GameOver更名为ScreenGameOver" />
+    <option name="LAST_COMMIT_MESSAGE" value="将GameOver更名为ScreenGameOver" />
   </component>
 </project>

@@ -68,16 +68,12 @@ public class ScreenStart extends JPanel {
     public ScreenStart(ScreenStartListener listener) {
         this.listener = listener;
         setBackground(new Color(240, 248, 255));
-        setPreferredSize(new Dimension(483, 483)); // 同步修改主菜单以适配正方形屏幕
+        setPreferredSize(new Dimension(483, 483));
 
         try {
-            File settingsFile = new File("resources/settings.png");
-            File helpFile = new File("resources/help.png");
-            File soundFile = new File("resources/sound.png");
-
-            if (settingsFile.exists()) settingsIcon = ImageIO.read(settingsFile);
-            if (helpFile.exists()) helpIcon = ImageIO.read(helpFile);
-            if (soundFile.exists()) soundIcon = ImageIO.read(soundFile);
+            settingsIcon = ImageIO.read(new File("resources/settings.png"));
+            helpIcon = ImageIO.read(new File("resources/help.png"));
+            soundIcon = ImageIO.read(new File("resources/sound.png"));
         } catch (IOException e) {
             System.out.println("警告：找不到resources文件夹中的图标文件");
             settingsIcon = null;

@@ -37,20 +37,24 @@ public class BoardScore extends javax.swing.JComponent {
     }
 
     private void initDecorationMarbles() {
-        int[][] positions = {
-                {boardX + boardWidth / 2, boardY - 10},
-                {boardX - 8, boardY + boardHeight / 2},
-                {boardX + boardWidth / 2, boardY + boardHeight + 8},
-                {boardX + boardWidth + 8, boardY + boardHeight / 2},
-                {boardX - 6, boardY + 8},
-                {boardX + boardWidth + 6, boardY + 8},
-                {boardX - 6, boardY + boardHeight - 8},
-                {boardX + boardWidth + 6, boardY + boardHeight - 8}
-        };
         decorationMarbles.clear();
+        int[][] positions = getDecoPositions();
         for (int[] pos : positions) {
             decorationMarbles.add(new DecorationMarble(pos[0], pos[1], random.nextInt(4) + 1));
         }
+    }
+
+    private int[][] getDecoPositions() {
+        return new int[][] {
+            {boardX + boardWidth / 2, boardY - 10},
+            {boardX - 8, boardY + boardHeight / 2},
+            {boardX + boardWidth / 2, boardY + boardHeight + 8},
+            {boardX + boardWidth + 8, boardY + boardHeight / 2},
+            {boardX - 6, boardY + 8},
+            {boardX + boardWidth + 6, boardY + 8},
+            {boardX - 6, boardY + boardHeight - 8},
+            {boardX + boardWidth + 6, boardY + boardHeight - 8}
+        };
     }
 
     private void startAnimation() {
@@ -64,16 +68,7 @@ public class BoardScore extends javax.swing.JComponent {
     }
 
     private void updateMarblePositions() {
-        int[][] positions = {
-                {boardX + boardWidth / 2, boardY - 10},
-                {boardX - 8, boardY + boardHeight / 2},
-                {boardX + boardWidth / 2, boardY + boardHeight + 8},
-                {boardX + boardWidth + 8, boardY + boardHeight / 2},
-                {boardX - 6, boardY + 8},
-                {boardX + boardWidth + 6, boardY + 8},
-                {boardX - 6, boardY + boardHeight - 8},
-                {boardX + boardWidth + 6, boardY + boardHeight - 8}
-        };
+        int[][] positions = getDecoPositions();
         for (int i = 0; i < decorationMarbles.size() && i < positions.length; i++) {
             decorationMarbles.get(i).x = positions[i][0];
             decorationMarbles.get(i).y = positions[i][1];
@@ -96,15 +91,12 @@ public class BoardScore extends javax.swing.JComponent {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // 阴影
         g2d.setColor(new Color(0, 0, 0, 30));
         g2d.fillRoundRect(boardX + 2, boardY + 2, boardWidth, boardHeight, 18, 18);
 
-        // 半透背景
         g2d.setColor(new Color(255, 255, 240, 235));
         g2d.fillRoundRect(boardX, boardY, boardWidth, boardHeight, 18, 18);
 
-        // 彩虹边框
         LinearGradientPaint border = new LinearGradientPaint(boardX, boardY, boardX + boardWidth, boardY + boardHeight,
                 new float[]{0, 0.25f, 0.5f, 0.75f, 1f},
                 new Color[]{new Color(255, 100, 100), new Color(255, 200, 100),
@@ -114,12 +106,10 @@ public class BoardScore extends javax.swing.JComponent {
         g2d.setPaint(border);
         g2d.drawRoundRect(boardX, boardY, boardWidth, boardHeight, 18, 18);
 
-        // 内边框光效
         g2d.setStroke(new BasicStroke(1.0f));
         g2d.setColor(new Color(255, 255, 255, 100));
         g2d.drawRoundRect(boardX + 2, boardY + 2, boardWidth - 4, boardHeight - 4, 14, 14);
 
-        // 文字：SCORE 和 BEST 同一行
         Font textFont = new Font("Comic Sans MS", Font.BOLD, 14);
         g2d.setFont(textFont);
         String sText = "SCORE", bText = "BEST";
@@ -128,19 +118,16 @@ public class BoardScore extends javax.swing.JComponent {
         int totalW = sW + 16 + bW;
         int startX = boardX + (boardWidth - totalW) / 2;
 
-        // 阴影
         g2d.setColor(new Color(80, 50, 120, 100));
         g2d.drawString(sText, startX + 1, boardY + 27);
         g2d.drawString(bText, startX + sW + 16 + 1, boardY + 27);
 
-        // 渐变文字
         LinearGradientPaint textGrad = new LinearGradientPaint(startX, boardY + 10, startX + totalW, boardY + 32,
                 new float[]{0, 1}, new Color[]{new Color(220, 180, 255), new Color(100, 70, 140)});
         g2d.setPaint(textGrad);
         g2d.drawString(sText, startX, boardY + 27);
         g2d.drawString(bText, startX + sW + 16, boardY + 27);
 
-        // 分数数字
         Font numFont = new Font("Arial Black", Font.BOLD, 22);
         g2d.setFont(numFont);
         String sVal = String.valueOf(currentScore), bVal = String.valueOf(highScore);
@@ -158,25 +145,25 @@ public class BoardScore extends javax.swing.JComponent {
         g2d.drawString(sVal, valStartX, boardY + 63);
         g2d.drawString(bVal, valStartX + svW + 16, boardY + 63);
 
-        // 旋转星星
         drawStar(g2d, boardX + boardWidth - 16, boardY + 16, 10, starRotation);
 
-        // 装饰弹珠
         for (DecorationMarble dm : decorationMarbles) dm.draw(g2d);
     }
 
+    private static final int[] STAR_X = new int[10];
+    private static final int[] STAR_Y = new int[10];
+
     private void drawStar(Graphics2D g, double x, double y, int size, double angle) {
-        int[] xp = new int[10], yp = new int[10];
         for (int i = 0; i < 10; i++) {
             double rad = Math.PI * 2 * i / 10 + angle;
             double r = (i % 2 == 0) ? size : size * 0.4;
-            xp[i] = (int) (x + Math.cos(rad) * r);
-            yp[i] = (int) (y + Math.sin(rad) * r);
+            STAR_X[i] = (int) (x + Math.cos(rad) * r);
+            STAR_Y[i] = (int) (y + Math.sin(rad) * r);
         }
         g.setColor(new Color(255, 215, 0, 220));
-        g.fillPolygon(xp, yp, 10);
+        g.fillPolygon(STAR_X, STAR_Y, 10);
         g.setColor(new Color(255, 100, 0, 180));
-        g.drawPolygon(xp, yp, 10);
+        g.drawPolygon(STAR_X, STAR_Y, 10);
     }
 
     public void stopAnimation() {

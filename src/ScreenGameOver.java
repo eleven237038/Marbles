@@ -63,11 +63,9 @@ public class ScreenGameOver extends JPanel implements MouseListener {
 
         Graphics2D g2 = (Graphics2D) g;
 
-        // 半透明背景
         g2.setColor(new Color(0,0,0,180));
         g2.fillRect(0,0,getWidth(),getHeight());
 
-        // 标题
         g2.setFont(new Font("Arial", Font.BOLD, 72));
 
         if(win) {
@@ -79,13 +77,11 @@ public class ScreenGameOver extends JPanel implements MouseListener {
             drawCenteredString(g2, "GAME OVER", 200);
         }
 
-        // Score
         g2.setFont(new Font("Arial", Font.BOLD, 42));
         g2.setColor(Color.WHITE);
 
         drawCenteredString(g2, "Score : " + score, 320);
 
-        // 按钮
         if(win) {
             drawButton(g2, nextImg, nextBtn, "NEXT LEVEL");
         }
