@@ -323,6 +323,40 @@ public class Marbles {
 
             // 消除完成后检测是否有失去附着的悬空弹珠
             checkFloatingMarbles();
+        } else {
+            // 未触发消除，对附近弹珠触发碰撞动画
+            Marble launchM = marbles[launchRow][launchCol];
+            if (launchM != null) {
+                double collisionX = launchM.getCenterX();
+                double collisionY = launchM.getCenterY();
+                triggerCollisionAnimation(launchRow, launchCol, collisionX, collisionY);
+            }
+        }
+    }
+
+    // 对碰撞点周围的弹珠触发碰撞动画
+    private void triggerCollisionAnimation(int launchRow, int launchCol, double collisionX, double collisionY) {
+        if (marbles == null) return;
+        double threshold = side * SQRT3 * 1.05; // 仅紧相邻一圈
+        double thresholdSq = threshold * threshold;
+        for (int dr = -1; dr <= 1; dr++) {
+            int nr = launchRow + dr;
+            if (nr < 0 || nr >= marbles.length || marbles[nr] == null) continue;
+            for (int dc = -1; dc <= 1; dc++) {
+                if (dc == 0 && dr == 0) continue;
+                int nc = launchCol + dc;
+                if (nc < 0 || nc >= marbles[nr].length) continue;
+                Marble m = marbles[nr][nc];
+                if (m == null || !m.isInitialized() || m.isPopping() || m.isFalling() || m.isAlone()) continue;
+                double dx = m.getCenterX() - collisionX;
+                double dy = m.getCenterY() - collisionY;
+                if (dx * dx + dy * dy <= thresholdSq) {
+                    // 距离越近延迟越短，距离越远延迟越长
+                    double dist = Math.sqrt(dx * dx + dy * dy);
+                    double delay = (dist / threshold) * 0.06;
+                    m.startCollision(collisionX, collisionY, delay);
+                }
+            }
         }
     }
 

@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="修复计分板bug" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="修改计分规则">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/readme.txt" beforeDir="false" afterPath="$PROJECT_DIR$/readme.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -116,15 +121,7 @@
       <workItem from="1779813084312" duration="424000" />
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
-      <workItem from="1779851862495" duration="11864000" />
-    </task>
-    <task id="LOCAL-00010" summary="更正六边形生成规则,增加初始朝向随机性">
-      <option name="closed" value="true" />
-      <created>1779468084036</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1779468084036</updated>
+      <workItem from="1779851862495" duration="12721000" />
     </task>
     <task id="LOCAL-00011" summary="更正六边形生成规则,为下降规则做准备">
       <option name="closed" value="true" />
@@ -510,7 +507,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779873582509</updated>
     </task>
-    <option name="localTasksCounter" value="59" />
+    <task id="LOCAL-00059" summary="修改计分规则">
+      <option name="closed" value="true" />
+      <created>1779873875703</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1779873875703</updated>
+    </task>
+    <option name="localTasksCounter" value="60" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -528,7 +533,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="添加素材" />
     <MESSAGE value="调整游戏界面大小" />
     <MESSAGE value="添加掉落动画" />
     <MESSAGE value="优化代码" />
@@ -553,6 +557,7 @@
     <MESSAGE value="合并BoardGame和BoardScreen" />
     <MESSAGE value="合并BoardGame和BoardScreen,合并后文件更名为ScreenGame" />
     <MESSAGE value="修复计分板bug" />
-    <option name="LAST_COMMIT_MESSAGE" value="修复计分板bug" />
+    <MESSAGE value="修改计分规则" />
+    <option name="LAST_COMMIT_MESSAGE" value="修改计分规则" />
   </component>
 </project>

@@ -30,6 +30,19 @@ public class Marble {
     private double aloneSlideVy = 0; // 斜向滑动的垂直速度
     private double aloneDelay = 0;
 
+    // 碰撞动画状态（无消除触发时触发：沿碰撞点向外移动再回弹）
+    private boolean colliding = false;
+    private double collisionDelay = 0;
+    private double collisionDirX = 0; // 碰撞方向（单位向量）
+    private double collisionDirY = 0;
+    private double collisionOffsetX = 0; // 当前偏移量
+    private double collisionOffsetY = 0;
+    private double collisionVelX = 0; // 偏移速度
+    private double collisionVelY = 0;
+    private double collisionPhase = 0; // 0=延迟中, 1=外移, 2=回弹
+    private double collisionOriginalCx = 0;
+    private double collisionOriginalCy = 0;
+
     // 主体色系
     private static final Color[] BASE_COLOR = {
             null,
@@ -117,13 +130,74 @@ public class Marble {
         this.aloneSlideVy = -Math.abs(Math.sin(angle) * slideSpeed); // 确保向上
     }
 
+    // 开始触发碰撞动画：沿碰撞点连线方向向外小幅移动再回弹
+    public void startCollision(double targetX, double targetY, double delay) {
+        this.colliding = true;
+        this.collisionDelay = delay;
+        this.collisionPhase = 0;
+        // 计算从碰撞点到自身的方向向量
+        double dx = this.cx - targetX;
+        double dy = this.cy - targetY;
+        double dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 0) {
+            this.collisionDirX = dx / dist;
+            this.collisionDirY = dy / dist;
+        } else {
+            this.collisionDirX = 0;
+            this.collisionDirY = -1;
+        }
+        this.collisionOffsetX = 0;
+        this.collisionOffsetY = 0;
+        this.collisionVelX = 0;
+        this.collisionVelY = 0;
+        this.collisionOriginalCx = this.cx;
+        this.collisionOriginalCy = this.cy;
+    }
+
     public boolean isAlone() { return alone; }
+    public boolean isColliding() { return colliding; }
     
     public boolean isPopping() { return popping; }
     public boolean isFalling() { return falling; }
     public boolean isDead() { return dead; }
 
     public void update(double dt) {
+        // 更新碰撞动画：沿碰撞点向外移动再回弹（独立于其他状态）
+        if (colliding) {
+            if (collisionPhase == 0) {
+                // 延迟阶段
+                collisionDelay -= dt;
+                if (collisionDelay <= 0) {
+                    collisionPhase = 1;
+                    // 给予一个向外的初速度
+                    double speed = 40 + random.nextDouble() * 20;
+                    collisionVelX = collisionDirX * speed;
+                    collisionVelY = collisionDirY * speed;
+                }
+            } else if (collisionPhase == 1) {
+                // 向外移动阶段（减速）
+                collisionOffsetX += collisionVelX * dt;
+                collisionOffsetY += collisionVelY * dt;
+                collisionVelX *= (1 - dt * 8); // 阻力衰减
+                collisionVelY *= (1 - dt * 8);
+                // 当速度衰减到足够小时，进入回弹阶段
+                double speed = Math.sqrt(collisionVelX * collisionVelX + collisionVelY * collisionVelY);
+                if (speed < 20) {
+                    collisionPhase = 2;
+                }
+                verticesDirty = true;
+            } else if (collisionPhase == 2) {
+                // 回弹阶段（弹簧式回到原点）
+                collisionOffsetX *= (1 - dt * 15);
+                collisionOffsetY *= (1 - dt * 15);
+                if (Math.abs(collisionOffsetX) < 0.5 && Math.abs(collisionOffsetY) < 0.5) {
+                    collisionOffsetX = 0;
+                    collisionOffsetY = 0;
+                    colliding = false;
+                }
+                verticesDirty = true;
+            }
+        }
         // 更新弹出动画
         if (popping) {
             if (popDelay > 0) {
@@ -230,8 +304,10 @@ public class Marble {
 
         // 精准半径：结合动画放大倍数
         double radius = side * 0.866 * scale;
-        double x = cx - radius;
-        double y = cy - radius;
+        double drawCx = cx + collisionOffsetX;
+        double drawCy = cy + collisionOffsetY;
+        double x = drawCx - radius;
+        double y = drawCy - radius;
         double diameter = radius * 2;
 
         Color base = BASE_COLOR[colorType];
@@ -243,7 +319,7 @@ public class Marble {
         g.fillOval((int)(x + 2 * scale), (int)(y + 2 * scale), (int)diameter, (int)diameter);
 
         // 球体渐变
-        Point2D center = new Point2D.Double(cx, cy);
+        Point2D center = new Point2D.Double(drawCx, drawCy);
         float[] stop = {0f, 0.6f, 1f};
         Color[] gradColor = {bright, base, dark};
         RadialGradientPaint ballGrad = new RadialGradientPaint(center, (float)radius, stop, gradColor);
@@ -262,14 +338,14 @@ public class Marble {
         // 主高光
         g.setColor(new Color(255,255,255,200));
         double highlightR = radius * 0.32;
-        g.fillOval((int)(cx - radius * 0.48), (int)(cy - radius * 0.48), (int)highlightR, (int)highlightR);
+        g.fillOval((int)(drawCx - radius * 0.48), (int)(drawCy - radius * 0.48), (int)highlightR, (int)highlightR);
 
         // 玻璃反光点
         g.setColor(new Color(255,255,255,120));
         int reflect1Size = Math.max(1, (int)(4 * scale));
         int reflect2Size = Math.max(1, (int)(3 * scale));
-        g.fillOval((int)(cx + radius * 0.25), (int)(cy - radius * 0.2), reflect1Size, reflect1Size);
-        g.fillOval((int)(cx - radius * 0.2), (int)(cy + radius * 0.3), reflect2Size, reflect2Size);
+        g.fillOval((int)(drawCx + radius * 0.25), (int)(drawCy - radius * 0.2), reflect1Size, reflect1Size);
+        g.fillOval((int)(drawCx - radius * 0.2), (int)(drawCy + radius * 0.3), reflect2Size, reflect2Size);
 
         // 还原画布透明度
         if (alpha < 1.0f) {
@@ -283,11 +359,11 @@ public class Marble {
             int borderAlpha = (int)(120 * t);
             double radius2 = side * 0.866 * 1.2;
             g.setColor(new Color(255, 30, 30, alphaVal));
-            g.fillOval((int)(cx - radius2), (int)(cy - radius2), (int)(radius2 * 2), (int)(radius2 * 2));
+            g.fillOval((int)(drawCx - radius2), (int)(drawCy - radius2), (int)(radius2 * 2), (int)(radius2 * 2));
             if (t > 0.3) {
                 g.setColor(new Color(255, 80, 80, borderAlpha));
                 g.setStroke(new BasicStroke(2.5f));
-                g.drawOval((int)(cx - radius2 * 0.85), (int)(cy - radius2 * 0.85), (int)(radius2 * 1.7), (int)(radius2 * 1.7));
+                g.drawOval((int)(drawCx - radius2 * 0.85), (int)(drawCy - radius2 * 0.85), (int)(radius2 * 1.7), (int)(radius2 * 1.7));
             }
         }
     }
@@ -297,16 +373,23 @@ public class Marble {
         this.cy = 0;
         this.side = 24.22;
         this.initialized = false;
-        
+
         // 重置动画状态
         this.popping = false;
         this.falling = false;
         this.alone = false;
+        this.colliding = false;
         this.dead = false;
         this.popDelay = 0;
         this.popProgress = 0;
         this.fallVy = 0;
         this.aloneDelay = 0;
+        this.collisionDelay = 0;
+        this.collisionOffsetX = 0;
+        this.collisionOffsetY = 0;
+        this.collisionVelX = 0;
+        this.collisionVelY = 0;
+        this.collisionPhase = 0;
         this.scored = false;
         this.warn = false;
         this.warnProgress = 0;

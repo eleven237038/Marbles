@@ -41,7 +41,7 @@ Marbles中centerX = centerX + (centerX % (side * Math.sqrt(3)) == 0 ? -side * Ma
 陈:下降
 刘:
 
-
+修改计分规则,消除三个及以内Marble,每个Marble计10分,三个以上六个及以下每个记15分,六个以上每个20分,每个掉落的Marble恒记20分
 
 
 
