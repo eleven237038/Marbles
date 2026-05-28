@@ -36,12 +36,20 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private boolean upPressed = false;
     private boolean downPressed = false;
 
+    private boolean wasStarted = false;
+
     private int currentScore = 0;
     private int levelHighScore = 0;
     private int levelWinScore = 0;
     private boolean levelWon = false;
     private int highScore = 0;
     private CustomGlassPane glassPane;
+    
+    // Sans 角色状态
+    private Sans sans;
+    private boolean sansActive = false;
+    private double sansX, sansY;
+    private boolean sansAnimating = false;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -129,10 +137,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         cardLayout.show(mainPanel, "game");
         currentScore = 0;
 
-        boolean wasStarted = gameStarted;
+        boolean wasStartedLocal = gameStarted;
         gameStarted = true;
 
-        if (!wasStarted) {
+        if (!wasStartedLocal) {
             if (startScreen != null) {
                 startScreen.stopAnimation();
             }
@@ -146,6 +154,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             glassPane.setVisible(true);
             glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
+        
+        // 如果是第三关，则触发 Sans 彩蛋
+        if (Level.getInstance().getCurrentLevel() == 3) {
+            startSansIntro();
+        }
     }
 
     @Override
@@ -154,6 +167,13 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         levelWinScore = level.getWinScore();
         levelHighScore = level.getLevelHighScore();
         levelWon = false;
+
+        // 初始化 Sans 角色并重置状态
+        if (sans == null) {
+            sans = new Sans();
+        }
+        sansActive = false;
+        sansAnimating = false;
 
         initMarbleGrid();
         upPressed = false;
@@ -323,6 +343,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             launchPad.drawCannon(g2, mouseX, mouseY);
         }
         if (launchMarble != null) launchMarble.draw(g2);
+        
+        // Sans 已转移至 CustomGlassPane 绘制，以允许跨越左侧面板
     }
 
     public void openPauseMenu() {
@@ -398,6 +420,65 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
         mPanel.repaint();
+
+        // 第3关开始时，触发 Sans 彩蛋
+        if (Level.getInstance().getCurrentLevel() == 3) {
+            startSansIntro();
+        }
+    }
+
+    private void startSansIntro() {
+        // 冻结游戏，暂停游戏逻辑
+        frozen = true;
+        gamePaused = true;
+        sansActive = true;
+        sansAnimating = true;
+
+        // Sans 从屏幕左侧外走入到计分板和暂停按钮中间的空白位置
+        // 左侧面板宽度为250，由于 Sans 放大2倍，宽约56，居中X为 97
+        int targetX = (LEFT_ZONE_WIDTH - 56) / 2;  
+        int targetY = GAME_HEIGHT - 200;  // 计分板下方、暂停按钮上方的安全区域
+        
+        sansX = -80;  // 起始位置（屏幕左侧外）
+        sansY = targetY;
+
+        final double finalX = targetX;
+        final double finalY = targetY;
+        
+        // 播放向右行走的动画
+        sans.play("Basic - Right", 150);
+
+        final long ANIM_DURATION = 2000;  // 2秒行走动画
+        final long startTime = System.currentTimeMillis();
+
+        javax.swing.Timer sansTimer = new javax.swing.Timer(16, e -> {
+            long elapsed = System.currentTimeMillis() - startTime;
+            double t = Math.min(1.0, (double) elapsed / ANIM_DURATION);
+
+            sansX = -80 + (finalX - (-80)) * t;
+            sansY = finalY;
+
+            // 必须重绘 GlassPane 以显示动画
+            if (glassPane != null) {
+                glassPane.repaint();
+            }
+
+            if (elapsed >= ANIM_DURATION) {
+                ((javax.swing.Timer) e.getSource()).stop();
+                sans.stopAnimation();
+                sansAnimating = false;
+                
+                // 动画结束后，自动解除冻结继续游戏
+                // 然后会保持down的第一个动作
+                frozen = false;
+                gamePaused = false;
+                
+                if (glassPane != null) {
+                    glassPane.repaint();
+                }
+            }
+        });
+        sansTimer.start();
     }
 
     public void onNextLevel() {
@@ -413,7 +494,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         cardLayout.show(mainPanel, "game");
         currentScore = 0;
 
-        boolean wasStarted = gameStarted;
+        wasStarted = gameStarted;
         gameStarted = true;
 
         if (!wasStarted) {
@@ -429,6 +510,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         if (glassPane != null) {
             glassPane.setVisible(true);
             glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
+        }
+        
+        // 如果选择的是第三关，触发 Sans 彩蛋
+        if (level == 3) {
+            startSansIntro();
         }
     }
 
@@ -764,6 +850,15 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
                 int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
                 g2d.drawString(btnText, tx, ty);
+                
+                // 绘制跨越面板的 Sans
+                if (sansActive && sans != null) {
+                    if (sansAnimating) {
+                        sans.draw(g2d, (int) sansX, (int) sansY, 2.0);
+                    } else {
+                        sans.drawSpecificFrame(g2d, "Basic - Down", 0, (int) sansX, (int) sansY, 2.0);
+                    }
+                }
             }
 
             if (overlayMode != 0) {
