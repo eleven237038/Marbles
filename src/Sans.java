@@ -12,8 +12,16 @@ import javax.imageio.ImageIO;
  */
 public class Sans {
     // 定义两个精灵图的本地路径
-    private static final String SPRITE_PATH_1 = "resources/image/Sans-1.png";
-    private static final String SPRITE_PATH_2 = "resources/image/Sans-2.png";
+    private static final String SPRITE_PATH_1 = getSpritePath1();
+    private static final String SPRITE_PATH_2 = getSpritePath2();
+
+    private static String getSpritePath1() {
+        return ResourceUtil.getImagePath("Sans-1.png");
+    }
+
+    private static String getSpritePath2() {
+        return ResourceUtil.getImagePath("Sans-2.png");
+    }
     
     // 使用数组存储多个精灵图
     private static BufferedImage[] spriteSheets = new BufferedImage[2];

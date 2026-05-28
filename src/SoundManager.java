@@ -11,7 +11,6 @@ public class SoundManager {
     private boolean soundEnabled = true;
 
     // 音效文件路径常量
-    private static final String SOUND_DIR = "resources/sound/";
     public static final String GAME_BEGIN = "GameBegin.wav";
     public static final String BACK_TO_MENU = "从菜单返回主页.wav";
     public static final String BACK_TO_GAME = "从菜单返回游戏.wav";
@@ -49,7 +48,7 @@ public class SoundManager {
 
     private void preloadSound(String fileName) {
         try {
-            File soundFile = new File(SOUND_DIR + fileName);
+            File soundFile = new File(ResourceUtil.getSoundPath(fileName));
             if (soundFile.exists()) {
                 AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
                 Clip clip = AudioSystem.getClip();
@@ -59,7 +58,7 @@ public class SoundManager {
                 System.out.println("预加载音效成功: " + fileName);
             } else {
                 soundLoaded.put(fileName, false);
-                System.out.println("音效文件不存在: " + SOUND_DIR + fileName);
+                System.err.println("音效文件不存在: " + soundFile.getAbsolutePath());
             }
         } catch (UnsupportedAudioFileException e) {
             System.out.println("不支持的音频格式: " + fileName);
@@ -85,7 +84,7 @@ public class SoundManager {
         } else if (soundLoaded.containsKey(fileName) && !soundLoaded.get(fileName)) {
             // 尝试动态加载
             try {
-                File soundFile = new File(SOUND_DIR + fileName);
+                File soundFile = new File(ResourceUtil.getSoundPath(fileName));
                 if (soundFile.exists()) {
                     AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
                     Clip clip = AudioSystem.getClip();

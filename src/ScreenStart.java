@@ -542,7 +542,7 @@ public class ScreenStart extends JPanel {
     public static BufferedImage loadIcon(String iconName) {
         return ICON_CACHE.computeIfAbsent(iconName, name -> {
             try {
-                File f = new File("resources/" + name);
+                File f = new File(ResourceUtil.getImagePath(name));
                 return f.exists() ? ImageIO.read(f) : null;
             } catch (IOException e) {
                 return null;
