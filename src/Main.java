@@ -343,8 +343,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             launchPad.drawCannon(g2, mouseX, mouseY);
         }
         if (launchMarble != null) launchMarble.draw(g2);
-        
-        // Sans 已转移至 CustomGlassPane 绘制，以允许跨越左侧面板
     }
 
     public void openPauseMenu() {
@@ -427,6 +425,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
     }
 
+    /**
+     * Sans出场动画处理：
+     * 冻结游戏界面，让Sans从屏幕左侧外使用Right动作走入到左侧面板居中空白处，
+     * 然后自动保持Down状态第一个动作，随即解除游戏界面冻结状态。
+     */
     private void startSansIntro() {
         // 冻结游戏，暂停游戏逻辑
         frozen = true;
@@ -434,9 +437,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sansActive = true;
         sansAnimating = true;
 
-        // Sans 从屏幕左侧外走入到计分板和暂停按钮中间的空白位置
-        // 左侧面板宽度为250，由于 Sans 放大2倍，宽约56，居中X为 97
-        int targetX = (LEFT_ZONE_WIDTH - 56) / 2;  
+        // 根据放大2倍后的尺寸计算左面板居中位置 (假设宽度在60左右)
+        int targetX = (LEFT_ZONE_WIDTH - 60) / 2;  
         int targetY = GAME_HEIGHT - 200;  // 计分板下方、暂停按钮上方的安全区域
         
         sansX = -80;  // 起始位置（屏幕左侧外）
@@ -463,13 +465,13 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 glassPane.repaint();
             }
 
+            // 动画到达目的地
             if (elapsed >= ANIM_DURATION) {
                 ((javax.swing.Timer) e.getSource()).stop();
                 sans.stopAnimation();
                 sansAnimating = false;
                 
                 // 动画结束后，自动解除冻结继续游戏
-                // 然后会保持down的第一个动作
                 frozen = false;
                 gamePaused = false;
                 
@@ -682,7 +684,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     SoundManager.getInstance().setSoundEnabled(newState);
                     ScreenStart.isSoundOnStatic = newState;
                     repaint();
-                    // 只有在打开音效时（从 OFF 切换到 ON）才播放音效
                     if (!oldState && newState) {
                         SoundManager.getInstance().playBackToMenu();
                     }
@@ -742,7 +743,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
         public void showHelp() {
             SoundManager.getInstance().playBackToMenu();
-
             returnToMode = overlayMode;
             overlayMode = 4;
             isScreenGameOverWin = false;
@@ -755,7 +755,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
         public void hideHelp() {
             SoundManager.getInstance().playBackToMenu();
-
             overlayMode = returnToMode;
             animating = true;
             animStartTime = System.currentTimeMillis();
@@ -851,11 +850,15 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
                 g2d.drawString(btnText, tx, ty);
                 
+                // ==========================================
                 // 绘制跨越面板的 Sans
+                // ==========================================
                 if (sansActive && sans != null) {
                     if (sansAnimating) {
+                        // 播放右走动画
                         sans.draw(g2d, (int) sansX, (int) sansY, 2.0);
                     } else {
+                        // 动画结束后锁定保持 Down 的第一帧 (frameIndex: 0)
                         sans.drawSpecificFrame(g2d, "Basic - Down", 0, (int) sansX, (int) sansY, 2.0);
                     }
                 }
