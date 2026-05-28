@@ -403,6 +403,33 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     }
 
     @Override
+    public void onSelectLevel(int level) {
+        SoundManager.getInstance().playGameBegin();
+        Level.getInstance().setCurrentLevel(level);
+
+        cardLayout.show(mainPanel, "game");
+        currentScore = 0;
+
+        boolean wasStarted = gameStarted;
+        gameStarted = true;
+
+        if (!wasStarted) {
+            if (startScreen != null) {
+                startScreen.stopAnimation();
+            }
+            init();
+            gameLoop(60);
+        } else {
+            init();
+        }
+
+        if (glassPane != null) {
+            glassPane.setVisible(true);
+            glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
+        }
+    }
+
+    @Override
     public void onOpenSettings() {
         SoundManager.getInstance().playBackToMenu();
         if (glassPane != null) {

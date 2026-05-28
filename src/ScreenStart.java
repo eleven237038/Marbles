@@ -15,14 +15,17 @@ public class ScreenStart extends JPanel {
     public interface ScreenStartListener {
         void onStartGame();
         void onOpenSettings();
+        void onSelectLevel(int level);
     }
 
     private final ScreenStartListener listener;
     private final ArrayList<Marble> decorMarbles = new ArrayList<>();
     private boolean startHover = false;
     private boolean settingHover = false;
+    private boolean levelSelectHover = false;
     private boolean startPressed = false;
     private boolean settingPressed = false;
+    private boolean levelSelectPressed = false;
     public static boolean isSoundOnStatic = true;
 
     private static final Font TITLE_FONT;
@@ -45,6 +48,7 @@ public class ScreenStart extends JPanel {
 
     private final Rectangle startBtnBounds = new Rectangle();
     private final Rectangle settingBtnBounds = new Rectangle();
+    private final Rectangle levelSelectBtnBounds = new Rectangle();
 
     private static final Map<String, BufferedImage> ICON_CACHE = new HashMap<>();
 
@@ -52,12 +56,16 @@ public class ScreenStart extends JPanel {
     private final int BTN_HEIGHT = 80;
     private int startX, startY;
     private int settingX, settingY;
+    private int levelSelectX, levelSelectY;
     private final int SETTING_SIZE = 60;
+    private final int BTN_SPACING = 15;
 
     private int fallOffset = -300;
 
     private javax.swing.Timer animationTimer;
     private BufferedImage settingsIcon;
+    private boolean showLevelSelectOverlay = false;
+    private int[] levelHoverStates = new int[100];
 
     public ScreenStart(ScreenStartListener listener) {
         this.listener = listener;
@@ -91,14 +99,22 @@ public class ScreenStart extends JPanel {
             public void mousePressed(MouseEvent e) {
                 int mx = e.getPoint().x;
                 int my = e.getPoint().y;
-                startPressed = startBtnBounds.contains(mx, my);
-                settingPressed = settingBtnBounds.contains(mx, my);
-                repaint();
+                if (showLevelSelectOverlay) {
+                    handleLevelSelectOverlayClick(mx, my);
+                } else {
+                    startPressed = startBtnBounds.contains(mx, my);
+                    settingPressed = settingBtnBounds.contains(mx, my);
+                    levelSelectPressed = levelSelectBtnBounds.contains(mx, my);
+                    repaint();
 
-                if (startPressed) {
-                    listener.onStartGame();
-                } else if (settingPressed) {
-                    openSettings();
+                    if (startPressed) {
+                        listener.onStartGame();
+                    } else if (settingPressed) {
+                        openSettings();
+                    } else if (levelSelectPressed) {
+                        showLevelSelectOverlay = true;
+                        repaint();
+                    }
                 }
             }
 
@@ -106,6 +122,7 @@ public class ScreenStart extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 startPressed = false;
                 settingPressed = false;
+                levelSelectPressed = false;
                 repaint();
             }
 
@@ -128,6 +145,10 @@ public class ScreenStart extends JPanel {
             public void mouseExited(MouseEvent e) {
                 startHover = false;
                 settingHover = false;
+                levelSelectHover = false;
+                for (int i = 0; i < levelHoverStates.length; i++) {
+                    levelHoverStates[i] = 0;
+                }
                 setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 repaint();
             }
@@ -140,18 +161,93 @@ public class ScreenStart extends JPanel {
     private void updateHoverState(int mx, int my) {
         boolean oldStartHover = startHover;
         boolean oldSettingHover = settingHover;
+        boolean oldLevelSelectHover = levelSelectHover;
 
         startHover = startBtnBounds.contains(mx, my);
         settingHover = settingBtnBounds.contains(mx, my);
+        levelSelectHover = levelSelectBtnBounds.contains(mx, my);
 
-        if (startHover || settingHover) {
+        if (showLevelSelectOverlay) {
+            updateLevelSelectOverlayHover(mx, my);
+        }
+
+        if (startHover || settingHover || levelSelectHover) {
             setCursor(new Cursor(Cursor.HAND_CURSOR));
         } else {
             setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         }
 
-        if (oldStartHover != startHover || oldSettingHover != settingHover) {
+        if (oldStartHover != startHover || oldSettingHover != settingHover || oldLevelSelectHover != levelSelectHover) {
             repaint();
+        }
+    }
+
+    private void updateLevelSelectOverlayHover(int mx, int my) {
+        if (!showLevelSelectOverlay) return;
+
+        int panelW = getWidth();
+        int panelH = getHeight();
+        int gridStartX = 30;
+        int gridStartY = 80;
+        int btnSize = 55;
+        int btnSpacing = 10;
+        int columns = 5;
+
+        int unlockedCount = Level.getInstance().getUnlockedLevelCount();
+        boolean changed = false;
+        for (int i = 0; i < 20; i++) {
+            int col = i % columns;
+            int row = i / columns;
+            int x = gridStartX + col * (btnSize + btnSpacing);
+            int y = gridStartY + row * (btnSize + btnSpacing);
+
+            Rectangle rect = new Rectangle(x, y, btnSize, btnSize);
+            int newState = rect.contains(mx, my) ? 1 : 0;
+            if (levelHoverStates[i] != newState) {
+                levelHoverStates[i] = newState;
+                changed = true;
+            }
+        }
+        if (changed) repaint();
+    }
+
+    private void handleLevelSelectOverlayClick(int mx, int my) {
+        int panelW = getWidth();
+        int panelH = getHeight();
+        int closeBtnW = 120;
+        int closeBtnH = 45;
+        int closeBtnX = (panelW - closeBtnW) / 2;
+        int closeBtnY = panelH - closeBtnH - 20;
+
+        Rectangle closeBtn = new Rectangle(closeBtnX, closeBtnY, closeBtnW, closeBtnH);
+        if (closeBtn.contains(mx, my)) {
+            showLevelSelectOverlay = false;
+            repaint();
+            return;
+        }
+
+        int gridStartX = 30;
+        int gridStartY = 80;
+        int btnSize = 55;
+        int btnSpacing = 10;
+        int columns = 5;
+
+        int unlockedCount = Level.getInstance().getUnlockedLevelCount();
+        for (int i = 0; i < 20; i++) {
+            int col = i % columns;
+            int row = i / columns;
+            int x = gridStartX + col * (btnSize + btnSpacing);
+            int y = gridStartY + row * (btnSize + btnSpacing);
+
+            Rectangle rect = new Rectangle(x, y, btnSize, btnSize);
+            if (rect.contains(mx, my)) {
+                int level = i + 1;
+                if (Level.getInstance().isLevelUnlocked(level)) {
+                    showLevelSelectOverlay = false;
+                    listener.onSelectLevel(level);
+                }
+                return;
+            }
         }
     }
 
@@ -191,6 +287,16 @@ public class ScreenStart extends JPanel {
         repaint();
     }
 
+    public void showLevelSelectOverlay() {
+        showLevelSelectOverlay = true;
+        repaint();
+    }
+
+    public void hideLevelSelectOverlay() {
+        showLevelSelectOverlay = false;
+        repaint();
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -206,14 +312,23 @@ public class ScreenStart extends JPanel {
         settingX = 30;
         settingY = h - SETTING_SIZE - 30;
 
+        levelSelectX = startX;
+        levelSelectY = startY + BTN_HEIGHT + BTN_SPACING;
+
         startBtnBounds.setBounds(startX, startY, BTN_WIDTH, BTN_HEIGHT);
         settingBtnBounds.setBounds(settingX, settingY, SETTING_SIZE, SETTING_SIZE);
+        levelSelectBtnBounds.setBounds(levelSelectX, levelSelectY, BTN_WIDTH, BTN_HEIGHT);
 
         drawBackground(g2d, w, h);
         drawLuxuryTitle(g2d, w, h, fallOffset);
         drawCompactMarbles(g2d, w, h, fallOffset);
         drawStartButton(g2d);
+        drawLevelSelectButton(g2d);
         drawStandardGearButton(g2d, h);
+
+        if (showLevelSelectOverlay) {
+            drawLevelSelectOverlay(g2d, w, h);
+        }
     }
 
     private void enableHighQualityRender(Graphics2D g2d) {
@@ -306,6 +421,125 @@ public class ScreenStart extends JPanel {
         int[] xP = {x - 18, x + 18, x - 18};
         int[] yP = {y - 18, y, y + 18};
         g2d.fillPolygon(xP, yP, 3);
+    }
+
+    private void drawLevelSelectButton(Graphics2D g2d) {
+        RoundRectangle2D btn = new RoundRectangle2D.Double(levelSelectX, levelSelectY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
+
+        Color c1 = levelSelectPressed ? new Color(50, 140, 255) :
+                levelSelectHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
+        Color c2 = levelSelectPressed ? new Color(30, 110, 255) :
+                levelSelectHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
+
+        LinearGradientPaint btnGrad = new LinearGradientPaint(levelSelectX, levelSelectY, levelSelectX, levelSelectY + BTN_HEIGHT,
+                new float[]{0, 1}, new Color[]{c1, c2});
+        g2d.setPaint(btnGrad);
+        g2d.fill(btn);
+
+        g2d.setStroke(new BasicStroke(2.5f));
+        g2d.setColor(Color.WHITE);
+        g2d.draw(btn);
+
+        g2d.setFont(new Font("Arial Black", Font.BOLD, 20));
+        g2d.setColor(Color.WHITE);
+        String text = "LEVEL";
+        FontMetrics fm = g2d.getFontMetrics();
+        int textX = levelSelectX + (BTN_WIDTH - fm.stringWidth(text)) / 2;
+        int textY = levelSelectY + (BTN_HEIGHT + fm.getAscent() - fm.getDescent()) / 2;
+        g2d.drawString(text, textX, textY);
+    }
+
+    private void drawLevelSelectOverlay(Graphics2D g2d, int w, int h) {
+        g2d.setColor(new Color(0, 0, 0, 200));
+        g2d.fillRect(0, 0, w, h);
+
+        int panelW = w;
+        int panelH = h;
+
+        g2d.setFont(new Font("Arial Black", Font.BOLD, 36));
+        g2d.setColor(new Color(255, 215, 0));
+        String title = "SELECT LEVEL";
+        FontMetrics fm = g2d.getFontMetrics();
+        g2d.drawString(title, (panelW - fm.stringWidth(title)) / 2, 55);
+
+        int gridStartX = 30;
+        int gridStartY = 80;
+        int btnSize = 55;
+        int btnSpacing = 10;
+        int columns = 5;
+        int rows = 4;
+
+        Level levelManager = Level.getInstance();
+        int currentLevel = levelManager.getCurrentLevel();
+        int unlockedCount = levelManager.getUnlockedLevelCount();
+
+        for (int i = 0; i < rows * columns; i++) {
+            int col = i % columns;
+            int row = i / columns;
+            int x = gridStartX + col * (btnSize + btnSpacing);
+            int y = gridStartY + row * (btnSize + btnSpacing);
+            int level = i + 1;
+
+            boolean unlocked = level <= unlockedCount;
+            boolean hover = levelHoverStates[i] == 1;
+
+            RoundRectangle2D btn = new RoundRectangle2D.Double(x, y, btnSize, btnSize, 12, 12);
+
+            if (unlocked) {
+                Color c1 = hover ? new Color(100, 190, 255) : new Color(70, 150, 255);
+                Color c2 = hover ? new Color(50, 140, 255) : new Color(30, 110, 255);
+                LinearGradientPaint btnGrad = new LinearGradientPaint(x, y, x, y + btnSize,
+                        new float[]{0, 1}, new Color[]{c1, c2});
+                g2d.setPaint(btnGrad);
+                g2d.fill(btn);
+
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.setColor(Color.WHITE);
+                g2d.draw(btn);
+
+                g2d.setFont(new Font("Arial Black", Font.BOLD, 18));
+                g2d.setColor(Color.WHITE);
+            } else {
+                g2d.setColor(new Color(80, 80, 80, 200));
+                g2d.fill(btn);
+
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.setColor(new Color(100, 100, 100, 150));
+                g2d.draw(btn);
+
+                g2d.setFont(new Font("Arial Black", Font.BOLD, 18));
+                g2d.setColor(new Color(120, 120, 120));
+            }
+
+            String levelText = String.valueOf(level);
+            fm = g2d.getFontMetrics();
+            int textX = x + (btnSize - fm.stringWidth(levelText)) / 2;
+            int textY = y + (btnSize + fm.getAscent() - fm.getDescent()) / 2;
+            g2d.drawString(levelText, textX, textY);
+        }
+
+        int closeBtnW = 120;
+        int closeBtnH = 45;
+        int closeBtnX = (panelW - closeBtnW) / 2;
+        int closeBtnY = panelH - closeBtnH - 20;
+
+        RoundRectangle2D closeBtn = new RoundRectangle2D.Double(closeBtnX, closeBtnY, closeBtnW, closeBtnH, 18, 18);
+        LinearGradientPaint closeGrad = new LinearGradientPaint(closeBtnX, closeBtnY, closeBtnX, closeBtnY + closeBtnH,
+                new float[]{0, 1}, new Color[]{new Color(220, 70, 70), new Color(180, 50, 50)});
+        g2d.setPaint(closeGrad);
+        g2d.fill(closeBtn);
+
+        g2d.setStroke(new BasicStroke(2f));
+        g2d.setColor(Color.WHITE);
+        g2d.draw(closeBtn);
+
+        g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
+        g2d.setColor(Color.WHITE);
+        String closeText = "Close";
+        fm = g2d.getFontMetrics();
+        int closeTextX = closeBtnX + (closeBtnW - fm.stringWidth(closeText)) / 2;
+        int closeTextY = closeBtnY + (closeBtnH + fm.getAscent() - fm.getDescent()) / 2;
+        g2d.drawString(closeText, closeTextX, closeTextY);
     }
 
     private void drawStandardGearButton(Graphics2D g2d, int h) {

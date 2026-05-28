@@ -30,6 +30,21 @@ public class Level {
         return currentLevel;
     }
 
+    public int getUnlockedLevelCount() {
+        int unlocked = 1;
+        for (int i = 1; i < currentLevel; i++) {
+            if (levelHighScores[i - 1] > 0) {
+                unlocked = i + 1;
+            }
+        }
+        return unlocked;
+    }
+
+    public boolean isLevelUnlocked(int level) {
+        if (level == 1) return true;
+        return level <= getUnlockedLevelCount();
+    }
+
     public int getWinScore() {
         return BASE_WIN_SCORE + (currentLevel - 1) * SCORE_INCREMENT;
     }
@@ -57,6 +72,13 @@ public class Level {
     public void resetToLevel(int level) {
         currentLevel = level;
         saveCurrentLevel(currentLevel);
+    }
+
+    public void setCurrentLevel(int level) {
+        if (level >= 1 && level <= 100) {
+            currentLevel = level;
+            saveCurrentLevel(currentLevel);
+        }
     }
 
     public void resetAllProgress() {
