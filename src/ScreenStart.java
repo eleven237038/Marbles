@@ -176,11 +176,11 @@ public class ScreenStart extends JPanel {
 
         int panelW = getWidth();
         int panelH = getHeight();
-        int gridStartX = 30;
-        int gridStartY = 80;
         int btnSize = 55;
         int btnSpacing = 10;
         int columns = 4;
+        int gridStartX = panelW / 2 - (columns * btnSize + (columns - 1) * btnSpacing) / 2;
+        int gridStartY = panelH / 2 - btnSize / 2;
 
         int unlockedCount = Level.getInstance().getUnlockedLevelCount();
         boolean changed = false;
@@ -215,11 +215,11 @@ public class ScreenStart extends JPanel {
             return;
         }
 
-        int gridStartX = 30;
-        int gridStartY = 80;
         int btnSize = 55;
         int btnSpacing = 10;
         int columns = 4;
+        int gridStartX = panelW / 2 - (columns * btnSize + (columns - 1) * btnSpacing) / 2;
+        int gridStartY = panelH / 2 - btnSize / 2;
 
         int unlockedCount = Level.getInstance().getUnlockedLevelCount();
         for (int i = 0; i < Level.MAX_LEVEL; i++) {
@@ -420,11 +420,11 @@ public class ScreenStart extends JPanel {
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString(title, (panelW - fm.stringWidth(title)) / 2, 55);
 
-        int gridStartX = 30;
-        int gridStartY = 80;
         int btnSize = 55;
         int btnSpacing = 10;
         int columns = 4;
+        int gridStartX = panelW / 2 - (columns * btnSize + (columns - 1) * btnSpacing) / 2;
+        int gridStartY = panelH / 2 - btnSize / 2;
 
         Level levelManager = Level.getInstance();
         int currentLevel = levelManager.getCurrentLevel();
