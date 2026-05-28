@@ -209,6 +209,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         hexGrid.setFallSpeedMultiplier(level.getFallSpeedMultiplier());
         // 参数：初始速度，最大速度，每秒增加速度，速度：像素/秒
         hexGrid.setLevelSpeedParams(3.0, 15.0, 0.1);
+        // 设置特殊弹珠生成配置（level 4的creeper由bossSans触发，不在这里启用）
+        boolean enableCreeper = level.hasCreeper() && level.getCurrentLevel() != 4;
+        hexGrid.setSpecialMarbleConfig(enableCreeper, level.hasBedrock(), level.hasHeart());
         hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);
         deadline = launchPad.getTopY();
@@ -479,6 +482,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 // 动画结束后，自动解除冻结继续游戏
                 frozen = false;
                 gamePaused = false;
+
+                // BossSans触发creeper生成
+                if (hexGrid != null) {
+                    hexGrid.enableCreeperGeneration();
+                }
 
                 // 启动待机动画重绘定时器
                 idleRepaintTimer = new javax.swing.Timer(16, evt -> {

@@ -56,4 +56,5 @@ Marbles中centerX = centerX + (centerX % (side * Math.sqrt(3)) == 0 ? -side * Ma
   17)(177,417)(177,294),(179,294)(179,417)(250,294)(250,417),(252,294)(252,417)(32
   3,417)(323,294)
 
+创建三种新弹珠"creeper""bedrock""heart";"creeper"采用resources/image/Marbles/creeper.png的精灵图,设置它碰到弹珠后会导致附近+3的六边形范围内的普通弹珠无视其他条件直接消除,"creeper"在第2,3,4关出现,在第2,3关中可以在Marble[][]和MarbleLaunch中生成,第4关中需要bossSans触发,仅在Marble[][]中生成,"bedrock""heart"免疫"creeper"的消除效果;"bedrock"采用resources/image/Marbles/bedrock.png的精灵图,不会触发消除效果,仅可触发掉落效果,在第3,4关中生成,仅在Marble[][]中生成;"heart"采用resources/image/Marbles/heart.png的精灵图,仅在第4关中出现,不会触发消除效果,仅可触发掉落效果,仅在Marble[][]中生成
 

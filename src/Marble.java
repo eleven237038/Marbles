@@ -1,6 +1,10 @@
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Random;
+import javax.imageio.ImageIO;
 
 public class Marble {
     private double cx, cy;
@@ -11,6 +15,14 @@ public class Marble {
     public static final int BLUE = 2;
     public static final int YELLOW = 3;
     public static final int PURPLE = 4;
+    public static final int CREEPER = 5;
+    public static final int BEDROCK = 6;
+    public static final int HEART = 7;
+
+    // 静态sprite图像（延迟加载）
+    private static BufferedImage creeperSprite = null;
+    private static BufferedImage bedrockSprite = null;
+    private static BufferedImage heartSprite = null;
 
     // 动画状态相关
     private boolean popping = false;
@@ -18,7 +30,7 @@ public class Marble {
     private boolean dead = false;
     private double popDelay = 0;
     private double popProgress = 0;
-    
+
     // 掉落物理参数
     private double fallVy = 0;
     private double fallAy = 1500; // 重力加速度
@@ -90,6 +102,23 @@ public class Marble {
     private double warnProgress = 0;
     private double warnIntensity = 0; // 0~1，越接近deadline值越大
 
+    // 静态初始化：加载特殊弹珠sprite
+    static {
+        loadSpecialSprites();
+    }
+
+    private static void loadSpecialSprites() {
+        try {
+            String basePath = ResourceManager.getImagePath("Marbles/");
+            creeperSprite = ImageIO.read(new File(basePath + "creeper.png"));
+            bedrockSprite = ImageIO.read(new File(basePath + "bedrock.png"));
+            heartSprite = ImageIO.read(new File(basePath + "heart.png"));
+            System.out.println("成功加载特殊弹珠sprite!");
+        } catch (IOException e) {
+            System.err.println("加载特殊弹珠sprite失败: " + e.getMessage());
+        }
+    }
+
     public Marble() {
         this.cx = 0;
         this.cy = 0;
@@ -109,13 +138,23 @@ public class Marble {
         this.initialized = true;
     }
 
+    // 判断是否为免疫creeper消除的类型
+    public boolean isImmuneToCreeper() {
+        return colorType == BEDROCK || colorType == HEART;
+    }
+
+    // 判断是否为普通弹珠（可被creeper消除）
+    public boolean isNormalMarble() {
+        return colorType >= RED && colorType <= PURPLE;
+    }
+
     // 开始触发消除动画并设置延迟时间
     public void startPop(double delay) {
         this.popping = true;
         this.popDelay = delay;
         this.popProgress = 0;
     }
-    
+
     // 开始触发无附着掉落动画
     public void startFalling(double delay) {
         this.falling = true;
@@ -166,7 +205,7 @@ public class Marble {
 
     public boolean isAlone() { return alone; }
     public boolean isColliding() { return colliding; }
-    
+
     public boolean isPopping() { return popping; }
     public boolean isFalling() { return falling; }
     public boolean isDead() { return dead; }
@@ -297,7 +336,7 @@ public class Marble {
 
         double scale = 1.0;
         float alpha = 1.0f;
-        
+
         // 当处于正在爆裂的状态，并且延迟时间已到，开始放大且透明化
         if (popping && popDelay <= 0) {
             scale = 1.0 + popProgress * 0.4; // 最大膨胀 1.4 倍
@@ -316,45 +355,59 @@ public class Marble {
         double radius = side * 0.866 * scale;
         double drawCx = cx + collisionOffsetX;
         double drawCy = cy + collisionOffsetY;
-        double x = drawCx - radius;
-        double y = drawCy - radius;
-        double diameter = radius * 2;
 
-        Color base = BASE_COLOR[colorType];
-        Color bright = BRIGHT_COLOR[colorType];
-        Color dark = DARK_COLOR[colorType];
+        // 绘制特殊弹珠sprite
+        if (colorType == CREEPER && creeperSprite != null) {
+            int spriteSize = (int)(radius * 2);
+            g.drawImage(creeperSprite, (int)(drawCx - radius), (int)(drawCy - radius), spriteSize, spriteSize, null);
+        } else if (colorType == BEDROCK && bedrockSprite != null) {
+            int spriteSize = (int)(radius * 2);
+            g.drawImage(bedrockSprite, (int)(drawCx - radius), (int)(drawCy - radius), spriteSize, spriteSize, null);
+        } else if (colorType == HEART && heartSprite != null) {
+            int spriteSize = (int)(radius * 2);
+            g.drawImage(heartSprite, (int)(drawCx - radius), (int)(drawCy - radius), spriteSize, spriteSize, null);
+        } else {
+            // 普通弹珠绘制
+            double x = drawCx - radius;
+            double y = drawCy - radius;
+            double diameter = radius * 2;
 
-        // 阴影
-        g.setColor(SHADOW_COLOR);
-        g.fillOval((int)Math.round(x + 2 * scale), (int)Math.round(y + 2 * scale), (int)Math.round(diameter), (int)Math.round(diameter));
+            Color base = BASE_COLOR[colorType];
+            Color bright = BRIGHT_COLOR[colorType];
+            Color dark = DARK_COLOR[colorType];
 
-        // 球体渐变
-        cachedCenter.setLocation(drawCx, drawCy);
-        Color[] gradColor = {bright, base, dark};
-        RadialGradientPaint ballGrad = new RadialGradientPaint(cachedCenter, (float)radius, GRADIENT_STOPS, gradColor);
-        g.setPaint(ballGrad);
-        g.fillOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
+            // 阴影
+            g.setColor(SHADOW_COLOR);
+            g.fillOval((int)Math.round(x + 2 * scale), (int)Math.round(y + 2 * scale), (int)Math.round(diameter), (int)Math.round(diameter));
 
-        // 双层精致边框
-        g.setStroke(new BasicStroke(1.8f * (float)scale));
-        g.setColor(BORDER_COLOR);
-        g.drawOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
+            // 球体渐变
+            cachedCenter.setLocation(drawCx, drawCy);
+            Color[] gradColor = {bright, base, dark};
+            RadialGradientPaint ballGrad = new RadialGradientPaint(cachedCenter, (float)radius, GRADIENT_STOPS, gradColor);
+            g.setPaint(ballGrad);
+            g.fillOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
 
-        g.setStroke(new BasicStroke(0.8f * (float)scale));
-        g.setColor(INNER_BORDER_COLOR);
-        g.drawOval((int)Math.round(x + 1 * scale), (int)Math.round(y + 1 * scale), (int)Math.round(diameter - 2 * scale), (int)Math.round(diameter - 2 * scale));
+            // 双层精致边框
+            g.setStroke(new BasicStroke(1.8f * (float)scale));
+            g.setColor(BORDER_COLOR);
+            g.drawOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
 
-        // 主高光
-        g.setColor(HIGHLIGHT_COLOR);
-        double highlightR = radius * 0.32;
-        g.fillOval((int)Math.round(drawCx - radius * 0.48), (int)Math.round(drawCy - radius * 0.48), (int)Math.round(highlightR), (int)Math.round(highlightR));
+            g.setStroke(new BasicStroke(0.8f * (float)scale));
+            g.setColor(INNER_BORDER_COLOR);
+            g.drawOval((int)Math.round(x + 1 * scale), (int)Math.round(y + 1 * scale), (int)Math.round(diameter - 2 * scale), (int)Math.round(diameter - 2 * scale));
 
-        // 玻璃反光点
-        g.setColor(REFLECTION_COLOR);
-        int reflect1Size = Math.max(1, (int)(4 * scale));
-        int reflect2Size = Math.max(1, (int)(3 * scale));
-        g.fillOval((int)Math.round(drawCx + radius * 0.25), (int)Math.round(drawCy - radius * 0.2), reflect1Size, reflect1Size);
-        g.fillOval((int)Math.round(drawCx - radius * 0.2), (int)Math.round(drawCy + radius * 0.3), reflect2Size, reflect2Size);
+            // 主高光
+            g.setColor(HIGHLIGHT_COLOR);
+            double highlightR = radius * 0.32;
+            g.fillOval((int)Math.round(drawCx - radius * 0.48), (int)Math.round(drawCy - radius * 0.48), (int)Math.round(highlightR), (int)Math.round(highlightR));
+
+            // 玻璃反光点
+            g.setColor(REFLECTION_COLOR);
+            int reflect1Size = Math.max(1, (int)(4 * scale));
+            int reflect2Size = Math.max(1, (int)(3 * scale));
+            g.fillOval((int)Math.round(drawCx + radius * 0.25), (int)Math.round(drawCy - radius * 0.2), reflect1Size, reflect1Size);
+            g.fillOval((int)Math.round(drawCx - radius * 0.2), (int)Math.round(drawCy + radius * 0.3), reflect2Size, reflect2Size);
+        }
 
         // 还原画布透明度
         if (alpha < 1.0f) {

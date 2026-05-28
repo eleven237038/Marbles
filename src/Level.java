@@ -37,6 +37,9 @@ public class Level {
         public static final double MAX_FALL_SPEED = 15.0;
         public static final double SPEED_INCREASE_RATE = 0.1;
         public static final boolean HAS_BOSS_SANS = false;
+        public static final boolean HAS_CREEPER = false;
+        public static final boolean HAS_BEDROCK = false;
+        public static final boolean HAS_HEART = false;
     }
 
     /** 第2关配置 */
@@ -48,6 +51,9 @@ public class Level {
         public static final double MAX_FALL_SPEED = 15.0;
         public static final double SPEED_INCREASE_RATE = 0.1;
         public static final boolean HAS_BOSS_SANS = false;
+        public static final boolean HAS_CREEPER = true;   // creeper出现
+        public static final boolean HAS_BEDROCK = false;
+        public static final boolean HAS_HEART = false;
     }
 
     /** 第3关配置 */
@@ -59,6 +65,9 @@ public class Level {
         public static final double MAX_FALL_SPEED = 15.0;
         public static final double SPEED_INCREASE_RATE = 0.1;
         public static final boolean HAS_BOSS_SANS = false;
+        public static final boolean HAS_CREEPER = true;   // creeper出现
+        public static final boolean HAS_BEDROCK = true;  // bedrock出现
+        public static final boolean HAS_HEART = false;
     }
 
     /** 第4关配置 */
@@ -70,6 +79,9 @@ public class Level {
         public static final double MAX_FALL_SPEED = 15.0;
         public static final double SPEED_INCREASE_RATE = 0.1;
         public static final boolean HAS_BOSS_SANS = true;
+        public static final boolean HAS_CREEPER = true;   // creeper出现
+        public static final boolean HAS_BEDROCK = true;    // bedrock出现
+        public static final boolean HAS_HEART = true;      // heart出现
     }
 
     // ========== 根据关卡号获取对应配置 ==========
@@ -78,19 +90,19 @@ public class Level {
         switch (level) {
             case 1: return new Object[]{Level1.WIN_SCORE, Level1.COLOR_TYPE_COUNT, Level1.FALL_SPEED_MULT,
                                          Level1.BASE_FALL_SPEED, Level1.MAX_FALL_SPEED, Level1.SPEED_INCREASE_RATE,
-                                         Level1.HAS_BOSS_SANS};
+                                         Level1.HAS_BOSS_SANS, Level1.HAS_CREEPER, Level1.HAS_BEDROCK, Level1.HAS_HEART};
             case 2: return new Object[]{Level2.WIN_SCORE, Level2.COLOR_TYPE_COUNT, Level2.FALL_SPEED_MULT,
                                          Level2.BASE_FALL_SPEED, Level2.MAX_FALL_SPEED, Level2.SPEED_INCREASE_RATE,
-                                         Level2.HAS_BOSS_SANS};
+                                         Level2.HAS_BOSS_SANS, Level2.HAS_CREEPER, Level2.HAS_BEDROCK, Level2.HAS_HEART};
             case 3: return new Object[]{Level3.WIN_SCORE, Level3.COLOR_TYPE_COUNT, Level3.FALL_SPEED_MULT,
                                          Level3.BASE_FALL_SPEED, Level3.MAX_FALL_SPEED, Level3.SPEED_INCREASE_RATE,
-                                         Level3.HAS_BOSS_SANS};
+                                         Level3.HAS_BOSS_SANS, Level3.HAS_CREEPER, Level3.HAS_BEDROCK, Level3.HAS_HEART};
             case 4: return new Object[]{Level4.WIN_SCORE, Level4.COLOR_TYPE_COUNT, Level4.FALL_SPEED_MULT,
                                          Level4.BASE_FALL_SPEED, Level4.MAX_FALL_SPEED, Level4.SPEED_INCREASE_RATE,
-                                         Level4.HAS_BOSS_SANS};
+                                         Level4.HAS_BOSS_SANS, Level4.HAS_CREEPER, Level4.HAS_BEDROCK, Level4.HAS_HEART};
             default: return new Object[]{Level1.WIN_SCORE, Level1.COLOR_TYPE_COUNT, Level1.FALL_SPEED_MULT,
                                          Level1.BASE_FALL_SPEED, Level1.MAX_FALL_SPEED, Level1.SPEED_INCREASE_RATE,
-                                         Level1.HAS_BOSS_SANS};
+                                         Level1.HAS_BOSS_SANS, Level1.HAS_CREEPER, Level1.HAS_BEDROCK, Level1.HAS_HEART};
         }
     }
 
@@ -145,6 +157,30 @@ public class Level {
 
     public boolean hasBossSans(int level) {
         return (boolean) getLevelConfig(level)[6];
+    }
+
+    public boolean hasCreeper() {
+        return (boolean) getLevelConfig(currentLevel)[7];
+    }
+
+    public boolean hasCreeper(int level) {
+        return (boolean) getLevelConfig(level)[7];
+    }
+
+    public boolean hasBedrock() {
+        return (boolean) getLevelConfig(currentLevel)[8];
+    }
+
+    public boolean hasBedrock(int level) {
+        return (boolean) getLevelConfig(level)[8];
+    }
+
+    public boolean hasHeart() {
+        return (boolean) getLevelConfig(currentLevel)[9];
+    }
+
+    public boolean hasHeart(int level) {
+        return (boolean) getLevelConfig(level)[9];
     }
 
     public int getLevelHighScore() {
