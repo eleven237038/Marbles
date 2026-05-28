@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="下降速度配置" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="修复bug">
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -139,15 +142,7 @@
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
       <workItem from="1779851862495" duration="18044000" />
-      <workItem from="1779938602200" duration="21655000" />
-    </task>
-    <task id="LOCAL-00040" summary="将StartScreen更名为ScreenStart">
-      <option name="closed" value="true" />
-      <created>1779849438766</created>
-      <option name="number" value="00040" />
-      <option name="presentableId" value="LOCAL-00040" />
-      <option name="project" value="LOCAL" />
-      <updated>1779849438766</updated>
+      <workItem from="1779938602200" duration="21974000" />
     </task>
     <task id="LOCAL-00041" summary="将LaunchMarble更名为MarbleLaunch">
       <option name="closed" value="true" />
@@ -533,7 +528,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779983322371</updated>
     </task>
-    <option name="localTasksCounter" value="89" />
+    <task id="LOCAL-00089" summary="修复bug">
+      <option name="closed" value="true" />
+      <created>1779983608001</created>
+      <option name="number" value="00089" />
+      <option name="presentableId" value="LOCAL-00089" />
+      <option name="project" value="LOCAL" />
+      <updated>1779983608001</updated>
+    </task>
+    <option name="localTasksCounter" value="90" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -551,7 +554,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="合并BoardGame和BoardScreen" />
     <MESSAGE value="合并BoardGame和BoardScreen,合并后文件更名为ScreenGame" />
     <MESSAGE value="修复计分板bug" />
     <MESSAGE value="修改计分规则" />
@@ -576,6 +578,7 @@
     <MESSAGE value="Sans站立动态设置" />
     <MESSAGE value="Boss关初始化" />
     <MESSAGE value="下降速度配置" />
-    <option name="LAST_COMMIT_MESSAGE" value="下降速度配置" />
+    <MESSAGE value="修复bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="修复bug" />
   </component>
 </project>

@@ -856,7 +856,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 g2d.setStroke(new BasicStroke(2f));
                 g2d.draw(btnShape);
 
-                g2d.setFont(new Font("Comic BossSans MS", Font.BOLD, 18));
+                g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
                 String btnText = "PAUSE";
                 FontMetrics fm = g2d.getFontMetrics();
                 int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
@@ -906,7 +906,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         private void drawPauseMenuOverlay(Graphics2D g2d, int cx, int cy) {
-            g2d.setFont(new Font("Arial Black", Font.BOLD, 42));
+            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 42));
             g2d.setColor(new Color(70, 150, 255));
             String title = "PAUSED";
             FontMetrics fm = g2d.getFontMetrics();
@@ -932,7 +932,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         private void drawScreenGameOverOverlay(Graphics2D g2d, int cx, int cy) {
-            g2d.setFont(new Font("Arial Black", Font.BOLD, 42));
+            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 42));
             if (levelWon) {
                 g2d.setColor(new Color(255, 215, 0));
                 String title = "LEVEL CLEAR!";
@@ -950,7 +950,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 130);
             }
 
-            g2d.setFont(new Font("Comic BossSans MS", Font.BOLD, 26));
+            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 26));
             g2d.setColor(Color.WHITE);
             String scoreText = "Score: " + currentScore;
             FontMetrics fm = g2d.getFontMetrics();
@@ -982,7 +982,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         private void drawSettingsOverlay(Graphics2D g2d, int cx, int cy) {
-            g2d.setFont(new Font("Arial Black", Font.BOLD, 36));
+            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 36));
             g2d.setColor(new Color(70, 150, 255));
             String title = "SETTINGS";
             FontMetrics fm = g2d.getFontMetrics();
@@ -1014,13 +1014,13 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     "3. Do not let marbles cross the bottom dashed line!"
             };
 
-            g2d.setFont(new Font("Arial Black", Font.BOLD, 36));
+            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 36));
             g2d.setColor(new Color(70, 150, 255));
             String title = "HOW TO PLAY";
             FontMetrics fm = g2d.getFontMetrics();
             g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 100);
 
-            g2d.setFont(new Font("Comic BossSans MS", Font.BOLD, 20));
+            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
             g2d.setColor(Color.WHITE);
             int lineHeight = 36;
             int startY = cy - 20;
@@ -1047,7 +1047,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             g2d.fillRoundRect(rect.x, rect.y, rect.width, rect.height, 18, 18);
 
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Comic BossSans MS", Font.BOLD, 18));
+            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
             FontMetrics fm = g2d.getFontMetrics();
             int textX = rect.x + (rect.width - fm.stringWidth(text)) / 2;
             int textY = rect.y + (rect.height + fm.getAscent() - fm.getDescent()) / 2;

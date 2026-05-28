@@ -41,7 +41,7 @@ public class ScreenStart extends JPanel {
     };
 
     static {
-        TITLE_FONT = new Font("Arial Black", Font.BOLD, 75);
+        TITLE_FONT = new Font("Comic Sans MS", Font.BOLD, 75);
     }
 
     private final Rectangle startBtnBounds = new Rectangle();
@@ -413,7 +413,7 @@ public class ScreenStart extends JPanel {
         int panelW = w;
         int panelH = h;
 
-        g2d.setFont(new Font("Arial Black", Font.BOLD, 36));
+        g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 36));
         g2d.setColor(new Color(255, 215, 0));
         String title = "SELECT LEVEL";
         FontMetrics fm = g2d.getFontMetrics();
@@ -450,7 +450,7 @@ public class ScreenStart extends JPanel {
                 g2d.setColor(Color.WHITE);
                 g2d.draw(btn);
 
-                g2d.setFont(new Font("Arial Black", Font.BOLD, 18));
+                g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
                 g2d.setColor(Color.WHITE);
             } else {
                 g2d.setColor(new Color(80, 80, 80, 200));
@@ -460,7 +460,7 @@ public class ScreenStart extends JPanel {
                 g2d.setColor(new Color(100, 100, 100, 150));
                 g2d.draw(btn);
 
-                g2d.setFont(new Font("Arial Black", Font.BOLD, 18));
+                g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
                 g2d.setColor(new Color(120, 120, 120));
             }
 
