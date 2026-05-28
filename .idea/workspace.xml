@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加Sans">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Level.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Level.java" afterDir="false" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="将关卡选择界面的关卡按钮从左上角改到屏幕中间">
+      <change beforePath="$PROJECT_DIR$/src/Sans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Sans.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenGame.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -79,7 +79,7 @@
     "settings.editor.selected.configurable": "proofread",
     "vue.rearranger.settings.migration": "true",
     "应用程序.HexGrid.executor": "Run",
-    "应用程序.Main.executor": "Run",
+    "应用程序.Main.executor": "Debug",
     "应用程序.Marble.executor": "Run",
     "应用程序.MarbleGame.executor": "Run"
   }
@@ -143,23 +143,7 @@
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
       <workItem from="1779851862495" duration="18044000" />
-      <workItem from="1779938602200" duration="7283000" />
-    </task>
-    <task id="LOCAL-00025" summary="优化代码">
-      <option name="closed" value="true" />
-      <created>1779703625954</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1779703625954</updated>
-    </task>
-    <task id="LOCAL-00026" summary="合并碰撞后消除逻辑">
-      <option name="closed" value="true" />
-      <created>1779704556160</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1779704556160</updated>
+      <workItem from="1779938602200" duration="7823000" />
     </task>
     <task id="LOCAL-00027" summary="合并UI,优化代码">
       <option name="closed" value="true" />
@@ -537,7 +521,23 @@
       <option name="project" value="LOCAL" />
       <updated>1779951863016</updated>
     </task>
-    <option name="localTasksCounter" value="74" />
+    <task id="LOCAL-00074" summary="将ScreenStart中的PLAY和Level按钮合并成PLAY按钮">
+      <option name="closed" value="true" />
+      <created>1779962252653</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1779962252654</updated>
+    </task>
+    <task id="LOCAL-00075" summary="将关卡选择界面的关卡按钮从左上角改到屏幕中间">
+      <option name="closed" value="true" />
+      <created>1779962523201</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1779962523201</updated>
+    </task>
+    <option name="localTasksCounter" value="76" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -555,8 +555,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="将ScreenBoard更名为BoardScreen" />
-    <MESSAGE value="将GameBoard更名为BoardGame" />
     <MESSAGE value="将GameOver更名为ScreenGameOver" />
     <MESSAGE value="更改窗口尺寸" />
     <MESSAGE value="更改装饰" />
@@ -580,6 +578,8 @@
     <MESSAGE value="添加Sans实体" />
     <MESSAGE value="添加music文件" />
     <MESSAGE value="添加Sans" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加Sans" />
+    <MESSAGE value="将ScreenStart中的PLAY和Level按钮合并成PLAY按钮" />
+    <MESSAGE value="将关卡选择界面的关卡按钮从左上角改到屏幕中间" />
+    <option name="LAST_COMMIT_MESSAGE" value="将关卡选择界面的关卡按钮从左上角改到屏幕中间" />
   </component>
 </project>

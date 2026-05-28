@@ -56,6 +56,11 @@ public class ScreenStart extends JPanel {
     private final int SETTING_SIZE = 60;
     private final int BTN_SPACING = 15;
 
+    // Level select grid constants
+    private static final int LEVEL_BTN_SIZE = 55;
+    private static final int LEVEL_BTN_SPACING = 10;
+    private static final int LEVEL_GRID_COLUMNS = 4;
+
     private int fallOffset = -300;
 
     private javax.swing.Timer animationTimer;
@@ -176,21 +181,18 @@ public class ScreenStart extends JPanel {
 
         int panelW = getWidth();
         int panelH = getHeight();
-        int btnSize = 55;
-        int btnSpacing = 10;
-        int columns = 4;
-        int gridStartX = panelW / 2 - (columns * btnSize + (columns - 1) * btnSpacing) / 2;
-        int gridStartY = panelH / 2 - btnSize / 2;
+        int gridStartX = panelW / 2 - (LEVEL_GRID_COLUMNS * LEVEL_BTN_SIZE + (LEVEL_GRID_COLUMNS - 1) * LEVEL_BTN_SPACING) / 2;
+        int gridStartY = panelH / 2 - LEVEL_BTN_SIZE / 2;
 
         int unlockedCount = Level.getInstance().getUnlockedLevelCount();
         boolean changed = false;
         for (int i = 0; i < Level.MAX_LEVEL; i++) {
-            int col = i % columns;
-            int row = i / columns;
-            int x = gridStartX + col * (btnSize + btnSpacing);
-            int y = gridStartY + row * (btnSize + btnSpacing);
+            int col = i % LEVEL_GRID_COLUMNS;
+            int row = i / LEVEL_GRID_COLUMNS;
+            int x = gridStartX + col * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
+            int y = gridStartY + row * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
 
-            Rectangle rect = new Rectangle(x, y, btnSize, btnSize);
+            Rectangle rect = new Rectangle(x, y, LEVEL_BTN_SIZE, LEVEL_BTN_SIZE);
             int newState = rect.contains(mx, my) ? 1 : 0;
             if (levelHoverStates[i] != newState) {
                 levelHoverStates[i] = newState;
@@ -215,20 +217,17 @@ public class ScreenStart extends JPanel {
             return;
         }
 
-        int btnSize = 55;
-        int btnSpacing = 10;
-        int columns = 4;
-        int gridStartX = panelW / 2 - (columns * btnSize + (columns - 1) * btnSpacing) / 2;
-        int gridStartY = panelH / 2 - btnSize / 2;
+        int gridStartX = panelW / 2 - (LEVEL_GRID_COLUMNS * LEVEL_BTN_SIZE + (LEVEL_GRID_COLUMNS - 1) * LEVEL_BTN_SPACING) / 2;
+        int gridStartY = panelH / 2 - LEVEL_BTN_SIZE / 2;
 
         int unlockedCount = Level.getInstance().getUnlockedLevelCount();
         for (int i = 0; i < Level.MAX_LEVEL; i++) {
-            int col = i % columns;
-            int row = i / columns;
-            int x = gridStartX + col * (btnSize + btnSpacing);
-            int y = gridStartY + row * (btnSize + btnSpacing);
+            int col = i % LEVEL_GRID_COLUMNS;
+            int row = i / LEVEL_GRID_COLUMNS;
+            int x = gridStartX + col * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
+            int y = gridStartY + row * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
 
-            Rectangle rect = new Rectangle(x, y, btnSize, btnSize);
+            Rectangle rect = new Rectangle(x, y, LEVEL_BTN_SIZE, LEVEL_BTN_SIZE);
             if (rect.contains(mx, my)) {
                 int level = i + 1;
                 if (Level.getInstance().isLevelUnlocked(level)) {
@@ -420,32 +419,29 @@ public class ScreenStart extends JPanel {
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString(title, (panelW - fm.stringWidth(title)) / 2, 55);
 
-        int btnSize = 55;
-        int btnSpacing = 10;
-        int columns = 4;
-        int gridStartX = panelW / 2 - (columns * btnSize + (columns - 1) * btnSpacing) / 2;
-        int gridStartY = panelH / 2 - btnSize / 2;
+        int gridStartX = panelW / 2 - (LEVEL_GRID_COLUMNS * LEVEL_BTN_SIZE + (LEVEL_GRID_COLUMNS - 1) * LEVEL_BTN_SPACING) / 2;
+        int gridStartY = panelH / 2 - LEVEL_BTN_SIZE / 2;
 
         Level levelManager = Level.getInstance();
         int currentLevel = levelManager.getCurrentLevel();
         int unlockedCount = levelManager.getUnlockedLevelCount();
 
         for (int i = 0; i < Level.MAX_LEVEL; i++) {
-            int col = i % columns;
-            int row = i / columns;
-            int x = gridStartX + col * (btnSize + btnSpacing);
-            int y = gridStartY + row * (btnSize + btnSpacing);
+            int col = i % LEVEL_GRID_COLUMNS;
+            int row = i / LEVEL_GRID_COLUMNS;
+            int x = gridStartX + col * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
+            int y = gridStartY + row * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
             int level = i + 1;
 
             boolean unlocked = level <= unlockedCount;
             boolean hover = levelHoverStates[i] == 1;
 
-            RoundRectangle2D btn = new RoundRectangle2D.Double(x, y, btnSize, btnSize, 12, 12);
+            RoundRectangle2D btn = new RoundRectangle2D.Double(x, y, LEVEL_BTN_SIZE, LEVEL_BTN_SIZE, 12, 12);
 
             if (unlocked) {
                 Color c1 = hover ? new Color(100, 190, 255) : new Color(70, 150, 255);
                 Color c2 = hover ? new Color(50, 140, 255) : new Color(30, 110, 255);
-                LinearGradientPaint btnGrad = new LinearGradientPaint(x, y, x, y + btnSize,
+                LinearGradientPaint btnGrad = new LinearGradientPaint(x, y, x, y + LEVEL_BTN_SIZE,
                         new float[]{0, 1}, new Color[]{c1, c2});
                 g2d.setPaint(btnGrad);
                 g2d.fill(btn);
@@ -470,8 +466,8 @@ public class ScreenStart extends JPanel {
 
             String levelText = String.valueOf(level);
             fm = g2d.getFontMetrics();
-            int textX = x + (btnSize - fm.stringWidth(levelText)) / 2;
-            int textY = y + (btnSize + fm.getAscent() - fm.getDescent()) / 2;
+            int textX = x + (LEVEL_BTN_SIZE - fm.stringWidth(levelText)) / 2;
+            int textY = y + (LEVEL_BTN_SIZE + fm.getAscent() - fm.getDescent()) / 2;
             g2d.drawString(levelText, textX, textY);
         }
 

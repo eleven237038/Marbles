@@ -20,7 +20,7 @@ public class Sans {
     private static final Object LOAD_LOCK = new Object();
 
     // 内部类：用于存储单个动作的切片数据
-    private class AnimData {
+    private static class AnimData {
         int sheetIndex;     // 所属精灵图的索引 (0 为 Sans-1.png, 1 为 Sans-2.png)
         int startX, startY; // 该动作在精灵图中的起始坐标
         int frameW, frameH; // 单帧的宽度和高度

@@ -41,6 +41,14 @@ public class ScreenGame {
     private static final Font SCORE_TEXT_FONT = new Font("Comic Sans MS", Font.BOLD, 13);
     private static final Font SCORE_NUM_FONT = new Font("Arial Black", Font.BOLD, 20);
 
+    // Cached rainbow border gradient colors
+    private static final float[] RAINBOW_STOPS = {0, 0.25f, 0.5f, 0.75f, 1f};
+    private static final Color[] RAINBOW_COLORS = {
+        new Color(255, 90, 90), new Color(255, 180, 80),
+        new Color(80, 240, 120), new Color(100, 180, 255),
+        new Color(240, 100, 220)
+    };
+
     public Point2D.Double cannon;
     private double headAngle = -Math.PI / 2;
     private int nextMarbleColor;
@@ -168,10 +176,7 @@ public class ScreenGame {
 
         // 彩虹渐变边框
         LinearGradientPaint border = new LinearGradientPaint(boardX, boardY, boardX + boardWidth, boardY + boardHeight,
-                new float[]{0, 0.25f, 0.5f, 0.75f, 1f},
-                new Color[]{new Color(255, 90, 90), new Color(255, 180, 80),
-                        new Color(80, 240, 120), new Color(100, 180, 255),
-                        new Color(240, 100, 220)});
+                RAINBOW_STOPS, RAINBOW_COLORS);
         g.setStroke(new BasicStroke(3.0f));
         g.setPaint(border);
         g.drawRoundRect(boardX, boardY, boardWidth, boardHeight, 22, 22);
