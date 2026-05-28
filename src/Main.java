@@ -175,9 +175,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     }
 
     private void initMarbleGrid() {
+        Level level = Level.getInstance();
         hexGrid = new Marbles();
         launchPad = new ScreenGame();
         hexGrid.setMaxRowCount(18);
+        hexGrid.setFallSpeedMultiplier(level.getFallSpeedMultiplier());
         hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);
         deadline = launchPad.getTopY();
@@ -185,7 +187,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         launchMarble = new MarbleLaunch();
         launchMarble.setScreenSize(mWidth, mHeight);
         launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
-        launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
+        launchPad.setNextMarbleColorType(random.nextInt(level.getColorTypeCount()) + 1);
     }
 
     @Override
@@ -277,7 +279,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             launchMarble.setColorType(nextColor);
             launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
 
-            launchPad.setNextMarbleColorType(random.nextInt(4) + 1);
+            int colorTypeCount = Level.getInstance().getColorTypeCount();
+            launchPad.setNextMarbleColorType(random.nextInt(colorTypeCount) + 1);
         }
     }
 

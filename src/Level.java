@@ -9,6 +9,15 @@ public class Level {
     private int currentLevel;
     private int[] levelHighScores;
 
+    // Level difficulty parameters
+    private static final int BASE_COLOR_TYPE_COUNT = 4;
+    private static final int COLOR_TYPE_INCREMENT = 1;
+    private static final int MAX_COLOR_TYPES = 6;
+
+    private static final double BASE_FALL_SPEED_MULT = 1.0;
+    private static final double FALL_SPEED_INCREMENT = 0.15;
+    private static final double MAX_FALL_SPEED_MULT = 2.5;
+
     private static Level instance;
 
     public static Level getInstance() {
@@ -47,6 +56,16 @@ public class Level {
 
     public int getWinScore() {
         return BASE_WIN_SCORE + (currentLevel - 1) * SCORE_INCREMENT;
+    }
+
+    public int getColorTypeCount() {
+        int count = BASE_COLOR_TYPE_COUNT + (currentLevel - 1) / 3;
+        return Math.min(count, MAX_COLOR_TYPES);
+    }
+
+    public double getFallSpeedMultiplier() {
+        double mult = BASE_FALL_SPEED_MULT + (currentLevel - 1) * FALL_SPEED_INCREMENT;
+        return Math.min(mult, MAX_FALL_SPEED_MULT);
     }
 
     public int getLevelHighScore() {

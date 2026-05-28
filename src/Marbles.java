@@ -17,6 +17,7 @@ public class Marbles {
     private int screenWidth;
     private int maxRowCount;
     private double side;
+    private double fallSpeedMultiplier = 1.0;
 
     private BiConsumer<Marble, Integer> scoreListener;
 
@@ -52,6 +53,10 @@ public class Marbles {
 
     public void setMaxRowCount(int maxRowCount) {
         this.maxRowCount = maxRowCount;
+    }
+
+    public void setFallSpeedMultiplier(double mult) {
+        this.fallSpeedMultiplier = mult;
     }
 
     public void setLastLaunchPosition(double x, double y) {
@@ -143,7 +148,7 @@ public class Marbles {
 
         updateScoreNumbers();
 
-        double yMove = side * 0.4 * dt;
+        double yMove = side * 0.4 * dt * fallSpeedMultiplier;
 
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
