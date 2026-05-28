@@ -43,7 +43,7 @@ public class Level {
 
     public int getUnlockedLevelCount() {
         int unlocked = 1;
-        for (int i = 1; i < currentLevel; i++) {
+        for (int i = 1; i <= currentLevel; i++) {
             if (levelHighScores[i - 1] > 0) {
                 unlocked = i + 1;
             }

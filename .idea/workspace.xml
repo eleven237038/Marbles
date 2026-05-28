@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="尝试Sans出场">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="将Sans更名为BossSans">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Marble.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Text Bubbles.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/bedrock.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/creeper.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Sans.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Sans.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/BossSans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BossSans.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Level.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Level.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -146,39 +145,7 @@
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
       <workItem from="1779851862495" duration="18044000" />
-      <workItem from="1779938602200" duration="17032000" />
-    </task>
-    <task id="LOCAL-00033" summary="调整游戏界面大小">
-      <option name="closed" value="true" />
-      <created>1779766023331</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1779766023331</updated>
-    </task>
-    <task id="LOCAL-00034" summary="添加掉落动画">
-      <option name="closed" value="true" />
-      <created>1779779201937</created>
-      <option name="number" value="00034" />
-      <option name="presentableId" value="LOCAL-00034" />
-      <option name="project" value="LOCAL" />
-      <updated>1779779201937</updated>
-    </task>
-    <task id="LOCAL-00035" summary="优化代码">
-      <option name="closed" value="true" />
-      <created>1779779707053</created>
-      <option name="number" value="00035" />
-      <option name="presentableId" value="LOCAL-00035" />
-      <option name="project" value="LOCAL" />
-      <updated>1779779707053</updated>
-    </task>
-    <task id="LOCAL-00036" summary="优化下落动画">
-      <option name="closed" value="true" />
-      <created>1779780433299</created>
-      <option name="number" value="00036" />
-      <option name="presentableId" value="LOCAL-00036" />
-      <option name="project" value="LOCAL" />
-      <updated>1779780433299</updated>
+      <workItem from="1779938602200" duration="20040000" />
     </task>
     <task id="LOCAL-00037" summary="将游戏界面作为独立文件提取,方便布局">
       <option name="closed" value="true" />
@@ -540,7 +507,39 @@
       <option name="project" value="LOCAL" />
       <updated>1779975062896</updated>
     </task>
-    <option name="localTasksCounter" value="82" />
+    <task id="LOCAL-00082" summary="完成Sans出场">
+      <option name="closed" value="true" />
+      <created>1779976351339</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1779976351339</updated>
+    </task>
+    <task id="LOCAL-00083" summary="完成Sans出场">
+      <option name="closed" value="true" />
+      <created>1779976357988</created>
+      <option name="number" value="00083" />
+      <option name="presentableId" value="LOCAL-00083" />
+      <option name="project" value="LOCAL" />
+      <updated>1779976357988</updated>
+    </task>
+    <task id="LOCAL-00084" summary=" 将ResourceUtil和SoundManager合并成一个新文件ResourceManager.Java文件">
+      <option name="closed" value="true" />
+      <created>1779976623594</created>
+      <option name="number" value="00084" />
+      <option name="presentableId" value="LOCAL-00084" />
+      <option name="project" value="LOCAL" />
+      <updated>1779976623594</updated>
+    </task>
+    <task id="LOCAL-00085" summary="将Sans更名为BossSans">
+      <option name="closed" value="true" />
+      <created>1779978192392</created>
+      <option name="number" value="00085" />
+      <option name="presentableId" value="LOCAL-00085" />
+      <option name="project" value="LOCAL" />
+      <updated>1779978192392</updated>
+    </task>
+    <option name="localTasksCounter" value="86" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -558,9 +557,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="合并LaunchPad至BoardGame" />
-    <MESSAGE value="添加警告动画" />
-    <MESSAGE value="精简代码" />
     <MESSAGE value="优化警告效果" />
     <MESSAGE value="优化窗口弹出" />
     <MESSAGE value="优化how to play窗口弹出" />
@@ -583,6 +579,9 @@
     <MESSAGE value="更新所有的路径,确保检索仅在本地仓库文件夹内进行而不是超过这个路径,保证其他人从远程仓库下载时可以正常读取加载" />
     <MESSAGE value="修正按钮显示" />
     <MESSAGE value="尝试Sans出场" />
-    <option name="LAST_COMMIT_MESSAGE" value="尝试Sans出场" />
+    <MESSAGE value="完成Sans出场" />
+    <MESSAGE value=" 将ResourceUtil和SoundManager合并成一个新文件ResourceManager.Java文件" />
+    <MESSAGE value="将Sans更名为BossSans" />
+    <option name="LAST_COMMIT_MESSAGE" value="将Sans更名为BossSans" />
   </component>
 </project>
