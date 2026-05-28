@@ -7,7 +7,7 @@ import java.util.function.BiConsumer;
 public class Marbles {
     private static final double SQRT3 = Math.sqrt(3);
     private static final int MIN_GROUP_SIZE = 3;
-    private static final double CREEPER_BLAST_RADIUS = 3.0; // creeper爆炸范围（六边形距离）
+    private static final double CREEPER_BLAST_RADIUS = 3.0;
 
     private int rowCount;
     private Marble[][] marbles;
@@ -46,9 +46,9 @@ public class Marbles {
     private boolean hasCreeper = false;
     private boolean hasBedrock = false;
     private boolean hasHeart = false;
-    private double creeperChance = 0.05;  // creeper生成概率
-    private double bedrockChance = 0.03; // bedrock生成概率
-    private double heartChance = 0.02;     // heart生成概率
+    private double creeperChance = 0.05;
+    private double bedrockChance = 0.03;
+    private double heartChance = 0.02;
 
     public Marbles() {
         this.marbles = null;
@@ -152,15 +152,16 @@ public class Marbles {
             this.marbles[row][col].init(baseX + col * xSpacing, baseY, row, col);
 
             // 根据概率生成特殊弹珠
-            double rand = random.nextDouble();
-            if (hasCreeper && rand < creeperChance) {
-                this.marbles[row][col].setColorType(Marble.CREEPER);
-            } else if (hasBedrock && rand < creeperChance + bedrockChance) {
-                this.marbles[row][col].setColorType(Marble.BEDROCK);
-            } else if (hasHeart && rand < creeperChance + bedrockChance + heartChance) {
-                this.marbles[row][col].setColorType(Marble.HEART);
+            if (hasCreeper || hasBedrock || hasHeart) {
+                double rand = random.nextDouble();
+                if (hasCreeper && rand < creeperChance) {
+                    this.marbles[row][col].setColorType(Marble.CREEPER);
+                } else if (hasBedrock && rand < creeperChance + bedrockChance) {
+                    this.marbles[row][col].setColorType(Marble.BEDROCK);
+                } else if (hasHeart && rand < creeperChance + bedrockChance + heartChance) {
+                    this.marbles[row][col].setColorType(Marble.HEART);
+                }
             }
-            // 否则保持默认的随机普通弹珠颜色
         }
         this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
     }
@@ -349,7 +350,7 @@ public class Marbles {
     private void checkCreeperExplosion(double x, double y) {
         if (marbles == null) return;
 
-        double blastRadiusSq = (side * 1.5 * CREEPER_BLAST_RADIUS) * (side * 1.5 * CREEPER_BLAST_RADIUS);
+        double blastRadiusSq = getBlastRadiusSq();
 
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
@@ -363,9 +364,8 @@ public class Marbles {
                     double distSq = dx * dx + dy * dy;
 
                     if (distSq <= blastRadiusSq) {
-                        // 触发creeper爆炸
                         creeperBlast(m.getCenterX(), m.getCenterY());
-                        return; // 只触发一次爆炸
+                        return;
                     }
                 }
             }
@@ -703,11 +703,17 @@ public class Marbles {
         return currentFallSpeed;
     }
 
+    // 获取creeper爆炸半径的平方
+    private double getBlastRadiusSq() {
+        double hexUnit = side * 1.5;
+        return hexUnit * CREEPER_BLAST_RADIUS * hexUnit * CREEPER_BLAST_RADIUS;
+    }
+
     // Creeper爆炸：消除中心点周围+3六边形范围内所有普通弹珠
     private void creeperBlast(double centerX, double centerY) {
         if (marbles == null) return;
 
-        double blastRadiusSq = (side * 1.5 * CREEPER_BLAST_RADIUS) * (side * 1.5 * CREEPER_BLAST_RADIUS);
+        double blastRadiusSq = getBlastRadiusSq();
 
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
@@ -715,10 +721,8 @@ public class Marbles {
                 Marble m = marbles[r][c];
                 if (m == null || !m.isInitialized() || m.isPopping() || m.isFalling()) continue;
 
-                // 免疫类型不被消除
                 if (m.isImmuneToCreeper()) continue;
 
-                // 计算距离
                 double dx = m.getCenterX() - centerX;
                 double dy = m.getCenterY() - centerY;
                 double distSq = dx * dx + dy * dy;

@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="统一字体">
-      <change afterPath="$PROJECT_DIR$/resources/image/heart.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/readme.txt" beforeDir="false" afterPath="$PROJECT_DIR$/readme.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/life.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Marbles/heart.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加弹珠类型">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -145,15 +143,7 @@
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
       <workItem from="1779851862495" duration="18044000" />
-      <workItem from="1779938602200" duration="23207000" />
-    </task>
-    <task id="LOCAL-00042" summary="将ScreenBoard更名为BoardScreen">
-      <option name="closed" value="true" />
-      <created>1779849965568</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1779849965568</updated>
+      <workItem from="1779938602200" duration="24283000" />
     </task>
     <task id="LOCAL-00043" summary="将GameBoard更名为BoardGame">
       <option name="closed" value="true" />
@@ -539,7 +529,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779983834746</updated>
     </task>
-    <option name="localTasksCounter" value="91" />
+    <task id="LOCAL-00091" summary="添加弹珠类型">
+      <option name="closed" value="true" />
+      <created>1779985251441</created>
+      <option name="number" value="00091" />
+      <option name="presentableId" value="LOCAL-00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1779985251441</updated>
+    </task>
+    <option name="localTasksCounter" value="92" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -557,7 +555,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="修复计分板bug" />
     <MESSAGE value="修改计分规则" />
     <MESSAGE value="添加碰撞效果" />
     <MESSAGE value="优化炮台代码" />
@@ -582,6 +579,7 @@
     <MESSAGE value="下降速度配置" />
     <MESSAGE value="修复bug" />
     <MESSAGE value="统一字体" />
-    <option name="LAST_COMMIT_MESSAGE" value="统一字体" />
+    <MESSAGE value="添加弹珠类型" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加弹珠类型" />
   </component>
 </project>
