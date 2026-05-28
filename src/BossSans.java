@@ -7,10 +7,10 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 /**
- * Sans - 角色渲染与精灵图(Sprite Sheet)动画控制类
+ * BossSans - 角色渲染与精灵图(Sprite Sheet)动画控制类
  * 支持读取单个聚合精灵图，并按名称调用对应动画
  */
-public class Sans {
+public class BossSans {
     // 统一指向新的精灵图路径
     private static final String SPRITE_PATH = ResourceManager.getImagePath("Sans.png");
     
@@ -51,7 +51,7 @@ public class Sans {
     private javax.swing.Timer animTimer;
     private boolean isAnimating = false;
 
-    public Sans() {
+    public BossSans() {
         loadSpriteSheets();
         initActions();
         

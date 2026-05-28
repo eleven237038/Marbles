@@ -45,8 +45,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private int highScore = 0;
     private CustomGlassPane glassPane;
     
-    // Sans 角色状态
-    private Sans sans;
+    // BossSans 角色状态
+    private BossSans sans;
     private boolean sansActive = false;
     private double sansX, sansY;
     private boolean sansAnimating = false;
@@ -155,9 +155,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
         
-        // 如果是第三关，则触发 Sans 彩蛋
+        // 如果是第三关，则触发 BossSans 彩蛋
         if (Level.getInstance().getCurrentLevel() == 3) {
-            startSansIntro();
+            startBossSansIntro();
         }
     }
 
@@ -168,9 +168,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         levelHighScore = level.getLevelHighScore();
         levelWon = false;
 
-        // 初始化 Sans 角色并重置状态
+        // 初始化 BossSans 角色并重置状态
         if (sans == null) {
-            sans = new Sans();
+            sans = new BossSans();
         }
         sansActive = false;
         sansAnimating = false;
@@ -419,25 +419,25 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
         mPanel.repaint();
 
-        // 第3关开始时，触发 Sans 彩蛋
+        // 第3关开始时，触发 BossSans 彩蛋
         if (Level.getInstance().getCurrentLevel() == 3) {
-            startSansIntro();
+            startBossSansIntro();
         }
     }
 
     /**
-     * Sans出场动画处理：
-     * 冻结游戏界面，让Sans从屏幕左侧外使用Right动作走入到左侧面板居中空白处，
+     * BossSans出场动画处理：
+     * 冻结游戏界面，让BossSans从屏幕左侧外使用Right动作走入到左侧面板居中空白处，
      * 然后自动保持Down状态第一个动作，随即解除游戏界面冻结状态。
      */
-    private void startSansIntro() {
+    private void startBossSansIntro() {
         // 冻结游戏，暂停游戏逻辑
         frozen = true;
         gamePaused = true;
         sansActive = true;
         sansAnimating = true;
 
-        // Sans 停止位置：窗口左边界和游戏区左边界的中心，减去一半站立图宽度
+        // BossSans 停止位置：窗口左边界和游戏区左边界的中心，减去一半站立图宽度
         int targetX = LEFT_ZONE_WIDTH / 2 - 47;
         int targetY = GAME_HEIGHT - 320;  // 计分板下方、暂停按钮上方的安全区域
         
@@ -514,9 +514,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
         
-        // 如果选择的是第三关，触发 Sans 彩蛋
+        // 如果选择的是第三关，触发 BossSans 彩蛋
         if (level == 3) {
-            startSansIntro();
+            startBossSansIntro();
         }
     }
 
@@ -843,7 +843,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 g2d.setStroke(new BasicStroke(2f));
                 g2d.draw(btnShape);
 
-                g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
+                g2d.setFont(new Font("Comic BossSans MS", Font.BOLD, 18));
                 String btnText = "PAUSE";
                 FontMetrics fm = g2d.getFontMetrics();
                 int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
@@ -851,7 +851,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 g2d.drawString(btnText, tx, ty);
                 
                 // ==========================================
-                // 绘制跨越面板的 Sans
+                // 绘制跨越面板的 BossSans
                 // ==========================================
                 if (sansActive && sans != null) {
                     if (sansAnimating) {
@@ -937,7 +937,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 130);
             }
 
-            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 26));
+            g2d.setFont(new Font("Comic BossSans MS", Font.BOLD, 26));
             g2d.setColor(Color.WHITE);
             String scoreText = "Score: " + currentScore;
             FontMetrics fm = g2d.getFontMetrics();
@@ -1007,7 +1007,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             FontMetrics fm = g2d.getFontMetrics();
             g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 100);
 
-            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
+            g2d.setFont(new Font("Comic BossSans MS", Font.BOLD, 20));
             g2d.setColor(Color.WHITE);
             int lineHeight = 36;
             int startY = cy - 20;
@@ -1034,7 +1034,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             g2d.fillRoundRect(rect.x, rect.y, rect.width, rect.height, 18, 18);
 
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
+            g2d.setFont(new Font("Comic BossSans MS", Font.BOLD, 18));
             FontMetrics fm = g2d.getFontMetrics();
             int textX = rect.x + (rect.width - fm.stringWidth(text)) / 2;
             int textY = rect.y + (rect.height + fm.getAscent() - fm.getDescent()) / 2;
