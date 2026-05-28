@@ -42,7 +42,7 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 			// Do Nothing
 		}
 	}
-	
+
 	//-------------------------------------------------------
 	// Functions to control the framerate
 	//-------------------------------------------------------
@@ -89,17 +89,17 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 					@Override
 					public boolean dispatchKeyEvent(KeyEvent e) {
 						switch (e.getID()) {
-						case KeyEvent.KEY_PRESSED:
-							GameEngine.this.keyPressed(e);
-							return false;
-						case KeyEvent.KEY_RELEASED:
-							GameEngine.this.keyReleased(e);
-							return false;
-						case KeyEvent.KEY_TYPED:
-							GameEngine.this.keyTyped(e);
-							return false;
-						default:
-							return false; // do not consume the event
+							case KeyEvent.KEY_PRESSED:
+								GameEngine.this.keyPressed(e);
+								return false;
+							case KeyEvent.KEY_RELEASED:
+								GameEngine.this.keyReleased(e);
+								return false;
+							case KeyEvent.KEY_TYPED:
+								GameEngine.this.keyTyped(e);
+								return false;
+							default:
+								return false; // do not consume the event
 						}
 					}
 				});
@@ -166,12 +166,12 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 	protected class GameTimer extends Timer {
 		private static final long serialVersionUID = 1L;
 		private int framerate;
-		
+
 		protected GameTimer(int framerate, ActionListener listener) {
 			super(1000/framerate, listener);
 			this.framerate = framerate;
 		}
-		
+
 		protected void setFramerate(int framerate) {
 			if (framerate < 1) framerate = 1;
 			this.framerate = framerate;
@@ -180,12 +180,12 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 			setInitialDelay(0);
 			setDelay(delay);
 		}
-		
+
 		protected int getFramerate() {
 			return framerate;
 		}
 	}
-	
+
 	// Main Loop of the game. Runs continuously
 	// and calls all the updates of the game and
 	// tells the game to display a new frame.
@@ -268,14 +268,14 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 
 	// Called whenever a key is released
 	public void keyReleased(KeyEvent event) {}
-	
+
 	// Called whenever a key is pressed and immediately released
 	public void keyTyped(KeyEvent event) {}
-	
+
 	//-------------------------------------------------------
 	// Mouse functions
 	//-------------------------------------------------------
-	
+
 	// Called whenever a mouse button is clicked
 	// (pressed and released in the same position)
 	public void mouseClicked(MouseEvent event) {}
@@ -324,7 +324,7 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 		// Clamp values
 		if(red < 0)   {red = 0;}
 		if(red > 255) {red = 255;}
-		
+
 		if(green < 0)   {green = 0;}
 		if(green > 255) {green = 255;}
 
@@ -352,7 +352,7 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 		// Clamp values
 		if(red < 0)   {red = 0;}
 		if(red > 255) {red = 255;}
-		
+
 		if(green < 0)   {green = 0;}
 		if(green > 255) {green = 255;}
 
@@ -843,7 +843,7 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 
 		// Generate a random number
 		double d = mRandom.nextDouble();
-		
+
 		// Convert to an integer in range [0, max) and return
 		return (int)(d*max);
 	}
@@ -858,7 +858,7 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 
 		// Generate a random number
 		float d = mRandom.nextFloat();
-		
+
 		// Convert to range [0, max) and return
 		return d*max;
 	}
@@ -873,7 +873,7 @@ public abstract class GameEngine implements KeyListener, MouseListener, MouseMot
 
 		// Generate a random number
 		double value = mRandom.nextDouble();
-		
+
 		// Convert to range [0, max) and return
 		return value*max;
 	}

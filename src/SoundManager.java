@@ -11,7 +11,7 @@ public class SoundManager {
     private boolean soundEnabled = true;
 
     // 音效文件路径常量
-    private static final String SOUND_DIR = "sound/";
+    private static final String SOUND_DIR = "resources/sound/";
     public static final String GAME_BEGIN = "GameBegin.wav";
     public static final String BACK_TO_MENU = "从菜单返回主页.wav";
     public static final String BACK_TO_GAME = "从菜单返回游戏.wav";

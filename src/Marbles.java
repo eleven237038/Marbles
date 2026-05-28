@@ -17,13 +17,20 @@ public class Marbles {
     private int screenWidth;
     private int maxRowCount;
     private double side;
+    private double fallSpeedMultiplier = 1.0;
 
     private BiConsumer<Marble, Integer> scoreListener;
 
-    private List<ScoreNumber> scoreNumbers = new ArrayList<>();
+    private List<ScreenGame.ScoreNumber> scoreNumbers = new ArrayList<>();
     private int lastRoundTotalScore = 0;
     private double lastLaunchX = 0;
     private double lastLaunchY = 0;
+
+    private double currentFallSpeed;      // 当前下落速度
+    private double baseFallSpeed;         // 基础下落速度
+    private double maxFallSpeed;           // 最大下落速度
+    private double speedIncreaseRate;    // 每秒增加的速度
+    private double gameTimeInLevel = 0;          // 当前关卡游戏时间
 
     // 弹珠颜色映射（与Marble类中的颜色保持一致）
     private static final Color[] MARBLE_BASE_COLORS = {
@@ -54,6 +61,10 @@ public class Marbles {
         this.maxRowCount = maxRowCount;
     }
 
+    public void setFallSpeedMultiplier(double mult) {
+        this.fallSpeedMultiplier = mult;
+    }
+
     public void setLastLaunchPosition(double x, double y) {
         this.lastLaunchX = x;
         this.lastLaunchY = y;
@@ -62,7 +73,7 @@ public class Marbles {
 
     public void addRoundTotalScore() {
         if (lastRoundTotalScore > 0) {
-            scoreNumbers.add(new ScoreNumber(lastLaunchX, lastLaunchY - 60, lastRoundTotalScore));
+            scoreNumbers.add(new ScreenGame.ScoreNumber(lastLaunchX, lastLaunchY - 60, lastRoundTotalScore));
             lastRoundTotalScore = 0;
         }
     }
@@ -72,7 +83,7 @@ public class Marbles {
     }
 
     private void drawScoreNumbers(Graphics2D g) {
-        for (ScoreNumber sn : scoreNumbers) {
+        for (ScreenGame.ScoreNumber sn : scoreNumbers) {
             sn.draw(g);
         }
     }
@@ -107,10 +118,11 @@ public class Marbles {
                 }
             }
         }
+
     }
 
     public void AddMarbleRow(int row, int screenWidth, int initialRowCount) {
-        double baseY = -2 * side;
+        double baseY = -side * 0.866;  // 弹珠底部刚好在屏幕顶部
         double xSpacing = side * SQRT3;
 
         if (marbles == null || row == maxRowCount) {
@@ -130,12 +142,13 @@ public class Marbles {
         for (int col = 0; col < perRow; col++) {
             this.marbles[row][col] = new Marble();
             this.marbles[row][col].init(baseX + col * xSpacing, baseY, row, col);
+            // 不设置保护时间
         }
         this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
     }
 
     public void initRow(int screenWidth, int screenHeight) {
-        StartMarbles(screenWidth, screenHeight, 4);
+        StartMarbles(screenWidth, screenHeight, 3);
     }
 
     public void update(double dt, double deadline) {
@@ -143,7 +156,7 @@ public class Marbles {
 
         updateScoreNumbers();
 
-        double yMove = side * 0.4 * dt;
+        double yMove = currentFallSpeed * dt * fallSpeedMultiplier;
 
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
@@ -151,7 +164,8 @@ public class Marbles {
                 Marble hex = marbles[r][c];
                 if (hex != null) {
                     if (!hex.isFalling()) {
-                        hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
+                        double newY = hex.getCenterY() + yMove;
+                        hex.setCenter(hex.getCenterX(), newY);
                     }
                     hex.update(dt);
                     hex.recalculateVerticesIfDirty();
@@ -190,7 +204,7 @@ public class Marbles {
     }
 
     private boolean isMarbleActive(Marble m) {
-        return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone();
+        return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone() ;
     }
 
     public Marble[] getRow(int row) {
@@ -351,7 +365,7 @@ public class Marbles {
                     lastRoundTotalScore += pointsPerMarble;
                     // 使用弹珠本身的颜色创建得分数字
                     Color marbleColor = getMarbleColor(m.getColorType());
-                    scoreNumbers.add(new ScoreNumber(m.getCenterX(), m.getCenterY() - 15, pointsPerMarble, marbleColor));
+                    scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, pointsPerMarble, marbleColor));
                 }
                 double dist = 0;
                 if (launchM != null) {
@@ -452,7 +466,7 @@ public class Marbles {
                         m.setScored(true);
                         // 掉落弹珠使用其本身的颜色
                         Color marbleColor = getMarbleColor(m.getColorType());
-                        scoreNumbers.add(new ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
+                        scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
                         lastRoundTotalScore += 20;
                         SoundManager.getInstance().playDropAndScore();
                     }
@@ -463,7 +477,8 @@ public class Marbles {
     }
 
     private void dfsFloating(int r, int c, boolean[][] visited) {
-        if (r < 0 || r >= marbles.length || marbles[r] == null || c < 0 || c >= marbles[r].length) return;
+        if (r < 0 || r >= marbles.length) return;
+        if (marbles[r] == null || c < 0 || c >= marbles[r].length) return;
         if (visited[r][c]) return;
 
         Marble current = marbles[r][c];
@@ -471,28 +486,23 @@ public class Marbles {
 
         visited[r][c] = true;
 
-        double thresholdSq = (side * SQRT3 * 1.2) * (side * SQRT3 * 1.2);
+        double thresholdSq = (side * SQRT3 * 1.2) * (side * SQRT3 * 1.2);  // 相邻距离阈值
 
-        for (int dr = -2; dr <= 2; dr++) {
-            int nr = r + dr;
-            if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
-                for (int dc = -2; dc <= 2; dc++) {
-                    int nc = c + dc;
-                    if (nc >= 0 && nc < marbles[nr].length) {
-                        Marble neighbor = marbles[nr][nc];
-                        if (isMarbleActive(neighbor)) {
-                            double dx = current.getCenterX() - neighbor.getCenterX();
-                            double dy = current.getCenterY() - neighbor.getCenterY();
-                            if (dx * dx + dy * dy <= thresholdSq) {
-                                dfsFloating(nr, nc, visited);
-                            }
-                        }
+        for (int nr = 0; nr < marbles.length; nr++) {
+            if (marbles[nr] == null) continue;
+            for (int nc = 0; nc < marbles[nr].length; nc++) {
+                if (nr == r && nc == c) continue;
+                Marble neighbor = marbles[nr][nc];
+                if (isMarbleActive(neighbor)) {
+                    double dx = current.getCenterX() - neighbor.getCenterX();
+                    double dy = current.getCenterY() - neighbor.getCenterY();
+                    if (dx * dx + dy * dy <= thresholdSq) {
+                        dfsFloating(nr, nc, visited);
                     }
                 }
             }
         }
     }
-
     private void dfs(int r, int c, int targetColor, boolean[][] visited, List<Marble> res) {
         if (r < 0 || r >= marbles.length) return;
         if (marbles[r] == null || c < 0 || c >= marbles[r].length) return;
@@ -505,22 +515,19 @@ public class Marbles {
         visited[r][c] = true;
         res.add(current);
 
-        double thresholdSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);
+        double thresholdSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);  // 相邻距离阈值
 
-        for (int dr = -1; dr <= 1; dr++) {
-            int nr = r + dr;
-            if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
-                for (int dc = -2; dc <= 2; dc++) {
-                    int nc = c + dc;
-                    if (nc >= 0 && nc < marbles[nr].length) {
-                        Marble neighbor = marbles[nr][nc];
-                        if (isMarbleActive(neighbor) && neighbor.getColorType() == targetColor) {
-                            double dx = current.getCenterX() - neighbor.getCenterX();
-                            double dy = current.getCenterY() - neighbor.getCenterY();
-                            if (dx * dx + dy * dy <= thresholdSq) {
-                                dfs(nr, nc, targetColor, visited, res);
-                            }
-                        }
+        // 遍历所有弹珠，使用实际距离判断相邻
+        for (int nr = 0; nr < marbles.length; nr++) {
+            if (marbles[nr] == null) continue;
+            for (int nc = 0; nc < marbles[nr].length; nc++) {
+                if (nr == r && nc == c) continue;
+                Marble neighbor = marbles[nr][nc];
+                if (isMarbleActive(neighbor) && neighbor.getColorType() == targetColor) {
+                    double dx = current.getCenterX() - neighbor.getCenterX();
+                    double dy = current.getCenterY() - neighbor.getCenterY();
+                    if (dx * dx + dy * dy <= thresholdSq) {
+                        dfs(nr, nc, targetColor, visited, res);
                     }
                 }
             }
@@ -576,5 +583,27 @@ public class Marbles {
         ySpacing = 0;
         scoreNumbers.clear();
         lastRoundTotalScore = 0;
+
+    }
+    public void resetLevelSpeed() {
+        this.currentFallSpeed = this.baseFallSpeed;
+        this.gameTimeInLevel = 0;
+    }
+
+    public void setLevelSpeedParams(double baseSpeed, double maxSpeed, double increaseRate) {
+        this.baseFallSpeed = baseSpeed;
+        this.maxFallSpeed = maxSpeed;
+        this.speedIncreaseRate = increaseRate;
+        this.currentFallSpeed = baseSpeed;
+    }
+
+    public void updateGameTime(double dt) {
+        this.gameTimeInLevel += dt;
+        double newSpeed = this.baseFallSpeed + this.gameTimeInLevel * this.speedIncreaseRate;
+        this.currentFallSpeed = Math.min(newSpeed, this.maxFallSpeed);
+    }
+
+    public double getCurrentFallSpeed() {
+        return currentFallSpeed;
     }
 }

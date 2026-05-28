@@ -45,7 +45,9 @@ Marbles中centerX = centerX + (centerX % (side * Math.sqrt(3)) == 0 ? -side * Ma
 
 
 
-
-
+main.java
+164
+// 参数：初始速度，最大速度，每秒增加速度,速度：像素/秒
+            hexGrid.setLevelSpeedParams(3.0, 15.0, 0.1);
 
 

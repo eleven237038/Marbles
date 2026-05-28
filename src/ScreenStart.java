@@ -15,6 +15,7 @@ public class ScreenStart extends JPanel {
     public interface ScreenStartListener {
         void onStartGame();
         void onOpenSettings();
+        void onSelectLevel(int level);
     }
 
     private final ScreenStartListener listener;
@@ -25,7 +26,6 @@ public class ScreenStart extends JPanel {
     private boolean settingPressed = false;
     public static boolean isSoundOnStatic = true;
 
-    private static final LinearGradientPaint BG_GRADIENT;
     private static final Font TITLE_FONT;
     private static final Color TITLE_SHADOW_COLOR_1 = new Color(0, 0, 0, 50);
     private static final Color TITLE_SHADOW_COLOR_2 = new Color(0, 0, 0, 30);
@@ -41,13 +41,11 @@ public class ScreenStart extends JPanel {
     };
 
     static {
-        BG_GRADIENT = new LinearGradientPaint(
-                0, 0, 0, 1,
-                new float[]{0, 1},
-                new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
-        );
         TITLE_FONT = new Font("Arial Black", Font.BOLD, 75);
     }
+
+    private final Rectangle startBtnBounds = new Rectangle();
+    private final Rectangle settingBtnBounds = new Rectangle();
 
     private static final Map<String, BufferedImage> ICON_CACHE = new HashMap<>();
 
@@ -56,19 +54,19 @@ public class ScreenStart extends JPanel {
     private int startX, startY;
     private int settingX, settingY;
     private final int SETTING_SIZE = 60;
+    private final int BTN_SPACING = 15;
 
-    private BufferedImage[] playSprites;
-    private int playSpriteIndex = 0;
-    private static final int PLAY_SPRITE_COUNT = 4;
-    private static final int PLAY_ANIM_DELAY = 10;
-    private boolean playAnimating = false;
-    private boolean playAnimStarted = false;
-    private javax.swing.Timer playSpriteTimer;
+    // Level select grid constants
+    private static final int LEVEL_BTN_SIZE = 55;
+    private static final int LEVEL_BTN_SPACING = 10;
+    private static final int LEVEL_GRID_COLUMNS = 4;
 
     private int fallOffset = -300;
 
     private javax.swing.Timer animationTimer;
     private BufferedImage settingsIcon;
+    private boolean showLevelSelectOverlay = false;
+    private int[] levelHoverStates = new int[Level.MAX_LEVEL];
 
     public ScreenStart(ScreenStartListener listener) {
         this.listener = listener;
@@ -78,33 +76,10 @@ public class ScreenStart extends JPanel {
         SoundManager.getInstance().setSoundEnabled(isSoundOnStatic);
 
         try {
-            settingsIcon = ImageIO.read(new File("resources/settings.png"));
-        } catch (IOException e) {
+            settingsIcon = loadIcon("settings.png");
+        } catch (Exception e) {
             settingsIcon = null;
         }
-
-        playSprites = new BufferedImage[PLAY_SPRITE_COUNT];
-        for (int i = 0; i < PLAY_SPRITE_COUNT; i++) {
-            try {
-                File f = new File("resources/image/PLAY/PLAY-" + (i + 1) + ".png");
-                if (f.exists()) {
-                    playSprites[i] = ImageIO.read(f);
-                }
-            } catch (IOException e) {
-                playSprites[i] = null;
-            }
-        }
-
-        playSpriteTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
-            if (playAnimating && playSpriteIndex < PLAY_SPRITE_COUNT - 1) {
-                playSpriteIndex++;
-                repaint();
-            } else if (playSpriteIndex >= PLAY_SPRITE_COUNT - 1) {
-                playAnimating = false;
-                playSpriteTimer.stop();
-                repaint();
-            }
-        });
 
         initDecorMarbles();
 
@@ -120,31 +95,24 @@ public class ScreenStart extends JPanel {
 
         startAnimation();
 
-        javax.swing.Timer startDelayTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
-            playAnimStarted = true;
-            playAnimating = true;
-            playSpriteTimer.start();
-            repaint();
-            ((javax.swing.Timer)e.getSource()).stop();
-        });
-        startDelayTimer.setRepeats(false);
-        startDelayTimer.start();
-
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 int mx = e.getPoint().x;
                 int my = e.getPoint().y;
-                startPressed = getPlayButtonBounds().contains(mx, my);
-                settingPressed = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
-                repaint();
-
-                if (startPressed) {
-                    listener.onStartGame();
-                } else if (settingPressed) {
-                    openSettings();
+                if (showLevelSelectOverlay) {
+                    handleLevelSelectOverlayClick(mx, my);
                 } else {
-                    restartPlayAnimation();
+                    startPressed = startBtnBounds.contains(mx, my);
+                    settingPressed = settingBtnBounds.contains(mx, my);
+                    repaint();
+
+                    if (startPressed) {
+                        showLevelSelectOverlay = true;
+                        repaint();
+                    } else if (settingPressed) {
+                        openSettings();
+                    }
                 }
             }
 
@@ -174,6 +142,9 @@ public class ScreenStart extends JPanel {
             public void mouseExited(MouseEvent e) {
                 startHover = false;
                 settingHover = false;
+                for (int i = 0; i < levelHoverStates.length; i++) {
+                    levelHoverStates[i] = 0;
+                }
                 setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 repaint();
             }
@@ -183,32 +154,16 @@ public class ScreenStart extends JPanel {
         addMouseMotionListener(mouseAdapter);
     }
 
-    private void restartPlayAnimation() {
-        playSpriteIndex = 0;
-        playAnimating = true;
-        if (!playSpriteTimer.isRunning()) {
-            playSpriteTimer.start();
-        }
-        repaint();
-    }
-
-    private Rectangle getPlayButtonBounds() {
-        if (playSprites != null && playSprites[playSpriteIndex] != null) {
-            int imgW = playSprites[playSpriteIndex].getWidth();
-            int imgH = playSprites[playSpriteIndex].getHeight();
-            int centerX = startX + BTN_WIDTH / 2;
-            int centerY = startY + BTN_HEIGHT / 2;
-            return new Rectangle(centerX - imgW / 2, centerY - imgH / 2, imgW, imgH);
-        }
-        return new Rectangle(startX, startY, BTN_WIDTH, BTN_HEIGHT);
-    }
-
     private void updateHoverState(int mx, int my) {
         boolean oldStartHover = startHover;
         boolean oldSettingHover = settingHover;
 
-        startHover = getPlayButtonBounds().contains(mx, my) && playAnimStarted;
-        settingHover = new Rectangle(settingX, settingY, SETTING_SIZE, SETTING_SIZE).contains(mx, my);
+        startHover = startBtnBounds.contains(mx, my);
+        settingHover = settingBtnBounds.contains(mx, my);
+
+        if (showLevelSelectOverlay) {
+            updateLevelSelectOverlayHover(mx, my);
+        }
 
         if (startHover || settingHover) {
             setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -218,6 +173,69 @@ public class ScreenStart extends JPanel {
 
         if (oldStartHover != startHover || oldSettingHover != settingHover) {
             repaint();
+        }
+    }
+
+    private void updateLevelSelectOverlayHover(int mx, int my) {
+        if (!showLevelSelectOverlay) return;
+
+        int panelW = getWidth();
+        int panelH = getHeight();
+        int gridStartX = panelW / 2 - (LEVEL_GRID_COLUMNS * LEVEL_BTN_SIZE + (LEVEL_GRID_COLUMNS - 1) * LEVEL_BTN_SPACING) / 2;
+        int gridStartY = panelH / 2 - LEVEL_BTN_SIZE / 2;
+
+        int unlockedCount = Level.getInstance().getUnlockedLevelCount();
+        boolean changed = false;
+        for (int i = 0; i < Level.MAX_LEVEL; i++) {
+            int col = i % LEVEL_GRID_COLUMNS;
+            int row = i / LEVEL_GRID_COLUMNS;
+            int x = gridStartX + col * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
+            int y = gridStartY + row * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
+
+            Rectangle rect = new Rectangle(x, y, LEVEL_BTN_SIZE, LEVEL_BTN_SIZE);
+            int newState = rect.contains(mx, my) ? 1 : 0;
+            if (levelHoverStates[i] != newState) {
+                levelHoverStates[i] = newState;
+                changed = true;
+            }
+        }
+        if (changed) repaint();
+    }
+
+    private void handleLevelSelectOverlayClick(int mx, int my) {
+        int panelW = getWidth();
+        int panelH = getHeight();
+        int closeBtnW = 120;
+        int closeBtnH = 45;
+        int closeBtnX = (panelW - closeBtnW) / 2;
+        int closeBtnY = panelH - closeBtnH - 20;
+
+        Rectangle closeBtn = new Rectangle(closeBtnX, closeBtnY, closeBtnW, closeBtnH);
+        if (closeBtn.contains(mx, my)) {
+            showLevelSelectOverlay = false;
+            repaint();
+            return;
+        }
+
+        int gridStartX = panelW / 2 - (LEVEL_GRID_COLUMNS * LEVEL_BTN_SIZE + (LEVEL_GRID_COLUMNS - 1) * LEVEL_BTN_SPACING) / 2;
+        int gridStartY = panelH / 2 - LEVEL_BTN_SIZE / 2;
+
+        int unlockedCount = Level.getInstance().getUnlockedLevelCount();
+        for (int i = 0; i < Level.MAX_LEVEL; i++) {
+            int col = i % LEVEL_GRID_COLUMNS;
+            int row = i / LEVEL_GRID_COLUMNS;
+            int x = gridStartX + col * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
+            int y = gridStartY + row * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
+
+            Rectangle rect = new Rectangle(x, y, LEVEL_BTN_SIZE, LEVEL_BTN_SIZE);
+            if (rect.contains(mx, my)) {
+                int level = i + 1;
+                if (Level.getInstance().isLevelUnlocked(level)) {
+                    showLevelSelectOverlay = false;
+                    listener.onSelectLevel(level);
+                }
+                return;
+            }
         }
     }
 
@@ -241,31 +259,12 @@ public class ScreenStart extends JPanel {
         if (!animationTimer.isRunning()) {
             animationTimer.start();
         }
-        if (playSpriteTimer.isRunning()) {
-            playSpriteTimer.stop();
-        }
-        playAnimStarted = false;
-        playAnimating = false;
-        playSpriteIndex = 0;
         repaint();
-
-        javax.swing.Timer restartDelayTimer = new javax.swing.Timer(PLAY_ANIM_DELAY, e -> {
-            playAnimStarted = true;
-            playAnimating = true;
-            playSpriteTimer.start();
-            repaint();
-            ((javax.swing.Timer)e.getSource()).stop();
-        });
-        restartDelayTimer.setRepeats(false);
-        restartDelayTimer.start();
     }
 
     public void stopAnimation() {
         if (animationTimer != null) {
             animationTimer.stop();
-        }
-        if (playSpriteTimer != null) {
-            playSpriteTimer.stop();
         }
     }
 
@@ -273,6 +272,16 @@ public class ScreenStart extends JPanel {
         // 只打开设置面板，不切换音效
         listener.onOpenSettings();
         settingPressed = false;
+        repaint();
+    }
+
+    public void showLevelSelectOverlay() {
+        showLevelSelectOverlay = true;
+        repaint();
+    }
+
+    public void hideLevelSelectOverlay() {
+        showLevelSelectOverlay = false;
         repaint();
     }
 
@@ -291,11 +300,18 @@ public class ScreenStart extends JPanel {
         settingX = 30;
         settingY = h - SETTING_SIZE - 30;
 
+        startBtnBounds.setBounds(startX, startY, BTN_WIDTH, BTN_HEIGHT);
+        settingBtnBounds.setBounds(settingX, settingY, SETTING_SIZE, SETTING_SIZE);
+
         drawBackground(g2d, w, h);
         drawLuxuryTitle(g2d, w, h, fallOffset);
         drawCompactMarbles(g2d, w, h, fallOffset);
         drawStartButton(g2d);
         drawStandardGearButton(g2d, h);
+
+        if (showLevelSelectOverlay) {
+            drawLevelSelectOverlay(g2d, w, h);
+        }
     }
 
     private void enableHighQualityRender(Graphics2D g2d) {
@@ -367,43 +383,116 @@ public class ScreenStart extends JPanel {
     }
 
     private void drawStartButton(Graphics2D g2d) {
-        if (!playAnimStarted) {
-            return;
+        RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
+
+        Color c1 = startPressed ? new Color(50, 140, 255) :
+                startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
+        Color c2 = startPressed ? new Color(30, 110, 255) :
+                startHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
+
+        LinearGradientPaint btnGrad = new LinearGradientPaint(startX, startY, startX, startY + BTN_HEIGHT,
+                new float[]{0, 1}, new Color[]{c1, c2});
+        g2d.setPaint(btnGrad);
+        g2d.fill(btn);
+
+        g2d.setStroke(new BasicStroke(2.5f));
+        g2d.setColor(Color.WHITE);
+        g2d.draw(btn);
+
+        int x = startX + BTN_WIDTH / 2;
+        int y = startY + BTN_HEIGHT / 2;
+        int[] xP = {x - 18, x + 18, x - 18};
+        int[] yP = {y - 18, y, y + 18};
+        g2d.fillPolygon(xP, yP, 3);
+    }
+
+    private void drawLevelSelectOverlay(Graphics2D g2d, int w, int h) {
+        g2d.setColor(new Color(0, 0, 0, 200));
+        g2d.fillRect(0, 0, w, h);
+
+        int panelW = w;
+        int panelH = h;
+
+        g2d.setFont(new Font("Arial Black", Font.BOLD, 36));
+        g2d.setColor(new Color(255, 215, 0));
+        String title = "SELECT LEVEL";
+        FontMetrics fm = g2d.getFontMetrics();
+        g2d.drawString(title, (panelW - fm.stringWidth(title)) / 2, 55);
+
+        int gridStartX = panelW / 2 - (LEVEL_GRID_COLUMNS * LEVEL_BTN_SIZE + (LEVEL_GRID_COLUMNS - 1) * LEVEL_BTN_SPACING) / 2;
+        int gridStartY = panelH / 2 - LEVEL_BTN_SIZE / 2;
+
+        Level levelManager = Level.getInstance();
+        int currentLevel = levelManager.getCurrentLevel();
+        int unlockedCount = levelManager.getUnlockedLevelCount();
+
+        for (int i = 0; i < Level.MAX_LEVEL; i++) {
+            int col = i % LEVEL_GRID_COLUMNS;
+            int row = i / LEVEL_GRID_COLUMNS;
+            int x = gridStartX + col * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
+            int y = gridStartY + row * (LEVEL_BTN_SIZE + LEVEL_BTN_SPACING);
+            int level = i + 1;
+
+            boolean unlocked = level <= unlockedCount;
+            boolean hover = levelHoverStates[i] == 1;
+
+            RoundRectangle2D btn = new RoundRectangle2D.Double(x, y, LEVEL_BTN_SIZE, LEVEL_BTN_SIZE, 12, 12);
+
+            if (unlocked) {
+                Color c1 = hover ? new Color(100, 190, 255) : new Color(70, 150, 255);
+                Color c2 = hover ? new Color(50, 140, 255) : new Color(30, 110, 255);
+                LinearGradientPaint btnGrad = new LinearGradientPaint(x, y, x, y + LEVEL_BTN_SIZE,
+                        new float[]{0, 1}, new Color[]{c1, c2});
+                g2d.setPaint(btnGrad);
+                g2d.fill(btn);
+
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.setColor(Color.WHITE);
+                g2d.draw(btn);
+
+                g2d.setFont(new Font("Arial Black", Font.BOLD, 18));
+                g2d.setColor(Color.WHITE);
+            } else {
+                g2d.setColor(new Color(80, 80, 80, 200));
+                g2d.fill(btn);
+
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.setColor(new Color(100, 100, 100, 150));
+                g2d.draw(btn);
+
+                g2d.setFont(new Font("Arial Black", Font.BOLD, 18));
+                g2d.setColor(new Color(120, 120, 120));
+            }
+
+            String levelText = String.valueOf(level);
+            fm = g2d.getFontMetrics();
+            int textX = x + (LEVEL_BTN_SIZE - fm.stringWidth(levelText)) / 2;
+            int textY = y + (LEVEL_BTN_SIZE + fm.getAscent() - fm.getDescent()) / 2;
+            g2d.drawString(levelText, textX, textY);
         }
 
-        BufferedImage sprite = playSprites[playSpriteIndex];
-        if (sprite != null) {
-            int imgW = sprite.getWidth();
-            int imgH = sprite.getHeight();
-            int centerX = startX + BTN_WIDTH / 2;
-            int centerY = startY + BTN_HEIGHT / 2;
-            int drawX = centerX - imgW / 2;
-            int drawY = centerY - imgH / 2;
+        int closeBtnW = 120;
+        int closeBtnH = 45;
+        int closeBtnX = (panelW - closeBtnW) / 2;
+        int closeBtnY = panelH - closeBtnH - 20;
 
-            g2d.drawImage(sprite, drawX, drawY, null);
-        } else {
-            RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
+        RoundRectangle2D closeBtn = new RoundRectangle2D.Double(closeBtnX, closeBtnY, closeBtnW, closeBtnH, 18, 18);
+        LinearGradientPaint closeGrad = new LinearGradientPaint(closeBtnX, closeBtnY, closeBtnX, closeBtnY + closeBtnH,
+                new float[]{0, 1}, new Color[]{new Color(220, 70, 70), new Color(180, 50, 50)});
+        g2d.setPaint(closeGrad);
+        g2d.fill(closeBtn);
 
-            Color c1 = startPressed ? new Color(50, 140, 255) :
-                    startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
-            Color c2 = startPressed ? new Color(30, 110, 255) :
-                    startHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
+        g2d.setStroke(new BasicStroke(2f));
+        g2d.setColor(Color.WHITE);
+        g2d.draw(closeBtn);
 
-            LinearGradientPaint btnGrad = new LinearGradientPaint(startX, startY, startX, startY + BTN_HEIGHT,
-                    new float[]{0, 1}, new Color[]{c1, c2});
-            g2d.setPaint(btnGrad);
-            g2d.fill(btn);
-
-            g2d.setStroke(new BasicStroke(2.5f));
-            g2d.setColor(Color.WHITE);
-            g2d.draw(btn);
-
-            int x = startX + BTN_WIDTH / 2;
-            int y = startY + BTN_HEIGHT / 2;
-            int[] xP = {x - 18, x + 18, x - 18};
-            int[] yP = {y - 18, y, y + 18};
-            g2d.fillPolygon(xP, yP, 3);
-        }
+        g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
+        g2d.setColor(Color.WHITE);
+        String closeText = "Close";
+        fm = g2d.getFontMetrics();
+        int closeTextX = closeBtnX + (closeBtnW - fm.stringWidth(closeText)) / 2;
+        int closeTextY = closeBtnY + (closeBtnH + fm.getAscent() - fm.getDescent()) / 2;
+        g2d.drawString(closeText, closeTextX, closeTextY);
     }
 
     private void drawStandardGearButton(Graphics2D g2d, int h) {

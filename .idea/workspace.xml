@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="Merge branch 'UI' of github.com:eleven237038/Marbles into UI&#10;&#10;# Conflicts:&#10;#&#9;.idea/misc.xml&#10;#&#9;.idea/workspace.xml&#10;#&#9;readme.txt&#10;#&#9;src/GameEngine.java&#10;#&#9;src/Main.java&#10;#&#9;src/Marble.java&#10;#&#9;src/Marbles.java">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="Merge branch 'demo' of github.com:eleven237038/Marbles into UI&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;src/Marbles.java&#10;#&#9;src/ScreenGame.java&#10;#&#9;src/SoundManager.java" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -65,7 +63,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "正在合并 UI",
+    "git-widget-placeholder": "UI",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "D:/Marbles-demo",
     "node.js.detected.package.eslint": "true",

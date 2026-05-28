@@ -14,11 +14,11 @@ public class ScreenGame {
     private static final double BASE_RATIO_H = 0.45;
 
     private static final Color[] MARBLE_COLORS = {
-        null,
-        new Color(220, 30, 30),
-        new Color(20, 80, 220),
-        new Color(240, 200, 20),
-        new Color(160, 30, 200)
+            null,
+            new Color(220, 30, 30),
+            new Color(20, 80, 220),
+            new Color(240, 200, 20),
+            new Color(160, 30, 200)
     };
 
     private static final Color BASE_COLOR_TOP = new Color(255, 180, 80);
@@ -37,6 +37,18 @@ public class ScreenGame {
     private static final double ANGLE_CLAMP_EPSILON = -0.001;
     private static final double SQRT3 = Math.sqrt(3);
 
+    // Cached fonts for drawScoreBoard (avoid per-frame allocation)
+    private static final Font SCORE_TEXT_FONT = new Font("Comic Sans MS", Font.BOLD, 13);
+    private static final Font SCORE_NUM_FONT = new Font("Arial Black", Font.BOLD, 20);
+
+    // Cached rainbow border gradient colors
+    private static final float[] RAINBOW_STOPS = {0, 0.25f, 0.5f, 0.75f, 1f};
+    private static final Color[] RAINBOW_COLORS = {
+            new Color(255, 90, 90), new Color(255, 180, 80),
+            new Color(80, 240, 120), new Color(100, 180, 255),
+            new Color(240, 100, 220)
+    };
+
     public Point2D.Double cannon;
     private double headAngle = -Math.PI / 2;
     private int nextMarbleColor;
@@ -51,6 +63,8 @@ public class ScreenGame {
     // 计分板数据
     private int currentScore = 0;
     private int highScore = 0;
+    private int levelHighScore = 0;
+    private int levelWinScore = 0;
 
     public ScreenGame() {
         this.cannon = new Point2D.Double();
@@ -123,8 +137,16 @@ public class ScreenGame {
         highScore = high;
     }
 
+    public void updateLevelScores(int current, int levelHigh, int levelWin) {
+        currentScore = current;
+        levelHighScore = levelHigh;
+        levelWinScore = levelWin;
+    }
+
     public int getCurrentScore() { return currentScore; }
     public int getHighScore() { return highScore; }
+    public int getLevelHighScore() { return levelHighScore; }
+    public int getLevelWinScore() { return levelWinScore; }
 
     public void drawLaunchPad(Graphics2D g, int w, int h) {
         setCannonPosition(w, h);
@@ -139,8 +161,8 @@ public class ScreenGame {
     }
 
     public void drawScoreBoard(Graphics2D g, int leftZoneWidth, int totalHeight) {
-        int boardX = 25, boardY = 30;
-        int boardWidth = 200, boardHeight = 160;
+        int boardX = 25, boardY = 20;
+        int boardWidth = 200, boardHeight = 190;
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -154,10 +176,7 @@ public class ScreenGame {
 
         // 彩虹渐变边框
         LinearGradientPaint border = new LinearGradientPaint(boardX, boardY, boardX + boardWidth, boardY + boardHeight,
-                new float[]{0, 0.25f, 0.5f, 0.75f, 1f},
-                new Color[]{new Color(255, 90, 90), new Color(255, 180, 80),
-                        new Color(80, 240, 120), new Color(100, 180, 255),
-                        new Color(240, 100, 220)});
+                RAINBOW_STOPS, RAINBOW_COLORS);
         g.setStroke(new BasicStroke(3.0f));
         g.setPaint(border);
         g.drawRoundRect(boardX, boardY, boardWidth, boardHeight, 22, 22);
@@ -166,57 +185,76 @@ public class ScreenGame {
         g.setColor(new Color(255, 255, 255, 150));
         g.drawRoundRect(boardX + 2, boardY + 2, boardWidth - 4, boardHeight - 4, 18, 18);
 
-        Font textFont = new Font("Comic Sans MS", Font.BOLD, 15);
-        Font numFont = new Font("Arial Black", Font.BOLD, 26);
-        FontMetrics fmText = g.getFontMetrics(textFont);
-        FontMetrics fmNum = g.getFontMetrics(numFont);
+        FontMetrics fmText = g.getFontMetrics(SCORE_TEXT_FONT);
+        FontMetrics fmNum = g.getFontMetrics(SCORE_NUM_FONT);
 
-        // ============ 上方区域: 最高分 BEST ============
-        String bText = "BEST";
-        int bTextX = boardX + (boardWidth - fmText.stringWidth(bText)) / 2;
-        g.setFont(textFont);
+        // ============ Level 标题 ============
+        String levelText = "LEVEL " + Level.getInstance().getCurrentLevel();
+        int levelTextX = boardX + (boardWidth - fmText.stringWidth(levelText)) / 2;
+        g.setFont(SCORE_TEXT_FONT);
         g.setColor(new Color(60, 40, 100, 90));
-        g.drawString(bText, bTextX + 1, boardY + 28);
-        
-        LinearGradientPaint textGrad = new LinearGradientPaint(boardX, boardY + 10, boardX + boardWidth, boardY + 35,
-                new float[]{0, 1}, new Color[]{new Color(180, 120, 255), new Color(80, 50, 130)});
-        g.setPaint(textGrad);
-        g.drawString(bText, bTextX, boardY + 28);
+        g.drawString(levelText, levelTextX + 1, boardY + 22);
+        g.setColor(new Color(180, 120, 255));
+        g.drawString(levelText, levelTextX, boardY + 22);
 
-        String bVal = String.valueOf(highScore);
-        int bValX = boardX + (boardWidth - fmNum.stringWidth(bVal)) / 2;
-        g.setFont(numFont);
+        // ============ Target 目标分 ============
+        String tText = "TARGET";
+        int tTextX = boardX + 20;
+        g.setFont(SCORE_TEXT_FONT);
+        g.setColor(new Color(60, 40, 100, 90));
+        g.drawString(tText, tTextX + 1, boardY + 45);
+        g.setColor(new Color(180, 120, 255));
+        g.drawString(tText, tTextX, boardY + 45);
+
+        String tVal = String.valueOf(levelWinScore);
+        int tValX = boardX + boardWidth - 20 - fmNum.stringWidth(tVal);
+        g.setFont(SCORE_NUM_FONT);
         g.setColor(new Color(0, 0, 0, 50));
-        g.drawString(bVal, bValX + 2, boardY + 65);
-        
-        LinearGradientPaint numGrad = new LinearGradientPaint(boardX, boardY + 40, boardX + boardWidth, boardY + 70,
-                new float[]{0, 1}, new Color[]{new Color(255, 110, 30), new Color(180, 40, 0)});
-        g.setPaint(numGrad);
-        g.drawString(bVal, bValX, boardY + 65);
+        g.drawString(tVal, tValX + 2, boardY + 70);
+        g.setColor(new Color(0, 200, 100));
+        g.drawString(tVal, tValX, boardY + 70);
 
-        // ============ 中间修饰分割线 ============
+        // ============ 分割线1 ============
         g.setColor(new Color(200, 200, 200, 120));
-        g.drawLine(boardX + 30, boardY + 80, boardX + boardWidth - 30, boardY + 80);
+        g.drawLine(boardX + 15, boardY + 80, boardX + boardWidth - 15, boardY + 80);
 
-        // ============ 下方区域: 当前分 SCORE ============
+        // ============ 当前分 SCORE ============
         String sText = "SCORE";
         int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
-        g.setFont(textFont);
+        g.setFont(SCORE_TEXT_FONT);
         g.setColor(new Color(60, 40, 100, 90));
-        g.drawString(sText, sTextX + 1, boardY + 108);
-        g.setPaint(textGrad);
-        g.drawString(sText, sTextX, boardY + 108);
+        g.drawString(sText, sTextX + 1, boardY + 102);
+        g.setColor(new Color(180, 120, 255));
+        g.drawString(sText, sTextX, boardY + 102);
 
         String sVal = String.valueOf(currentScore);
-        int sValX = boardX + (boardWidth - fmNum.stringWidth(sVal)) / 2;
-        g.setFont(numFont);
+        int sValX = boardX + (boardWidth - fmText.stringWidth(sVal)) / 2;
+        g.setFont(SCORE_NUM_FONT);
         g.setColor(new Color(0, 0, 0, 50));
-        g.drawString(sVal, sValX + 2, boardY + 145);
-        
-        LinearGradientPaint numGrad2 = new LinearGradientPaint(boardX, boardY + 120, boardX + boardWidth, boardY + 150,
-                new float[]{0, 1}, new Color[]{new Color(40, 150, 255), new Color(0, 80, 180)});
-        g.setPaint(numGrad2);
-        g.drawString(sVal, sValX, boardY + 145);
+        g.drawString(sVal, sValX + 2, boardY + 130);
+        g.setColor(new Color(40, 150, 255));
+        g.drawString(sVal, sValX, boardY + 130);
+
+        // ============ 分割线2 ============
+        g.setColor(new Color(200, 200, 200, 120));
+        g.drawLine(boardX + 15, boardY + 138, boardX + boardWidth - 15, boardY + 138);
+
+        // ============ 最高分 BEST ============
+        String bText = "BEST";
+        int bTextX = boardX + 20;
+        g.setFont(SCORE_TEXT_FONT);
+        g.setColor(new Color(60, 40, 100, 90));
+        g.drawString(bText, bTextX + 1, boardY + 160);
+        g.setColor(new Color(180, 120, 255));
+        g.drawString(bText, bTextX, boardY + 160);
+
+        String bVal = String.valueOf(levelHighScore);
+        int bValX = boardX + boardWidth - 20 - fmNum.stringWidth(bVal);
+        g.setFont(SCORE_NUM_FONT);
+        g.setColor(new Color(0, 0, 0, 50));
+        g.drawString(bVal, bValX + 2, boardY + 185);
+        g.setColor(new Color(255, 110, 30));
+        g.drawString(bVal, bValX, boardY + 185);
     }
 
     public void drawCannon(Graphics2D g, double mx, double my) {
@@ -378,5 +416,162 @@ public class ScreenGame {
 
         g.setStroke(new BasicStroke(1));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+    }
+
+    // 分数数字动画类
+    public static class ScoreNumber {
+        private double x, y;
+        private String scoreText;
+        private float alpha = 1.0f;
+        private float scale = 0.5f;
+        private float yOffset = 0;
+        private long startTime;
+        private long delayTime = 0;
+        private static final long DURATION = 800;
+        private static final long TOTAL_DELAY = 250;
+
+        private Color textColor;
+        private boolean isTotalScore;
+        private int scoreValue;
+        private Color totalBaseColor;
+
+        public ScoreNumber(double x, double y, int score, Color marbleColor) {
+            this.x = x;
+            this.y = y;
+            this.scoreText = "+" + score;
+            this.startTime = System.currentTimeMillis();
+            this.textColor = marbleColor;
+            this.isTotalScore = false;
+            this.scoreValue = score;
+        }
+
+        public ScoreNumber(double x, double y, int totalScore) {
+            this.x = x;
+            this.y = y;
+            this.scoreText = "+" + totalScore;
+            this.startTime = System.currentTimeMillis() + TOTAL_DELAY;
+            this.delayTime = TOTAL_DELAY;
+            this.isTotalScore = true;
+            this.scoreValue = totalScore;
+            this.totalBaseColor = getBaseColorByScore(totalScore);
+        }
+
+        private Color getBaseColorByScore(int score) {
+            if (score <= 30) {
+                return new Color(0, 200, 200);
+            } else if (score <= 60) {
+                return new Color(255, 200, 50);
+            } else if (score <= 100) {
+                return new Color(160, 100, 220);
+            } else {
+                return new Color(255, 180, 80);
+            }
+        }
+
+        private Color getGradientColor(float progress) {
+            int r, g, b;
+
+            if (scoreValue <= 30) {
+                r = (int)(80 + (0 - 80) * progress);
+                g = (int)(180 + (255 - 180) * progress);
+                b = (int)(180 + (200 - 180) * progress);
+            } else if (scoreValue <= 60) {
+                r = (int)(200 + (255 - 200) * progress);
+                g = (int)(150 + (215 - 150) * progress);
+                b = (int)(30 + (50 - 30) * progress);
+            } else if (scoreValue <= 100) {
+                r = (int)(120 + (180 - 120) * progress);
+                g = (int)(80 + (120 - 80) * progress);
+                b = (int)(200 + (255 - 200) * progress);
+            } else {
+                r = (int)(220 + (255 - 220) * progress);
+                g = (int)(160 + (215 - 160) * progress);
+                b = (int)(60 + (100 - 60) * progress);
+            }
+
+            return new Color(safeComponent(r), safeComponent(g), safeComponent(b));
+        }
+
+        private int safeComponent(int value) {
+            if (value < 0) return 0;
+            if (value > 255) return 255;
+            return value;
+        }
+
+        public boolean update() {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime < startTime) {
+                return true;
+            }
+
+            long elapsed = currentTime - startTime;
+            if (elapsed >= DURATION) {
+                return false;
+            }
+
+            float progress = (float) elapsed / DURATION;
+            alpha = 1.0f - progress;
+            scale = 0.5f + progress * 1.0f;
+            yOffset = -progress * 40;
+
+            return true;
+        }
+
+        public void draw(Graphics2D g2d) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime < startTime) {
+                return;
+            }
+
+            Composite originalComposite = g2d.getComposite();
+
+            float safeAlpha = alpha;
+            if (safeAlpha < 0) safeAlpha = 0;
+            if (safeAlpha > 1) safeAlpha = 1;
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, safeAlpha));
+
+            int fontSize = isTotalScore ? (int)(28 * scale) : (int)(18 * scale);
+            Font font = new Font("Arial Black", Font.BOLD, fontSize);
+            g2d.setFont(font);
+
+            FontMetrics fm = g2d.getFontMetrics();
+            int textWidth = fm.stringWidth(scoreText);
+
+            Color drawColor;
+            if (isTotalScore) {
+                long elapsed = currentTime - startTime;
+                if (elapsed < 0) elapsed = 0;
+                float progress = (float) elapsed / DURATION;
+                if (progress < 0) progress = 0;
+                if (progress > 1) progress = 1;
+                drawColor = getGradientColor(progress);
+            } else {
+                drawColor = textColor;
+            }
+
+            int shadowAlpha = (int)(80 * alpha);
+            if (shadowAlpha < 0) shadowAlpha = 0;
+            if (shadowAlpha > 255) shadowAlpha = 255;
+            g2d.setColor(new Color(0, 0, 0, shadowAlpha));
+            g2d.drawString(scoreText, (int)(x - textWidth / 2 + 2), (int)(y + yOffset + 2));
+
+            if (isTotalScore && alpha > 0.6f) {
+                g2d.setColor(new Color(255, 255, 200, (int)(40 * alpha)));
+                g2d.drawString(scoreText, (int)(x - textWidth / 2 - 1), (int)(y + yOffset - 1));
+                g2d.drawString(scoreText, (int)(x - textWidth / 2 + 1), (int)(y + yOffset + 1));
+            }
+
+            g2d.setColor(drawColor);
+            g2d.drawString(scoreText, (int)(x - textWidth / 2), (int)(y + yOffset));
+
+            if (isTotalScore && alpha > 0.5f) {
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, safeAlpha * 0.25f));
+                g2d.setColor(new Color(255, 255, 200));
+                g2d.drawString(scoreText, (int)(x - textWidth / 2), (int)(y + yOffset - 2));
+                g2d.drawString(scoreText, (int)(x - textWidth / 2), (int)(y + yOffset + 2));
+            }
+
+            g2d.setComposite(originalComposite);
+        }
     }
 }
