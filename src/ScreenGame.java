@@ -37,6 +37,10 @@ public class ScreenGame {
     private static final double ANGLE_CLAMP_EPSILON = -0.001;
     private static final double SQRT3 = Math.sqrt(3);
 
+    // Cached fonts for drawScoreBoard (avoid per-frame allocation)
+    private static final Font SCORE_TEXT_FONT = new Font("Comic Sans MS", Font.BOLD, 13);
+    private static final Font SCORE_NUM_FONT = new Font("Arial Black", Font.BOLD, 20);
+
     public Point2D.Double cannon;
     private double headAngle = -Math.PI / 2;
     private int nextMarbleColor;
@@ -176,40 +180,33 @@ public class ScreenGame {
         g.setColor(new Color(255, 255, 255, 150));
         g.drawRoundRect(boardX + 2, boardY + 2, boardWidth - 4, boardHeight - 4, 18, 18);
 
-        Font textFont = new Font("Comic Sans MS", Font.BOLD, 13);
-        Font numFont = new Font("Arial Black", Font.BOLD, 20);
-        FontMetrics fmText = g.getFontMetrics(textFont);
-        FontMetrics fmNum = g.getFontMetrics(numFont);
+        FontMetrics fmText = g.getFontMetrics(SCORE_TEXT_FONT);
+        FontMetrics fmNum = g.getFontMetrics(SCORE_NUM_FONT);
 
         // ============ Level 标题 ============
         String levelText = "LEVEL " + Level.getInstance().getCurrentLevel();
         int levelTextX = boardX + (boardWidth - fmText.stringWidth(levelText)) / 2;
-        g.setFont(textFont);
+        g.setFont(SCORE_TEXT_FONT);
         g.setColor(new Color(60, 40, 100, 90));
         g.drawString(levelText, levelTextX + 1, boardY + 22);
-
-        LinearGradientPaint textGrad = new LinearGradientPaint(boardX, boardY + 10, boardX + boardWidth, boardY + 25,
-                new float[]{0, 1}, new Color[]{new Color(180, 120, 255), new Color(80, 50, 130)});
-        g.setPaint(textGrad);
+        g.setColor(new Color(180, 120, 255));
         g.drawString(levelText, levelTextX, boardY + 22);
 
         // ============ Target 目标分 ============
         String tText = "TARGET";
         int tTextX = boardX + 20;
-        g.setFont(textFont);
+        g.setFont(SCORE_TEXT_FONT);
         g.setColor(new Color(60, 40, 100, 90));
         g.drawString(tText, tTextX + 1, boardY + 45);
-        g.setPaint(textGrad);
+        g.setColor(new Color(180, 120, 255));
         g.drawString(tText, tTextX, boardY + 45);
 
         String tVal = String.valueOf(levelWinScore);
         int tValX = boardX + boardWidth - 20 - fmNum.stringWidth(tVal);
-        g.setFont(numFont);
+        g.setFont(SCORE_NUM_FONT);
         g.setColor(new Color(0, 0, 0, 50));
         g.drawString(tVal, tValX + 2, boardY + 70);
-        LinearGradientPaint numGradTarget = new LinearGradientPaint(boardX, boardY + 50, boardX + boardWidth, boardY + 75,
-                new float[]{0, 1}, new Color[]{new Color(0, 200, 100), new Color(0, 120, 50)});
-        g.setPaint(numGradTarget);
+        g.setColor(new Color(0, 200, 100));
         g.drawString(tVal, tValX, boardY + 70);
 
         // ============ 分割线1 ============
@@ -219,20 +216,18 @@ public class ScreenGame {
         // ============ 当前分 SCORE ============
         String sText = "SCORE";
         int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
-        g.setFont(textFont);
+        g.setFont(SCORE_TEXT_FONT);
         g.setColor(new Color(60, 40, 100, 90));
         g.drawString(sText, sTextX + 1, boardY + 102);
-        g.setPaint(textGrad);
+        g.setColor(new Color(180, 120, 255));
         g.drawString(sText, sTextX, boardY + 102);
 
         String sVal = String.valueOf(currentScore);
-        int sValX = boardX + (boardWidth - fmNum.stringWidth(sVal)) / 2;
-        g.setFont(numFont);
+        int sValX = boardX + (boardWidth - fmText.stringWidth(sVal)) / 2;
+        g.setFont(SCORE_NUM_FONT);
         g.setColor(new Color(0, 0, 0, 50));
         g.drawString(sVal, sValX + 2, boardY + 130);
-        LinearGradientPaint numGrad2 = new LinearGradientPaint(boardX, boardY + 105, boardX + boardWidth, boardY + 135,
-                new float[]{0, 1}, new Color[]{new Color(40, 150, 255), new Color(0, 80, 180)});
-        g.setPaint(numGrad2);
+        g.setColor(new Color(40, 150, 255));
         g.drawString(sVal, sValX, boardY + 130);
 
         // ============ 分割线2 ============
@@ -242,20 +237,18 @@ public class ScreenGame {
         // ============ 最高分 BEST ============
         String bText = "BEST";
         int bTextX = boardX + 20;
-        g.setFont(textFont);
+        g.setFont(SCORE_TEXT_FONT);
         g.setColor(new Color(60, 40, 100, 90));
         g.drawString(bText, bTextX + 1, boardY + 160);
-        g.setPaint(textGrad);
+        g.setColor(new Color(180, 120, 255));
         g.drawString(bText, bTextX, boardY + 160);
 
         String bVal = String.valueOf(levelHighScore);
         int bValX = boardX + boardWidth - 20 - fmNum.stringWidth(bVal);
-        g.setFont(numFont);
+        g.setFont(SCORE_NUM_FONT);
         g.setColor(new Color(0, 0, 0, 50));
         g.drawString(bVal, bValX + 2, boardY + 185);
-        LinearGradientPaint numGrad = new LinearGradientPaint(boardX, boardY + 165, boardX + boardWidth, boardY + 190,
-                new float[]{0, 1}, new Color[]{new Color(255, 110, 30), new Color(180, 40, 0)});
-        g.setPaint(numGrad);
+        g.setColor(new Color(255, 110, 30));
         g.drawString(bVal, bValX, boardY + 185);
     }
 

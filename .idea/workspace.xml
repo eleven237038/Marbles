@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加关卡模式">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Marbles.png" beforeDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更正晋级按钮" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -142,15 +138,7 @@
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
       <workItem from="1779851862495" duration="18044000" />
-      <workItem from="1779938602200" duration="708000" />
-    </task>
-    <task id="LOCAL-00020" summary="合并UI弹珠样式">
-      <option name="closed" value="true" />
-      <created>1779553666727</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1779553666727</updated>
+      <workItem from="1779938602200" duration="1021000" />
     </task>
     <task id="LOCAL-00021" summary="合并UI分支">
       <option name="closed" value="true" />
@@ -536,7 +524,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779937065798</updated>
     </task>
-    <option name="localTasksCounter" value="69" />
+    <task id="LOCAL-00069" summary="更正晋级按钮">
+      <option name="closed" value="true" />
+      <created>1779939430342</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1779939430342</updated>
+    </task>
+    <option name="localTasksCounter" value="70" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -554,7 +550,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="更名,统一格式" />
     <MESSAGE value="合并gameover" />
     <MESSAGE value="将StartScreen更名为ScreenStart" />
     <MESSAGE value="将LaunchMarble更名为MarbleLaunch" />
@@ -579,6 +574,7 @@
     <MESSAGE value="合并UI,音效" />
     <MESSAGE value="优化代码" />
     <MESSAGE value="添加关卡模式" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加关卡模式" />
+    <MESSAGE value="更正晋级按钮" />
+    <option name="LAST_COMMIT_MESSAGE" value="更正晋级按钮" />
   </component>
 </project>
