@@ -70,15 +70,6 @@ public class MarbleLaunch extends Marble {
                 vx = -vx;
             }
 
-            // 顶壁判定：接触顶部时直接停止，由 Main.java 捕获并触发吸附
-            // [Bug 1, Bug 3] 修复: 停止 Y 速度并重置发射状态
-            if (cy <= radius) {
-                cy = radius;
-                vy = 0;
-                vx = 0;
-                launched = false;
-            }
-
             setCenter(cx, cy);
             recalculateVerticesIfDirty();
         }

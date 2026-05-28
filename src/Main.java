@@ -273,12 +273,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             double checkX = prevX + dx * i / steps;
             double checkY = prevY + dy * i / steps;
 
-            if (checkY <= radius) {
-                collided = true;
-                launchMarble.setCenter(checkX, checkY);
-                break;
-            }
-
             for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
                 Marble[] row = hexGrid.getRow(r);
                 if (row == null) continue;
