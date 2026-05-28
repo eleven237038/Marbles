@@ -399,11 +399,19 @@ public class ScreenStart extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.draw(btn);
 
-        int x = startX + BTN_WIDTH / 2;
+        int x = startX + BTN_WIDTH / 2-65;
         int y = startY + BTN_HEIGHT / 2;
         int[] xP = {x - 18, x + 18, x - 18};
         int[] yP = {y - 18, y, y + 18};
         g2d.fillPolygon(xP, yP, 3);
+        // 添加 PLAY 文字
+        g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 40));
+        g2d.setColor(Color.WHITE);
+        String playText = "PLAY";
+        FontMetrics fm = g2d.getFontMetrics();
+        int textX = x + 35;  // 三角形右侧
+        int textY = y + fm.getAscent() / 2 - 3;
+        g2d.drawString(playText, textX, textY);
     }
 
     private void drawLevelSelectOverlay(Graphics2D g2d, int w, int h) {
