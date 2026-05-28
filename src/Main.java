@@ -48,8 +48,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     // BossSans 角色状态
     private BossSans sans;
     private boolean sansActive = false;
+    private boolean sansIdle = false;
     private double sansX, sansY;
     private boolean sansAnimating = false;
+    private javax.swing.Timer idleRepaintTimer = null;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -155,8 +157,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
         
-        // 如果是第三关，则触发 BossSans 彩蛋
-        if (Level.getInstance().getCurrentLevel() == 3) {
+        // 如果该关有 BossSans 出场
+        if (Level.getInstance().hasBossSans()) {
             startBossSansIntro();
         }
     }
@@ -173,7 +175,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             sans = new BossSans();
         }
         sansActive = false;
+        sansIdle = false;
         sansAnimating = false;
+        if (idleRepaintTimer != null) {
+            idleRepaintTimer.stop();
+            idleRepaintTimer = null;
+        }
 
         initMarbleGrid();
         upPressed = false;
@@ -200,6 +207,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         launchPad = new ScreenGame();
         hexGrid.setMaxRowCount(18);
         hexGrid.setFallSpeedMultiplier(level.getFallSpeedMultiplier());
+        // 参数：初始速度，最大速度，每秒增加速度，速度：像素/秒
+        hexGrid.setLevelSpeedParams(3.0, 15.0, 0.1);
         hexGrid.initRow(mWidth, mHeight);
         launchPad.setCannonPosition(mWidth, mHeight);
         deadline = launchPad.getTopY();
@@ -419,8 +428,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
         mPanel.repaint();
 
-        // 第3关开始时，触发 BossSans 彩蛋
-        if (Level.getInstance().getCurrentLevel() == 3) {
+        // 该关有 BossSans 出场时，触发彩蛋
+        if (Level.getInstance().hasBossSans()) {
             startBossSansIntro();
         }
     }
@@ -470,11 +479,21 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 ((javax.swing.Timer) e.getSource()).stop();
                 sans.stopAnimation();
                 sansAnimating = false;
-                
+                sansIdle = true;
+                sans.play("Basic - Down", 500);
+
                 // 动画结束后，自动解除冻结继续游戏
                 frozen = false;
                 gamePaused = false;
-                
+
+                // 启动待机动画重绘定时器
+                idleRepaintTimer = new javax.swing.Timer(16, evt -> {
+                    if (glassPane != null) {
+                        glassPane.repaint();
+                    }
+                });
+                idleRepaintTimer.start();
+
                 if (glassPane != null) {
                     glassPane.repaint();
                 }
@@ -514,8 +533,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
         
-        // 如果选择的是第三关，触发 BossSans 彩蛋
-        if (level == 3) {
+        // 如果选择的关卡有 BossSans 出场
+        if (Level.getInstance().hasBossSans(level)) {
             startBossSansIntro();
         }
     }
@@ -857,9 +876,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     if (sansAnimating) {
                         // 播放右走动画
                         sans.draw(g2d, (int) sansX, (int) sansY, 1.2);
-                    } else {
-                        // 动画结束后锁定保持 Down 的第一帧 (frameIndex: 0)
-                        sans.drawSpecificFrame(g2d, "Basic - Down", 0, (int) sansX, (int) sansY, 1.2);
+                    } else if (sansIdle) {
+                        // 站立动画（2帧每秒切换）
+                        sans.draw(g2d, (int) sansX, (int) sansY, 1.2);
                     }
                 }
             }

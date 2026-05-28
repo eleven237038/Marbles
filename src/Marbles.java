@@ -35,6 +35,12 @@ public class Marbles {
             new Color(160, 30, 200)   // 紫色
     };
 
+    private double currentFallSpeed;      // 当前下落速度
+    private double baseFallSpeed;         // 基础下落速度
+    private double maxFallSpeed;           // 最大下落速度
+    private double speedIncreaseRate;    // 每秒增加的速度
+    private double gameTimeInLevel = 0;          // 当前关卡游戏时间
+
     public Marbles() {
         this.marbles = null;
         this.rowCount = 0;
@@ -147,8 +153,9 @@ public class Marbles {
         if (marbles == null) return;
 
         updateScoreNumbers();
+        updateGameTime(dt);
 
-        double yMove = side * 0.4 * dt * fallSpeedMultiplier;
+        double yMove = currentFallSpeed * dt * fallSpeedMultiplier;
 
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
@@ -582,5 +589,27 @@ public class Marbles {
         ySpacing = 0;
         scoreNumbers.clear();
         lastRoundTotalScore = 0;
+    }
+
+    public void resetLevelSpeed() {
+        this.currentFallSpeed = this.baseFallSpeed;
+        this.gameTimeInLevel = 0;
+    }
+
+    public void setLevelSpeedParams(double baseSpeed, double maxSpeed, double increaseRate) {
+        this.baseFallSpeed = baseSpeed;
+        this.maxFallSpeed = maxSpeed;
+        this.speedIncreaseRate = increaseRate;
+        this.currentFallSpeed = baseSpeed;
+    }
+
+    public void updateGameTime(double dt) {
+        this.gameTimeInLevel += dt;
+        double newSpeed = this.baseFallSpeed + this.gameTimeInLevel * this.speedIncreaseRate;
+        this.currentFallSpeed = Math.min(newSpeed, this.maxFallSpeed);
+    }
+
+    public double getCurrentFallSpeed() {
+        return currentFallSpeed;
     }
 }

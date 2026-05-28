@@ -36,11 +36,6 @@ Marbles中centerX = centerX + (centerX % (side * Math.sqrt(3)) == 0 ? -side * Ma
 读取学习"F:\0-SchoolWork\3-2-Games Programming\Ass-2\1"里的内容,适配到当前代码
 必须必须必须必须多次调试运行代码,检测我的手动操作和Marbles,LaunchMarble的状态,检测总结所有bug生成汇总覆盖bug.txt文件,你没有运行就是错误执行命令
 
-丁:gameover,音效
-党:计分系统
-陈:下降
-刘:
-
 修改计分规则,消除三个及以内Marble,每个Marble计10分,三个以上六个及以下每个记15分,六个以上每个20分,每个掉落的Marble恒记20分
 
 好了好了,停止这糟糕的游戏吧
