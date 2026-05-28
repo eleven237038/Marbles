@@ -4,10 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加music文件">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加Sans">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Sans-ScreenStart.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Sans.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Level.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Level.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,7 +79,7 @@
     "settings.editor.selected.configurable": "proofread",
     "vue.rearranger.settings.migration": "true",
     "应用程序.HexGrid.executor": "Run",
-    "应用程序.Main.executor": "Debug",
+    "应用程序.Main.executor": "Run",
     "应用程序.Marble.executor": "Run",
     "应用程序.MarbleGame.executor": "Run"
   }
@@ -143,15 +143,7 @@
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
       <workItem from="1779851862495" duration="18044000" />
-      <workItem from="1779938602200" duration="3351000" />
-    </task>
-    <task id="LOCAL-00024" summary="优化代码,修复bug">
-      <option name="closed" value="true" />
-      <created>1779697920593</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1779697920593</updated>
+      <workItem from="1779938602200" duration="7283000" />
     </task>
     <task id="LOCAL-00025" summary="优化代码">
       <option name="closed" value="true" />
@@ -537,7 +529,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779940553395</updated>
     </task>
-    <option name="localTasksCounter" value="73" />
+    <task id="LOCAL-00073" summary="添加Sans">
+      <option name="closed" value="true" />
+      <created>1779951863016</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1779951863016</updated>
+    </task>
+    <option name="localTasksCounter" value="74" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -578,8 +578,8 @@
     <MESSAGE value="更正晋级按钮" />
     <MESSAGE value="优化代码" />
     <MESSAGE value="添加Sans实体" />
-    <MESSAGE value="添加Sans" />
     <MESSAGE value="添加music文件" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加music文件" />
+    <MESSAGE value="添加Sans" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加Sans" />
   </component>
 </project>

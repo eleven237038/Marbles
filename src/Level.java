@@ -15,8 +15,10 @@ public class Level {
     private static final int MAX_COLOR_TYPES = 6;
 
     private static final double BASE_FALL_SPEED_MULT = 1.0;
-    private static final double FALL_SPEED_INCREMENT = 0.15;
+    private static final double FALL_SPEED_INCREMENT = 0.3;
     private static final double MAX_FALL_SPEED_MULT = 2.5;
+
+    public static final int MAX_LEVEL = 4;
 
     private static Level instance;
 
@@ -29,7 +31,7 @@ public class Level {
 
     private Level() {
         currentLevel = loadCurrentLevel();
-        levelHighScores = new int[100];
+        levelHighScores = new int[MAX_LEVEL];
         for (int i = 0; i < levelHighScores.length; i++) {
             levelHighScores[i] = loadLevelHighScore(i + 1);
         }
@@ -59,7 +61,7 @@ public class Level {
     }
 
     public int getColorTypeCount() {
-        int count = BASE_COLOR_TYPE_COUNT + (currentLevel - 1) / 3;
+        int count = BASE_COLOR_TYPE_COUNT + (currentLevel - 1) / 2;
         return Math.min(count, MAX_COLOR_TYPES);
     }
 
@@ -84,8 +86,10 @@ public class Level {
     }
 
     public void nextLevel() {
-        currentLevel++;
-        saveCurrentLevel(currentLevel);
+        if (currentLevel < MAX_LEVEL) {
+            currentLevel++;
+            saveCurrentLevel(currentLevel);
+        }
     }
 
     public void resetToLevel(int level) {
@@ -94,7 +98,7 @@ public class Level {
     }
 
     public void setCurrentLevel(int level) {
-        if (level >= 1 && level <= 100) {
+        if (level >= 1 && level <= MAX_LEVEL) {
             currentLevel = level;
             saveCurrentLevel(currentLevel);
         }
