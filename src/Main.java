@@ -864,8 +864,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 lastRestartBtn = restartBtn;
             }
 
-            Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + (levelWon || isScreenGameOverWin ? 0 : btnHeight + btnSpacing), btnWidth, btnHeight);
-            drawOverlayButton(g2d, menuBtn, "Next Level", new Color(100, 190, 255));
+            int menuOffset = (levelWon || isScreenGameOverWin) ? (levelWon ? btnHeight + btnSpacing : 0) : btnHeight + btnSpacing;
+            Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + menuOffset, btnWidth, btnHeight);
+            drawOverlayButton(g2d, menuBtn, "Main Menu", new Color(100, 190, 255));
             lastMenuBtn = menuBtn;
         }
 

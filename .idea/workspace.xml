@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化代码">
-      <change beforePath="$PROJECT_DIR$/src/Sans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Sans.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/SoundManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SoundManager.java" afterDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更新所有的路径,确保检索仅在本地仓库文件夹内进行而不是超过这个路径,保证其他人从远程仓库下载时可以正常读取加载" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -143,15 +139,7 @@
       <workItem from="1779849180880" duration="6000" />
       <workItem from="1779849203020" duration="1335000" />
       <workItem from="1779851862495" duration="18044000" />
-      <workItem from="1779938602200" duration="11255000" />
-    </task>
-    <task id="LOCAL-00029" summary="添加消除动画">
-      <option name="closed" value="true" />
-      <created>1779722741718</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1779722741718</updated>
+      <workItem from="1779938602200" duration="11560000" />
     </task>
     <task id="LOCAL-00030" summary="优化代码">
       <option name="closed" value="true" />
@@ -537,7 +525,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779963573503</updated>
     </task>
-    <option name="localTasksCounter" value="78" />
+    <task id="LOCAL-00078" summary="更新所有的路径,确保检索仅在本地仓库文件夹内进行而不是超过这个路径,保证其他人从远程仓库下载时可以正常读取加载">
+      <option name="closed" value="true" />
+      <created>1779969654494</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1779969654494</updated>
+    </task>
+    <option name="localTasksCounter" value="79" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -555,7 +551,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="更改窗口尺寸" />
     <MESSAGE value="更改装饰" />
     <MESSAGE value="更改背景色调" />
     <MESSAGE value="合并LaunchPad至BoardGame" />
@@ -580,6 +575,7 @@
     <MESSAGE value="将关卡选择界面的关卡按钮从左上角改到屏幕中间" />
     <MESSAGE value="优化" />
     <MESSAGE value="优化代码" />
-    <option name="LAST_COMMIT_MESSAGE" value="优化代码" />
+    <MESSAGE value="更新所有的路径,确保检索仅在本地仓库文件夹内进行而不是超过这个路径,保证其他人从远程仓库下载时可以正常读取加载" />
+    <option name="LAST_COMMIT_MESSAGE" value="更新所有的路径,确保检索仅在本地仓库文件夹内进行而不是超过这个路径,保证其他人从远程仓库下载时可以正常读取加载" />
   </component>
 </project>
