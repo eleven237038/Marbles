@@ -865,7 +865,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             }
 
             Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + (levelWon || isScreenGameOverWin ? 0 : btnHeight + btnSpacing), btnWidth, btnHeight);
-            drawOverlayButton(g2d, menuBtn, "Main Menu", new Color(100, 190, 255));
+            drawOverlayButton(g2d, menuBtn, "Next Level", new Color(100, 190, 255));
             lastMenuBtn = menuBtn;
         }
 
