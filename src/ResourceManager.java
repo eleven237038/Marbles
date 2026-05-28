@@ -1,11 +1,22 @@
-import javax.sound.sampled.*;
 import java.io.File;
+import java.net.URISyntaxException;
+import java.security.CodeSource;
+import javax.sound.sampled.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SoundManager {
-    private static SoundManager instance;
+/**
+ * ResourceManager - 统一管理资源路径和音效
+ * 合并了 ResourceUtil 和 SoundManager 的功能
+ */
+public class ResourceManager {
+    private static ResourceManager instance;
+
+    // ========== 资源路径管理 (原 ResourceUtil) ==========
+    private static String resourceBasePath;
+
+    // ========== 音效管理 (原 SoundManager) ==========
     private Map<String, Clip> soundClips;
     private Map<String, Boolean> soundLoaded;
     private boolean soundEnabled = true;
@@ -21,18 +32,81 @@ public class SoundManager {
     public static final String GAME_FAIL = "晋级&失败.wav";
     public static final String THREE_CLEAR = "钝角三消.wav";
 
-    private SoundManager() {
+    private ResourceManager() {
         soundClips = new HashMap<>();
         soundLoaded = new HashMap<>();
         preloadAllSounds();
     }
 
-    public static SoundManager getInstance() {
+    public static ResourceManager getInstance() {
         if (instance == null) {
-            instance = new SoundManager();
+            instance = new ResourceManager();
         }
         return instance;
     }
+
+    // ========== 资源路径方法 (原 ResourceUtil) ==========
+
+    /**
+     * 获取资源文件夹的基础路径
+     */
+    public static String getResourceBasePath() {
+        if (resourceBasePath != null) {
+            return resourceBasePath;
+        }
+
+        try {
+            CodeSource codeSource = ResourceManager.class.getProtectionDomain().getCodeSource();
+            if (codeSource != null) {
+                File classLocation = new File(codeSource.getLocation().toURI());
+                if (classLocation.isFile()) {
+                    resourceBasePath = classLocation.getParentFile().getParentFile().getParent() + File.separator;
+                } else {
+                    resourceBasePath = classLocation.getParentFile().getParentFile().getParent() + File.separator;
+                }
+            }
+        } catch (URISyntaxException e) {
+            // 回退到当前工作目录
+        }
+
+        if (resourceBasePath == null) {
+            resourceBasePath = System.getProperty("user.dir") + File.separator;
+        }
+
+        // 验证 resources 文件夹存在
+        File resourcesDir = new File(resourceBasePath + "resources");
+        if (!resourcesDir.exists() || !resourcesDir.isDirectory()) {
+            File parent = new File(resourceBasePath).getParentFile();
+            if (parent != null && new File(parent, "resources").exists()) {
+                resourceBasePath = parent.getAbsolutePath() + File.separator;
+            }
+        }
+
+        return resourceBasePath;
+    }
+
+    /**
+     * 构建资源文件的完整路径
+     */
+    public static String getResourcePath(String relativePath) {
+        return getResourceBasePath() + "resources" + File.separator + relativePath;
+    }
+
+    /**
+     * 构建音效文件的完整路径
+     */
+    public static String getSoundPath(String fileName) {
+        return getResourceBasePath() + "resources" + File.separator + "sound" + File.separator + fileName;
+    }
+
+    /**
+     * 构建图片资源的完整路径
+     */
+    public static String getImagePath(String fileName) {
+        return getResourceBasePath() + "resources" + File.separator + "image" + File.separator + fileName;
+    }
+
+    // ========== 音效方法 (原 SoundManager) ==========
 
     private void preloadAllSounds() {
         preloadSound(GAME_BEGIN);
@@ -48,7 +122,7 @@ public class SoundManager {
 
     private void preloadSound(String fileName) {
         try {
-            File soundFile = new File(ResourceUtil.getSoundPath(fileName));
+            File soundFile = new File(getSoundPath(fileName));
             if (soundFile.exists()) {
                 AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
                 Clip clip = AudioSystem.getClip();
@@ -75,16 +149,13 @@ public class SoundManager {
     public void playSound(String fileName) {
         if (!soundEnabled) return;
 
-        // 检查是否已预加载且可用
         if (soundClips.containsKey(fileName) && soundClips.get(fileName) != null) {
             Clip clip = soundClips.get(fileName);
-            // 重置到开头并播放
             clip.setFramePosition(0);
             clip.start();
         } else if (soundLoaded.containsKey(fileName) && !soundLoaded.get(fileName)) {
-            // 尝试动态加载
             try {
-                File soundFile = new File(ResourceUtil.getSoundPath(fileName));
+                File soundFile = new File(getSoundPath(fileName));
                 if (soundFile.exists()) {
                     AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
                     Clip clip = AudioSystem.getClip();

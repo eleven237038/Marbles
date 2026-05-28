@@ -132,7 +132,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     @Override
     public void onStartGame() {
-        SoundManager.getInstance().playGameBegin();
+        ResourceManager.getInstance().playGameBegin();
 
         cardLayout.show(mainPanel, "game");
         currentScore = 0;
@@ -347,14 +347,14 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     public void openPauseMenu() {
         gamePaused = true;
-        SoundManager.getInstance().playBackToMenu();
+        ResourceManager.getInstance().playBackToMenu();
         if (glassPane != null) {
             glassPane.showOverlay(1, false);
         }
     }
 
     public void closePauseMenu() {
-        SoundManager.getInstance().playBackToMenu();
+        ResourceManager.getInstance().playBackToMenu();
 
         gamePaused = false;
         if (glassPane != null) {
@@ -365,7 +365,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     private void openScreenGameOverMenu(boolean win) {
         if (!win) {
-            SoundManager.getInstance().playGameFail();
+            ResourceManager.getInstance().playGameFail();
         }
 
         frozen = true;
@@ -376,7 +376,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     }
 
     private void returnToMenu() {
-        SoundManager.getInstance().playBackToMenu();
+        ResourceManager.getInstance().playBackToMenu();
 
         frozen = false;
         gamePaused = false;
@@ -403,7 +403,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     }
 
     public void onRestart() {
-        SoundManager.getInstance().playBackToMenu();
+        ResourceManager.getInstance().playBackToMenu();
 
         if (glassPane != null) {
             glassPane.hideOverlay();
@@ -490,7 +490,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     @Override
     public void onSelectLevel(int level) {
-        SoundManager.getInstance().playGameBegin();
+        ResourceManager.getInstance().playGameBegin();
         Level.getInstance().setCurrentLevel(level);
 
         cardLayout.show(mainPanel, "game");
@@ -522,7 +522,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     @Override
     public void onOpenSettings() {
-        SoundManager.getInstance().playBackToMenu();
+        ResourceManager.getInstance().playBackToMenu();
         if (glassPane != null) {
             glassPane.showSettings();
         }
@@ -679,13 +679,13 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 }
             } else if (overlayMode == 3) {
                 if (lastSettingsBtn != null && lastSettingsBtn.contains(p)) {
-                    boolean oldState = SoundManager.getInstance().isSoundEnabled();
+                    boolean oldState = ResourceManager.getInstance().isSoundEnabled();
                     boolean newState = !oldState;
-                    SoundManager.getInstance().setSoundEnabled(newState);
+                    ResourceManager.getInstance().setSoundEnabled(newState);
                     ScreenStart.isSoundOnStatic = newState;
                     repaint();
                     if (!oldState && newState) {
-                        SoundManager.getInstance().playBackToMenu();
+                        ResourceManager.getInstance().playBackToMenu();
                     }
                 } else if (lastHelpBtn != null && lastHelpBtn.contains(p)) {
                     showHelp();
@@ -742,7 +742,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         public void showHelp() {
-            SoundManager.getInstance().playBackToMenu();
+            ResourceManager.getInstance().playBackToMenu();
             returnToMode = overlayMode;
             overlayMode = 4;
             isScreenGameOverWin = false;
@@ -754,7 +754,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         public void hideHelp() {
-            SoundManager.getInstance().playBackToMenu();
+            ResourceManager.getInstance().playBackToMenu();
             overlayMode = returnToMode;
             animating = true;
             animStartTime = System.currentTimeMillis();
@@ -775,7 +775,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         public void closeSettings() {
-            SoundManager.getInstance().playBackToMenu();
+            ResourceManager.getInstance().playBackToMenu();
             hideOverlay();
         }
 
@@ -981,7 +981,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             int startY = cy - 20;
 
             Rectangle soundBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
-            String soundText = SoundManager.getInstance().isSoundEnabled() ? "Sound: ON" : "Sound: OFF";
+            String soundText = ResourceManager.getInstance().isSoundEnabled() ? "Sound: ON" : "Sound: OFF";
             drawOverlayButton(g2d, soundBtn, soundText, new Color(70, 150, 255));
             lastSettingsBtn = soundBtn;
 

@@ -334,11 +334,11 @@ public class Marbles {
             int groupSize = connectedGroup.size();
 
             if (groupSize == 3) {
-                SoundManager.getInstance().playThreeClear();
+                ResourceManager.getInstance().playThreeClear();
             } else if (groupSize == 4) {
-                SoundManager.getInstance().playFourClear();
+                ResourceManager.getInstance().playFourClear();
             } else if (groupSize > 4) {
-                SoundManager.getInstance().playMassiveClear();
+                ResourceManager.getInstance().playMassiveClear();
             }
 
             int pointsPerMarble;
@@ -371,7 +371,7 @@ public class Marbles {
             addRoundTotalScore();
 
         } else {
-            SoundManager.getInstance().playNoClear();
+            ResourceManager.getInstance().playNoClear();
 
             Marble launchM = marbles[launchRow][launchCol];
             if (launchM != null) {
@@ -460,7 +460,7 @@ public class Marbles {
                         Color marbleColor = getMarbleColor(m.getColorType());
                         scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
                         lastRoundTotalScore += 20;
-                        SoundManager.getInstance().playDropAndScore();
+                        ResourceManager.getInstance().playDropAndScore();
                     }
                     m.startFalling(random.nextDouble() * 0.1);
                 }

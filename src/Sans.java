@@ -12,7 +12,7 @@ import javax.imageio.ImageIO;
  */
 public class Sans {
     // 统一指向新的精灵图路径
-    private static final String SPRITE_PATH = ResourceUtil.getImagePath("Sans.png");
+    private static final String SPRITE_PATH = ResourceManager.getImagePath("Sans.png");
     
     // 使用数组存储精灵图（当前仅需一个）
     private static BufferedImage[] spriteSheets = new BufferedImage[1];

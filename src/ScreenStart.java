@@ -73,7 +73,7 @@ public class ScreenStart extends JPanel {
         setBackground(new Color(188, 195, 255));
         setPreferredSize(new Dimension(Main.TOTAL_WIDTH, Main.GAME_HEIGHT));
 
-        SoundManager.getInstance().setSoundEnabled(isSoundOnStatic);
+        ResourceManager.getInstance().setSoundEnabled(isSoundOnStatic);
 
         try {
             settingsIcon = loadIcon("settings.png");
@@ -542,7 +542,7 @@ public class ScreenStart extends JPanel {
     public static BufferedImage loadIcon(String iconName) {
         return ICON_CACHE.computeIfAbsent(iconName, name -> {
             try {
-                File f = new File(ResourceUtil.getImagePath(name));
+                File f = new File(ResourceManager.getImagePath(name));
                 return f.exists() ? ImageIO.read(f) : null;
             } catch (IOException e) {
                 return null;
