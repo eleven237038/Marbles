@@ -156,7 +156,8 @@ public class Marbles {
                 Marble hex = marbles[r][c];
                 if (hex != null) {
                     if (!hex.isFalling()) {
-                        hex.setCenter(hex.getCenterX(), hex.getCenterY() + yMove);
+                        double newY = hex.getCenterY() + yMove;
+                        hex.setCenter(hex.getCenterX(), newY);
                     }
                     hex.update(dt);
                     hex.recalculateVerticesIfDirty();

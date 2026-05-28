@@ -69,6 +69,16 @@ public class Marble {
     };
 
     private static final Random random = new Random();
+
+    // Cached rendering constants (avoid per-frame allocation)
+    private static final float[] GRADIENT_STOPS = {0f, 0.6f, 1f};
+    private static final Color SHADOW_COLOR = new Color(0, 0, 0, 40);
+    private static final Color BORDER_COLOR = new Color(0, 0, 0, 70);
+    private static final Color HIGHLIGHT_COLOR = new Color(255, 255, 255, 200);
+    private static final Color REFLECTION_COLOR = new Color(255, 255, 255, 120);
+    private static final Color INNER_BORDER_COLOR = new Color(255, 255, 255, 50);
+
+    public Point2D.Double cachedCenter = new Point2D.Double();
     private int colorType;
     private int row;
     private int col;
@@ -315,37 +325,36 @@ public class Marble {
         Color dark = DARK_COLOR[colorType];
 
         // 阴影
-        g.setColor(new Color(0,0,0,40));
-        g.fillOval((int)(x + 2 * scale), (int)(y + 2 * scale), (int)diameter, (int)diameter);
+        g.setColor(SHADOW_COLOR);
+        g.fillOval((int)Math.round(x + 2 * scale), (int)Math.round(y + 2 * scale), (int)Math.round(diameter), (int)Math.round(diameter));
 
         // 球体渐变
-        Point2D center = new Point2D.Double(drawCx, drawCy);
-        float[] stop = {0f, 0.6f, 1f};
+        cachedCenter.setLocation(drawCx, drawCy);
         Color[] gradColor = {bright, base, dark};
-        RadialGradientPaint ballGrad = new RadialGradientPaint(center, (float)radius, stop, gradColor);
+        RadialGradientPaint ballGrad = new RadialGradientPaint(cachedCenter, (float)radius, GRADIENT_STOPS, gradColor);
         g.setPaint(ballGrad);
-        g.fillOval((int)x, (int)y, (int)diameter, (int)diameter);
+        g.fillOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
 
         // 双层精致边框
         g.setStroke(new BasicStroke(1.8f * (float)scale));
-        g.setColor(new Color(0,0,0,70));
-        g.drawOval((int)x, (int)y, (int)diameter, (int)diameter);
+        g.setColor(BORDER_COLOR);
+        g.drawOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
 
         g.setStroke(new BasicStroke(0.8f * (float)scale));
-        g.setColor(new Color(255,255,255,50));
-        g.drawOval((int)(x + 1 * scale), (int)(y + 1 * scale), (int)(diameter - 2 * scale), (int)(diameter - 2 * scale));
+        g.setColor(INNER_BORDER_COLOR);
+        g.drawOval((int)Math.round(x + 1 * scale), (int)Math.round(y + 1 * scale), (int)Math.round(diameter - 2 * scale), (int)Math.round(diameter - 2 * scale));
 
         // 主高光
-        g.setColor(new Color(255,255,255,200));
+        g.setColor(HIGHLIGHT_COLOR);
         double highlightR = radius * 0.32;
-        g.fillOval((int)(drawCx - radius * 0.48), (int)(drawCy - radius * 0.48), (int)highlightR, (int)highlightR);
+        g.fillOval((int)Math.round(drawCx - radius * 0.48), (int)Math.round(drawCy - radius * 0.48), (int)Math.round(highlightR), (int)Math.round(highlightR));
 
         // 玻璃反光点
-        g.setColor(new Color(255,255,255,120));
+        g.setColor(REFLECTION_COLOR);
         int reflect1Size = Math.max(1, (int)(4 * scale));
         int reflect2Size = Math.max(1, (int)(3 * scale));
-        g.fillOval((int)(drawCx + radius * 0.25), (int)(drawCy - radius * 0.2), reflect1Size, reflect1Size);
-        g.fillOval((int)(drawCx - radius * 0.2), (int)(drawCy + radius * 0.3), reflect2Size, reflect2Size);
+        g.fillOval((int)Math.round(drawCx + radius * 0.25), (int)Math.round(drawCy - radius * 0.2), reflect1Size, reflect1Size);
+        g.fillOval((int)Math.round(drawCx - radius * 0.2), (int)Math.round(drawCy + radius * 0.3), reflect2Size, reflect2Size);
 
         // 还原画布透明度
         if (alpha < 1.0f) {
@@ -359,11 +368,11 @@ public class Marble {
             int borderAlpha = (int)(120 * t);
             double radius2 = side * 0.866 * 1.2;
             g.setColor(new Color(255, 30, 30, alphaVal));
-            g.fillOval((int)(drawCx - radius2), (int)(drawCy - radius2), (int)(radius2 * 2), (int)(radius2 * 2));
+            g.fillOval((int)Math.round(drawCx - radius2), (int)Math.round(drawCy - radius2), (int)Math.round(radius2 * 2), (int)Math.round(radius2 * 2));
             if (t > 0.3) {
                 g.setColor(new Color(255, 80, 80, borderAlpha));
                 g.setStroke(new BasicStroke(2.5f));
-                g.drawOval((int)(drawCx - radius2 * 0.85), (int)(drawCy - radius2 * 0.85), (int)(radius2 * 1.7), (int)(radius2 * 1.7));
+                g.drawOval((int)Math.round(drawCx - radius2 * 0.85), (int)Math.round(drawCy - radius2 * 0.85), (int)Math.round(radius2 * 1.7), (int)Math.round(radius2 * 1.7));
             }
         }
     }
