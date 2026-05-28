@@ -437,9 +437,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sansActive = true;
         sansAnimating = true;
 
-        // 根据放大2倍后的尺寸计算左面板居中位置 (假设宽度在60左右)
-        int targetX = (LEFT_ZONE_WIDTH - 60) / 2;  
-        int targetY = GAME_HEIGHT - 200;  // 计分板下方、暂停按钮上方的安全区域
+        // Sans 停止位置：窗口左边界和游戏区左边界的中心，减去一半站立图宽度
+        int targetX = LEFT_ZONE_WIDTH / 2 - 47;
+        int targetY = GAME_HEIGHT - 320;  // 计分板下方、暂停按钮上方的安全区域
         
         sansX = -80;  // 起始位置（屏幕左侧外）
         sansY = targetY;
@@ -856,10 +856,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 if (sansActive && sans != null) {
                     if (sansAnimating) {
                         // 播放右走动画
-                        sans.draw(g2d, (int) sansX, (int) sansY, 2.0);
+                        sans.draw(g2d, (int) sansX, (int) sansY, 1.2);
                     } else {
                         // 动画结束后锁定保持 Down 的第一帧 (frameIndex: 0)
-                        sans.drawSpecificFrame(g2d, "Basic - Down", 0, (int) sansX, (int) sansY, 2.0);
+                        sans.drawSpecificFrame(g2d, "Basic - Down", 0, (int) sansX, (int) sansY, 1.2);
                     }
                 }
             }
