@@ -43,7 +43,7 @@ public class Level {
     public static class Level2 {
         public static final int WIN_SCORE = 1000;
         public static final int COLOR_TYPE_COUNT = 4;
-        public static final double FALL_SPEED_MULT = 1.3;
+        public static final double FALL_SPEED_MULT = 1.0;
         public static final double BASE_FALL_SPEED = 3.0;
         public static final double MAX_FALL_SPEED = 15.0;
         public static final double SPEED_INCREASE_RATE = 0.1;
@@ -54,7 +54,7 @@ public class Level {
     public static class Level3 {
         public static final int WIN_SCORE = 1500;
         public static final int COLOR_TYPE_COUNT = 5;
-        public static final double FALL_SPEED_MULT = 1.6;
+        public static final double FALL_SPEED_MULT = 1.0;
         public static final double BASE_FALL_SPEED = 3.0;
         public static final double MAX_FALL_SPEED = 15.0;
         public static final double SPEED_INCREASE_RATE = 0.1;
@@ -65,7 +65,7 @@ public class Level {
     public static class Level4 {
         public static final int WIN_SCORE = 2000;
         public static final int COLOR_TYPE_COUNT = 5;
-        public static final double FALL_SPEED_MULT = 2.0;
+        public static final double FALL_SPEED_MULT = 1.0;
         public static final double BASE_FALL_SPEED = 3.0;
         public static final double MAX_FALL_SPEED = 15.0;
         public static final double SPEED_INCREASE_RATE = 0.1;
