@@ -775,6 +775,10 @@ public class Marbles {
     }
 
     public void resetLevelSpeed() {
+        resetSpeedState();
+    }
+
+    private void resetSpeedState() {
         this.currentFallSpeed = this.baseFallSpeed;
         this.gameTimeInLevel = 0;
         this.speedManuallySet = false;
@@ -784,8 +788,7 @@ public class Marbles {
         this.baseFallSpeed = baseSpeed;
         this.maxFallSpeed = maxSpeed;
         this.speedIncreaseRate = increaseRate;
-        this.currentFallSpeed = baseSpeed;
-        this.speedManuallySet = false;
+        resetSpeedState();
     }
 
     public void setSpecialMarbleConfig(boolean creeper, boolean bedrock, boolean heart) {

@@ -327,8 +327,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sans.setCombatDialog(dialog);
         sansIdle = true;
         sansAnimating = false;
-        
-        // 等待对话显示完毕(4秒)后，再让Sans消失并向左走出窗口
+
         javax.swing.Timer waitTimer = new javax.swing.Timer(4000, ev -> {
             ((javax.swing.Timer) ev.getSource()).stop();
             sansIdle = false;

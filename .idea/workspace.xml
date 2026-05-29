@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="1" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="降低技能5难度">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -145,23 +147,7 @@
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
       <workItem from="1780030147321" duration="17251000" />
-      <workItem from="1780054676653" duration="834000" />
-    </task>
-    <task id="LOCAL-00071" summary="添加Sans">
-      <option name="closed" value="true" />
-      <created>1779940153949</created>
-      <option name="number" value="00071" />
-      <option name="presentableId" value="LOCAL-00071" />
-      <option name="project" value="LOCAL" />
-      <updated>1779940153949</updated>
-    </task>
-    <task id="LOCAL-00072" summary="添加music文件">
-      <option name="closed" value="true" />
-      <created>1779940553395</created>
-      <option name="number" value="00072" />
-      <option name="presentableId" value="LOCAL-00072" />
-      <option name="project" value="LOCAL" />
-      <updated>1779940553395</updated>
+      <workItem from="1780054676653" duration="1553000" />
     </task>
     <task id="LOCAL-00073" summary="添加Sans">
       <option name="closed" value="true" />
@@ -539,7 +525,23 @@
       <option name="project" value="LOCAL" />
       <updated>1780055452750</updated>
     </task>
-    <option name="localTasksCounter" value="120" />
+    <task id="LOCAL-00120" summary="修正Sans动作">
+      <option name="closed" value="true" />
+      <created>1780055586262</created>
+      <option name="number" value="00120" />
+      <option name="presentableId" value="LOCAL-00120" />
+      <option name="project" value="LOCAL" />
+      <updated>1780055586262</updated>
+    </task>
+    <task id="LOCAL-00121" summary="降低技能5难度">
+      <option name="closed" value="true" />
+      <created>1780055702511</created>
+      <option name="number" value="00121" />
+      <option name="presentableId" value="LOCAL-00121" />
+      <option name="project" value="LOCAL" />
+      <updated>1780055702511</updated>
+    </task>
+    <option name="localTasksCounter" value="122" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -557,8 +559,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Sans站立动态设置" />
-    <MESSAGE value="Boss关初始化" />
     <MESSAGE value="下降速度配置" />
     <MESSAGE value="统一字体" />
     <MESSAGE value="添加弹珠类型" />
@@ -582,6 +582,8 @@
     <MESSAGE value="修复碰撞bug" />
     <MESSAGE value="将&quot;弹珠游戏-豪华版&quot;改为&quot;请一定玩第四关&quot;的英文" />
     <MESSAGE value="1" />
-    <option name="LAST_COMMIT_MESSAGE" value="1" />
+    <MESSAGE value="修正Sans动作" />
+    <MESSAGE value="降低技能5难度" />
+    <option name="LAST_COMMIT_MESSAGE" value="降低技能5难度" />
   </component>
 </project>
