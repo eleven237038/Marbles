@@ -328,8 +328,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sansIdle = true;
         sansAnimating = false;
         
-        // 给予2.5秒的停留时间让玩家阅读完毕
-        javax.swing.Timer waitTimer = new javax.swing.Timer(2500, ev -> {
+        // 等待对话显示完毕(4秒)后，再让Sans消失并向左走出窗口
+        javax.swing.Timer waitTimer = new javax.swing.Timer(4000, ev -> {
             ((javax.swing.Timer) ev.getSource()).stop();
             sansIdle = false;
             sansAnimating = true;
