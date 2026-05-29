@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="修复碰撞bug">
-      <change beforePath="$PROJECT_DIR$/src/Level.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Level.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="将&quot;弹珠游戏-豪华版&quot;改为&quot;请一定玩第四关&quot;的英文" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -148,14 +145,7 @@
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
       <workItem from="1780030147321" duration="17251000" />
-    </task>
-    <task id="LOCAL-00069" summary="更正晋级按钮">
-      <option name="closed" value="true" />
-      <created>1779939430342</created>
-      <option name="number" value="00069" />
-      <option name="presentableId" value="LOCAL-00069" />
-      <option name="project" value="LOCAL" />
-      <updated>1779939430342</updated>
+      <workItem from="1780054676653" duration="411000" />
     </task>
     <task id="LOCAL-00070" summary="优化代码">
       <option name="closed" value="true" />
@@ -541,7 +531,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780053362464</updated>
     </task>
-    <option name="localTasksCounter" value="118" />
+    <task id="LOCAL-00118" summary="将&quot;弹珠游戏-豪华版&quot;改为&quot;请一定玩第四关&quot;的英文">
+      <option name="closed" value="true" />
+      <created>1780055024925</created>
+      <option name="number" value="00118" />
+      <option name="presentableId" value="LOCAL-00118" />
+      <option name="project" value="LOCAL" />
+      <updated>1780055024925</updated>
+    </task>
+    <option name="localTasksCounter" value="119" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -559,7 +557,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value=" 将ResourceUtil和SoundManager合并成一个新文件ResourceManager.Java文件" />
     <MESSAGE value="将Sans更名为BossSans" />
     <MESSAGE value="Sans站立动态设置" />
     <MESSAGE value="Boss关初始化" />
@@ -584,6 +581,7 @@
     <MESSAGE value="PLAY按钮优化" />
     <MESSAGE value="优化第四关弹珠" />
     <MESSAGE value="修复碰撞bug" />
-    <option name="LAST_COMMIT_MESSAGE" value="修复碰撞bug" />
+    <MESSAGE value="将&quot;弹珠游戏-豪华版&quot;改为&quot;请一定玩第四关&quot;的英文" />
+    <option name="LAST_COMMIT_MESSAGE" value="将&quot;弹珠游戏-豪华版&quot;改为&quot;请一定玩第四关&quot;的英文" />
   </component>
 </project>

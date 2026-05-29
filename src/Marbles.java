@@ -42,6 +42,7 @@ public class Marbles {
     private double maxFallSpeed;
     private double speedIncreaseRate;
     private double gameTimeInLevel = 0;
+    private boolean speedManuallySet = false;
 
     private boolean hasCreeper = false;
     private boolean hasBedrock = false;
@@ -76,7 +77,10 @@ public class Marbles {
     public void setFallSpeedMultiplier(double mult) { this.fallSpeedMultiplier = mult; }
     
     // 强制设置下落速度 (被BossSans切阶段调用)
-    public void setCurrentFallSpeed(double speed) { this.currentFallSpeed = speed; }
+    public void setCurrentFallSpeed(double speed) {
+        this.currentFallSpeed = speed;
+        this.speedManuallySet = true;
+    }
 
     public void setLastLaunchPosition(double x, double y) {
         this.lastLaunchX = x;
@@ -773,6 +777,7 @@ public class Marbles {
     public void resetLevelSpeed() {
         this.currentFallSpeed = this.baseFallSpeed;
         this.gameTimeInLevel = 0;
+        this.speedManuallySet = false;
     }
 
     public void setLevelSpeedParams(double baseSpeed, double maxSpeed, double increaseRate) {
@@ -780,6 +785,7 @@ public class Marbles {
         this.maxFallSpeed = maxSpeed;
         this.speedIncreaseRate = increaseRate;
         this.currentFallSpeed = baseSpeed;
+        this.speedManuallySet = false;
     }
 
     public void setSpecialMarbleConfig(boolean creeper, boolean bedrock, boolean heart) {
@@ -789,6 +795,7 @@ public class Marbles {
     }
 
     public void updateGameTime(double dt) {
+        if (this.speedManuallySet) return;
         this.gameTimeInLevel += dt;
         double newSpeed = this.baseFallSpeed + this.gameTimeInLevel * this.speedIncreaseRate;
         this.currentFallSpeed = Math.min(newSpeed, this.maxFallSpeed);
