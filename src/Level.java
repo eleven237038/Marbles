@@ -80,7 +80,7 @@ public class Level {
         public static final double SPEED_INCREASE_RATE = 0.1;
         public static final boolean HAS_BOSS_SANS = true;
         public static final boolean HAS_CREEPER = false;  // 第4关不自然生成creeper（由BossSans触发）
-        public static final boolean HAS_BEDROCK = true;    // bedrock出现
+        public static final boolean HAS_BEDROCK = false;  // 第4关不自然生成bedrock
         public static final boolean HAS_HEART = true;      // heart出现
     }
 
