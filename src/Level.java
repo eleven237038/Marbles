@@ -73,12 +73,13 @@ public class Level {
     /** 第4关配置 */
     public static class Level4 {
         public static final int WIN_SCORE = 2000;
-        // FIXED: 修正为 4。防止将 CREEPER (5) 误算为普通颜色，从而解决了 level4 自然生成 creeper 的 bug。
         public static final int COLOR_TYPE_COUNT = 4; 
         public static final double FALL_SPEED_MULT = 1.0;
-        public static final double BASE_FALL_SPEED = 3.0;
-        public static final double MAX_FALL_SPEED = 15.0;
-        public static final double SPEED_INCREASE_RATE = 0.1;
+        // 匹配 150 BPM 节拍恒定底速 (四分音符) 的物理呈现
+        public static final double BASE_FALL_SPEED = 15.0; 
+        public static final double MAX_FALL_SPEED = 150.0;
+        // 第4关不再加速，完全按乐理节拍硬核恒速下落
+        public static final double SPEED_INCREASE_RATE = 0.0;
         public static final boolean HAS_BOSS_SANS = true;
         public static final boolean HAS_CREEPER = false;  // 第4关不自然生成creeper（由BossSans触发）
         public static final boolean HAS_BEDROCK = false;  // 第4关不自然生成bedrock

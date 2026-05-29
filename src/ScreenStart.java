@@ -46,7 +46,8 @@ public class ScreenStart extends JPanel {
     };
 
     static {
-        TITLE_FONT = new Font("Comic Sans MS", Font.BOLD, 75);
+        // 增大了主标题尺寸
+        TITLE_FONT = new Font("Comic Sans MS", Font.BOLD, 105);
     }
 
     private final Rectangle startBtnBounds = new Rectangle();
@@ -376,7 +377,8 @@ public class ScreenStart extends JPanel {
         FontMetrics fm = g2d.getFontMetrics();
         int titleWidth = fm.stringWidth(title);
         int baseX = w / 2 - titleWidth / 2;
-        int baseY = h / 4 + offset;
+        // 标题向下轻微偏移，适配变大后的尺寸
+        int baseY = h / 4 + offset + 20;
 
         g2d.setColor(TITLE_SHADOW_COLOR_1);
         g2d.drawString(title, baseX + 6, baseY + 6);
@@ -401,17 +403,18 @@ public class ScreenStart extends JPanel {
 
     private void drawCompactMarbles(Graphics2D g2d, int w, int h, int offset) {
         int centerX = w / 2;
-        int titleY = h / 4 + offset;
+        int titleY = h / 4 + offset + 20;
 
+        // 扩宽弹珠与中心标题的距离，适配巨幅标题
         int[][] positions = {
-                {centerX - 170, titleY - 60},
-                {centerX + 170, titleY - 60},
-                {centerX - 200, titleY},
-                {centerX + 200, titleY},
-                {centerX - 120, titleY + 50},
-                {centerX, titleY + 80},
-                {centerX + 120, titleY + 50},
-                {centerX, titleY - 80}
+                {centerX - 240, titleY - 80},
+                {centerX + 240, titleY - 80},
+                {centerX - 280, titleY + 10},
+                {centerX + 280, titleY + 10},
+                {centerX - 180, titleY + 90},
+                {centerX, titleY + 120},
+                {centerX + 180, titleY + 90},
+                {centerX, titleY - 110}
         };
 
         for (int i = 0; i < decorMarbles.size(); i++) {

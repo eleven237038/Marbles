@@ -60,6 +60,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private int sansCreeperShots = 0;
     // 永久苦力怕发射台技能激活状态
     private boolean sansCreeperActive = false;
+    private int sansSkill6Count = 0; // Tracking Skill 6 abuse
+    private boolean sansLeaving = false; // Is Sans in the process of leaving?
+    private double level4Timer = 0;      // Tracking 10 mins requirement
 
     private javax.swing.Timer dialogTimer = null;
     private boolean utStyleDone = false;
@@ -202,6 +205,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sansSkillTimer = 30.0;
         sansCreeperShots = 0;
         sansCreeperActive = false; // 重置苦力怕技能
+        sansSkill6Count = 0;
+        sansLeaving = false;
+        level4Timer = 0;
+        
         if (idleRepaintTimer != null) {
             idleRepaintTimer.stop();
             idleRepaintTimer = null;
@@ -215,10 +222,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             // 检测heart掉落与消除
             if (marble != null && marble.getColorType() == Marble.HEART && sans != null && sansActive) {
                 sans.removeOneHeart();
-                // 当heart剩余2颗时，切换成正义之矛.mp3并放出非阻塞对话（Undertale经典傲娇帅气对白）
+                // 当heart剩余2颗时，切换成正义之矛.mp3并放出非阻塞对话（并且下落速度切阶段）
                 if (sans.getHeartCount() == 2) {
                     ResourceManager.getInstance().playJusticeMusic();
                     sans.setCombatDialog("看来我不能继续偷懒了。\n准备好度过一段糟糕的时光了吗？");
+                    // 以节拍比例提速至 2.19x 等效的高潮致命坠落速度
+                    hexGrid.setCurrentFallSpeed(26.28);
                 }
             }
 
@@ -242,7 +251,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         launchPad = new ScreenGame();
         hexGrid.setMaxRowCount(18);
         hexGrid.setFallSpeedMultiplier(level.getFallSpeedMultiplier());
-        hexGrid.setLevelSpeedParams(3.0, 15.0, 0.1);
+        hexGrid.setLevelSpeedParams(level.getBaseFallSpeed(), level.getMaxFallSpeed(), level.getSpeedIncreaseRate());
         
         // 如果是 level4，则彻底关闭自然生成 creeper 逻辑，交由 BossSans 的技能来动态触发
         boolean enableCreeper = level.hasCreeper() && level.getCurrentLevel() != 4;
@@ -264,8 +273,18 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         if (frozen || gamePaused) return;
         if (hexGrid != null) hexGrid.update(dt, deadline);
 
-        // 仅当过场动画结束、游戏正常开启且非暂停状态时，进行 Sans 的 30 秒攻击计时。
+        // 仅当过场动画结束、游戏正常开启且非暂停状态时，进行 Sans 状态和攻击计时。
         if (sansActive && gameStarted && !frozen && !gamePaused) {
+            
+            // 10 分钟枯燥超时机制检查
+            if (Level.getInstance().getCurrentLevel() == 4) {
+                level4Timer += dt;
+                if (level4Timer >= 600.0 && !sansLeaving) {
+                    triggerSansLeave(true, "呃...我们打了多久了？10分钟？\n你赢了，我太累了，先睡了。");
+                    return;
+                }
+            }
+            
             sansSkillTimer -= dt;
             if (sansSkillTimer <= 0) {
                 triggerSansSkill();
@@ -299,9 +318,43 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         collisionWithDeadline();
     }
 
+    // Sans 走过场触发通用逻辑
+    private void triggerSansLeave(boolean win, String dialog) {
+        if (sansLeaving) return;
+        sansLeaving = true;
+        frozen = true; // 冻结整个弹珠与碰撞系统
+        
+        sans.setCombatDialog(dialog);
+        sansIdle = true;
+        sansAnimating = false;
+        
+        // 给予2.5秒的停留时间让玩家阅读完毕
+        javax.swing.Timer waitTimer = new javax.swing.Timer(2500, ev -> {
+            ((javax.swing.Timer) ev.getSource()).stop();
+            sansIdle = false;
+            sansAnimating = true;
+            sans.play("Basic - Left", 150);
+            
+            javax.swing.Timer leaveTimer = new javax.swing.Timer(16, ev2 -> {
+                sansX -= 3;
+                if (glassPane != null) {
+                    glassPane.repaint();
+                }
+                if (sansX < -250) {
+                    ((javax.swing.Timer) ev2.getSource()).stop();
+                    sansActive = false;
+                    sansAnimating = false;
+                    openScreenGameOverMenu(win);
+                }
+            });
+            leaveTimer.start();
+        });
+        waitTimer.start();
+    }
+
     // Trigger Undertale Sans signature boss battle skills and dialogs
     private void triggerSansSkill() {
-        if (hexGrid == null || sans == null) return;
+        if (hexGrid == null || sans == null || sansLeaving) return;
         int skillType;
         
         // 当出现警戒 Marble 时，Sans 的触发技能恒定锁定为 6 (Creeper 支持)
@@ -361,6 +414,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 sans.setCombatDialog(s5Dialogs[random.nextInt(s5Dialogs.length)]);
                 break;
             case 6:
+                sansSkill6Count++;
+                if (sansSkill6Count > 5) {
+                    triggerSansLeave(false, "又是这个绿色的东西？\n看来你真的只知道用爆炸。\n我受够了，你自己玩吧。");
+                    return;
+                }
+            
                 sansCreeperActive = true;
                 if (launchMarble != null) {
                     launchMarble.setColorType(Marble.CREEPER);
@@ -411,14 +470,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             double checkX = prevX + dx * i / steps;
             double checkY = prevY + dy * i / steps;
 
-            // ===== [BUG修复] 顶部边界检测 =====
-            // 解决弹珠射出窗口上边缘后永远消失的问题。使其碰到顶端自动吸附。
             if (checkY <= radius) {
                 collided = true;
                 launchMarble.setCenter(checkX, radius);
                 break;
             }
-            // ===============================
 
             for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
                 Marble[] row = hexGrid.getRow(r);
@@ -473,6 +529,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     }
 
     private void collisionWithDeadline() {
+        if (sansLeaving) return; // 已执行过场时不重复触发
         if (hexGrid == null) return;
         double radius = hexGrid.getSide() * 0.866;
         for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
@@ -481,7 +538,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             for (int c = 0; c < row.length; c++) {
                 Marble marble = row[c];
                 if (marble != null && marble.isInitialized() && !marble.isPopping() && !marble.isFalling() && marble.getCenterY() + radius >= deadline) {
-                    openScreenGameOverMenu(false);
+                    if (sansActive && Level.getInstance().getCurrentLevel() == 4) {
+                        triggerSansLeave(false, "看来你已经到极限了。\n那么，游戏到此为止吧。");
+                    } else {
+                        openScreenGameOverMenu(false);
+                    }
                     return;
                 }
             }
@@ -718,27 +779,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
         sans.initHearts(sansX, sansY);
         sans.setOnAllHeartsRemoved(() -> {
-            sansIdle = false;
-            sansAnimating = true;
-            sans.play("Basic - Left", 150);
-            // heart==0 触发离场对白（非阻塞，经典 Undertale 傲娇伤心语调）
-            sans.setCombatDialog("猜我只是... 太懒了躲不开。\npapyrus，你想要点什么吗？");
-
-            javax.swing.Timer leaveTimer = new javax.swing.Timer(16, ev -> {
-                sansX -= 3; 
-                if (glassPane != null) {
-                    glassPane.repaint();
-                }
-                if (sansX < -200) {
-                    ((javax.swing.Timer) ev.getSource()).stop();
-                    sansActive = false;
-                    sansAnimating = false;
-                    if (glassPane != null) {
-                        glassPane.repaint();
-                    }
-                }
-            });
-            leaveTimer.start();
+            if (sansLeaving) return;
+            triggerSansLeave(true, "猜我只是... 太懒了躲不开。\npapyrus，你想要点什么吗？");
         });
     }
 

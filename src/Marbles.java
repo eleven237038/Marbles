@@ -74,6 +74,10 @@ public class Marbles {
     public int getMaxRowCount() { return maxRowCount; }
     public void setMaxRowCount(int maxRowCount) { this.maxRowCount = maxRowCount; }
     public void setFallSpeedMultiplier(double mult) { this.fallSpeedMultiplier = mult; }
+    
+    // 强制设置下落速度 (被BossSans切阶段调用)
+    public void setCurrentFallSpeed(double speed) { this.currentFallSpeed = speed; }
+
     public void setLastLaunchPosition(double x, double y) {
         this.lastLaunchX = x;
         this.lastLaunchY = y;
@@ -856,7 +860,7 @@ public class Marbles {
         this.alternateColorRows = rows;
     }
 
-    // 技能 2: 将一个严格以2个Marble长为边长的六边形范围转换为 bedrock (避开 heartMarble)
+    // 技能 2: 将一个严格以1个Marble边长为六边形范围转换为 bedrock (避开 heartMarble)
     public void skillBedrockRadius() {
         if (marbles == null) return;
         List<Marble> targets = new ArrayList<>();
@@ -873,8 +877,8 @@ public class Marbles {
         double cx = center.getCenterX();
         double cy = center.getCenterY();
         
-        // 修改阈值：完美六边形半径约为2.2个单位的物理距离，可准确囊括两层六边形 (共19个棋子)
-        double radiusSq = (side * SQRT3 * 2.2) * (side * SQRT3 * 2.2);
+        // 修改阈值：完美六边形半径调整为1.1，仅囊括中心本体与其直接相邻的6个相连弹珠 (共7颗)
+        double radiusSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);
 
         for (Marble[] row : marbles) {
             if (row == null) continue;
@@ -890,42 +894,40 @@ public class Marbles {
         }
     }
 
-    // 技能 3: 挑选一个完整行，除一个之外，其余全部变成 bedrock (避开 heartMarble)
+    // 技能 3: 挑选一个活跃的正常弹珠及其周围的最多 3 个活跃正常弹珠，将其集体转为 Bedrock (总计生成4个相邻Bedrock)
     public void skillBedrockRow() {
         if (marbles == null) return;
-        List<Integer> validRows = new ArrayList<>();
+        List<Marble> normalMarbles = new ArrayList<>();
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
-            int activeCount = 0;
-            int normalCount = 0;
             for (Marble m : marbles[r]) {
-                if (isMarbleActive(m)) {
-                    activeCount++;
-                    if (m.isNormalMarble() && m.getColorType() != Marble.HEART) {
-                        normalCount++;
-                    }
+                if (isMarbleActive(m) && m.isNormalMarble() && m.getColorType() != Marble.HEART) {
+                    normalMarbles.add(m);
                 }
-            }
-            if (activeCount >= 5 && normalCount > 1) {
-                validRows.add(r);
-            }
-        }
-        if (validRows.isEmpty()) return;
-        int chosenRow = validRows.get(random.nextInt(validRows.size()));
-
-        List<Marble> normalMarbles = new ArrayList<>();
-        for (Marble m : marbles[chosenRow]) {
-            if (isMarbleActive(m) && m.isNormalMarble() && m.getColorType() != Marble.HEART) {
-                normalMarbles.add(m);
             }
         }
         if (normalMarbles.isEmpty()) return;
 
-        Marble keepNormal = normalMarbles.get(random.nextInt(normalMarbles.size()));
-        for (Marble m : normalMarbles) {
-            if (m != keepNormal) {
-                m.setColorType(Marble.BEDROCK);
+        // 挑选核心转化目标
+        Marble center = normalMarbles.get(random.nextInt(normalMarbles.size()));
+        center.setColorType(Marble.BEDROCK);
+
+        // 获取相邻目标池并过滤非法目标
+        List<Marble> neighbors = getNeighbors(center.getRow(), center.getCol());
+        List<Marble> validNeighbors = new ArrayList<>();
+        for (Marble n : neighbors) {
+            if (isMarbleActive(n) && n.isNormalMarble() && n.getColorType() != Marble.HEART) {
+                validNeighbors.add(n);
             }
+        }
+
+        // 打乱并随机转化3个相邻位，实现精准生成4个相邻bedrock
+        java.util.Collections.shuffle(validNeighbors, random);
+        int count = 1;
+        for (Marble n : validNeighbors) {
+            if (count >= 4) break;
+            n.setColorType(Marble.BEDROCK);
+            count++;
         }
     }
 
