@@ -4,12 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="为Sans添加技能">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="为Sans修复技能">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/readme.txt" beforeDir="false" afterPath="$PROJECT_DIR$/readme.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/BossSans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BossSans.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -151,15 +147,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
-      <workItem from="1780030147321" duration="13916000" />
-    </task>
-    <task id="LOCAL-00064" summary="合并UI,音效">
-      <option name="closed" value="true" />
-      <created>1779895890492</created>
-      <option name="number" value="00064" />
-      <option name="presentableId" value="LOCAL-00064" />
-      <option name="project" value="LOCAL" />
-      <updated>1779895890492</updated>
+      <workItem from="1780030147321" duration="14877000" />
     </task>
     <task id="LOCAL-00065" summary="合并UI,音效">
       <option name="closed" value="true" />
@@ -545,7 +533,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780048695948</updated>
     </task>
-    <option name="localTasksCounter" value="113" />
+    <task id="LOCAL-00113" summary="为Sans修复技能">
+      <option name="closed" value="true" />
+      <created>1780050133301</created>
+      <option name="number" value="00113" />
+      <option name="presentableId" value="LOCAL-00113" />
+      <option name="project" value="LOCAL" />
+      <updated>1780050133301</updated>
+    </task>
+    <option name="localTasksCounter" value="114" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -563,7 +559,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="更新所有的路径,确保检索仅在本地仓库文件夹内进行而不是超过这个路径,保证其他人从远程仓库下载时可以正常读取加载" />
     <MESSAGE value="修正按钮显示" />
     <MESSAGE value="尝试Sans出场" />
     <MESSAGE value="完成Sans出场" />
@@ -588,6 +583,7 @@
     <MESSAGE value="大跃进" />
     <MESSAGE value="修复对话框文字bug" />
     <MESSAGE value="为Sans添加技能" />
-    <option name="LAST_COMMIT_MESSAGE" value="为Sans添加技能" />
+    <MESSAGE value="为Sans修复技能" />
+    <option name="LAST_COMMIT_MESSAGE" value="为Sans修复技能" />
   </component>
 </project>

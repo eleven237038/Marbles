@@ -424,26 +424,23 @@ public class ScreenStart extends JPanel {
 
     private void drawStartButton(Graphics2D g2d) {
         double scaleX = 1.0;
-        
-        // 当尚未触发入场动效时，按钮尺寸为0保持隐藏
-        if (!startAnimTriggered) {
-            scaleX = 0.0;
-        } else if (isPlayBtnAnimating) {
+
+        // 按钮入场动画：从0平滑展开到1，带轻微弹性
+        if (isPlayBtnAnimating) {
             long elapsed = System.currentTimeMillis() - playBtnAnimStartTime;
-            if (elapsed < 150) {
-                scaleX = 12.0 / 13.0; // 首次极速挤压为12/13
-            } else if (elapsed < 300) {
-                scaleX = 1.0;         // 恢复原状
-            } else if (elapsed < 450) {
-                scaleX = 14.0 / 13.0; // 弹出拉伸至14/13
-            } else {
-                scaleX = 1.0;
-            }
+            double t = Math.min(elapsed / 800.0, 1.0); // 800ms展开
+
+            // 从0到1的平滑过渡 + 微幅弹性
+            scaleX = 0.0
+                + 1.0 * easeOutBack(t)      // 主展开，带轻微回弹
+                + 0.03 * sineWave(t, 0.4);  // 到达后的微幅振荡
+        } else if (!startAnimTriggered) {
+            scaleX = 0.0;
         }
-        
+
         if (scaleX == 0.0) return;
 
-        // 根据挤压/拉伸缩放计算新的大小和中心坐标
+        // 根据缩放计算新的大小和中心坐标
         int currentWidth = (int)(BTN_WIDTH * scaleX);
         int currentX = startX + (BTN_WIDTH - currentWidth) / 2;
 
@@ -469,22 +466,38 @@ public class ScreenStart extends JPanel {
         String text = "PLAY";
         FontMetrics fm = g2d.getFontMetrics();
         int textW = fm.stringWidth(text);
-        
+
         int triSize = 20;
         int spacing = 10;
         int totalW = triSize + spacing + textW;
-        
+
         int drawX = currentX + (currentWidth - totalW) / 2;
         int drawY = startY + BTN_HEIGHT / 2;
-        
+
         // 绘制三角形 ▶
         int[] xP = {drawX, drawX + triSize, drawX};
         int[] yP = {drawY - triSize/2, drawY, drawY + triSize/2};
         g2d.setColor(Color.WHITE);
         g2d.fillPolygon(xP, yP, 3);
-        
+
         // 绘制文本
         g2d.drawString(text, drawX + triSize + spacing, drawY + fm.getAscent()/2 - 3);
+    }
+
+    // easeOutBack：先回弹再超调
+    private double easeOutBack(double t) {
+        if (t <= 0) return 0;
+        if (t >= 1) return 1;
+        double c1 = 1.70158;
+        double c3 = c1 + 1;
+        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
+
+    // 正弦波：用于到达后的微幅振荡
+    private double sineWave(double t, double damping) {
+        if (t <= 0) return 0;
+        if (t >= 1) return 0;
+        return Math.sin(t * Math.PI * 3) * Math.exp(-t / damping) * 0.5;
     }
 
     private void drawLevelSelectOverlay(Graphics2D g2d, int w, int h) {
