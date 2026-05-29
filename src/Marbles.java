@@ -856,7 +856,7 @@ public class Marbles {
         this.alternateColorRows = rows;
     }
 
-    // 技能 2: 将一个 3 像素半径范围内的弹珠转换为 bedrock（避开 heartMarble）
+    // 技能 2: 将一个严格以2个Marble长为边长的六边形范围转换为 bedrock (避开 heartMarble)
     public void skillBedrockRadius() {
         if (marbles == null) return;
         List<Marble> targets = new ArrayList<>();
@@ -872,7 +872,9 @@ public class Marbles {
         Marble center = targets.get(random.nextInt(targets.size()));
         double cx = center.getCenterX();
         double cy = center.getCenterY();
-        double radiusSq = (side * SQRT3 * 3.2) * (side * SQRT3 * 3.2);
+        
+        // 修改阈值：完美六边形半径约为2.2个单位的物理距离，可准确囊括两层六边形 (共19个棋子)
+        double radiusSq = (side * SQRT3 * 2.2) * (side * SQRT3 * 2.2);
 
         for (Marble[] row : marbles) {
             if (row == null) continue;
@@ -927,28 +929,25 @@ public class Marbles {
         }
     }
 
-    // 技能 5: 瞬间向下传送 2 行（物理坐标与存储槽索引同时同步向下位移）
+    // 技能 5: 瞬间向下传送 2 行（物理坐标与存储槽索引同时同步向下位移，并补充空槽确保无缝连接）
     public void skillTeleportDown(int rows) {
         if (marbles == null) return;
         
-        // 1. 创建扩容后的全新行数组
-        Marble[][] newMarbles = new Marble[marbles.length + rows][];
-        
-        // 2. 将原索引全部向后推移对应的行数，并物理向下位移
-        for (int r = 0; r < marbles.length; r++) {
-            if (marbles[r] != null) {
-                newMarbles[r + rows] = marbles[r];
-                for (Marble m : marbles[r]) {
-                    if (m != null) {
-                        m.setRow(r + rows);
-                        m.setCenter(m.getCenterX(), m.getCenterY() + ySpacing * rows);
+        for (int i = 0; i < rows; i++) {
+            // 所有弹珠物理向下移动一层
+            for (int r = 0; r < marbles.length; r++) {
+                if (marbles[r] != null) {
+                    for (Marble m : marbles[r]) {
+                        if (m != null && !m.isDead() && !m.isFalling() && !m.isPopping()) {
+                            m.setCenter(m.getCenterX(), m.getCenterY() + ySpacing);
+                        }
                     }
                 }
             }
+            // 在顶部立刻生成新的一行填补空隙
+            int newRow = maxRowCount + rowCount;
+            this.rowCount++;
+            AddMarbleRow(newRow, screenWidth, this.rowCount);
         }
-        
-        // 3. 覆盖指针并推进关卡累计行数，确保后续行继续正常追加
-        this.marbles = newMarbles;
-        this.rowCount += rows;
     }
 }

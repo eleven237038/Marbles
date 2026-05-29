@@ -2,7 +2,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
 
@@ -262,12 +264,38 @@ public class BossSans {
     }
 
     // ========== UT风格 绘制对话框气泡 ==========
-    public void drawUTBubble(Graphics2D g, String text, int bx, int by, boolean tailLeft) {
-        String[] lines = text.split("\n");
-        // 使用UT风格经典黑白气泡与字体
+    public void drawUTBubble(Graphics2D g, String text, int bx, int by, int maxWidth, boolean tailLeft, boolean tailDown) {
+        // 自动换行处理
         Font font = new Font("Monospaced", Font.BOLD, 18);
         g.setFont(font);
         FontMetrics fm = g.getFontMetrics();
+
+        String[] rawLines = text.split("\n");
+        List<String> wrappedLines = new ArrayList<>();
+        for (String line : rawLines) {
+            if (fm.stringWidth(line) <= maxWidth) {
+                wrappedLines.add(line);
+            } else {
+                StringBuilder current = new StringBuilder();
+                int currentW = 0;
+                for (int i = 0; i < line.length(); i++) {
+                    char c = line.charAt(i);
+                    int cw = fm.charWidth(c);
+                    if (currentW + cw > maxWidth) {
+                        wrappedLines.add(current.toString());
+                        current = new StringBuilder();
+                        currentW = 0;
+                    }
+                    current.append(c);
+                    currentW += cw;
+                }
+                if (current.length() > 0) {
+                    wrappedLines.add(current.toString());
+                }
+            }
+        }
+
+        String[] lines = wrappedLines.toArray(new String[0]);
 
         int maxW = 0;
         for (String l : lines) maxW = Math.max(maxW, fm.stringWidth(l));
@@ -278,14 +306,27 @@ public class BossSans {
         // 气泡底色
         g.setColor(Color.WHITE);
         g.fillRoundRect(bx, by, bw, bh, 15, 15);
-        
+
         // 气泡边框
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(4));
         g.drawRoundRect(bx, by, bw, bh, 15, 15);
 
         // 尾巴
-        if (tailLeft) {
+        if (tailDown) {
+            // 尾巴朝下，位于气泡底部中间
+            int tailX = bx + bw / 2;
+            int tailY = by + bh;
+            int[] px = {tailX - 10, tailX + 10, tailX};
+            int[] py = {tailY, tailY, tailY + 20};
+            g.setColor(Color.WHITE);
+            g.fillPolygon(px, py, 3);
+            g.setColor(Color.BLACK);
+            g.drawLine(tailX - 10, tailY, tailX, tailY + 20);
+            g.drawLine(tailX + 10, tailY, tailX, tailY + 20);
+            g.setColor(Color.WHITE);
+            g.drawLine(tailX - 8, tailY, tailX + 8, tailY);
+        } else if (tailLeft) {
             int[] px = {bx, bx - 25, bx};
             int[] py = {by + bh / 2 - 10, by + bh / 2 + 10, by + bh / 2 + 5};
             g.setColor(Color.WHITE);
@@ -304,7 +345,7 @@ public class BossSans {
             g.drawLine(bx + bw + 25, by + bh / 2 + 10, bx + bw, by + bh / 2 - 10);
             g.drawLine(bx + bw + 25, by + bh / 2 + 10, bx + bw, by + bh / 2 + 5);
             g.setColor(Color.WHITE);
-            g.drawLine(bx + bw, by + bh/2 - 8, bx + bw, by + bh/2 + 3); 
+            g.drawLine(bx + bw, by + bh/2 - 8, bx + bw, by + bh/2 + 3);
         }
 
         g.setColor(Color.BLACK);
@@ -382,7 +423,7 @@ public class BossSans {
         // 渲染对话气泡，尾巴朝左指向Sans
         int bx = anchorX + 100;
         int by = anchorY - 80;
-        drawUTBubble(g, wrapped.toString(), bx, by, true);
+        drawUTBubble(g, wrapped.toString(), bx, by, 220, true, false);
     }
 
     // ========== 战斗阶段非阻塞对话方法 ==========
@@ -400,14 +441,53 @@ public class BossSans {
             return;
         }
 
-        FontMetrics fm = g.getFontMetrics(new Font("Monospaced", Font.BOLD, 18));
-        int maxW = 0;
-        for (String l : combatDialogText.split("\n")) maxW = Math.max(maxW, fm.stringWidth(l));
-        int bw = maxW + 40;
+        // 设定边界限制：最左不能超过窗口(10)，最右不能超过游戏界面左侧边缘(250之前)
+        int minX = 10;
+        int maxX = 240;
+        int maxContentWidth = maxX - minX - 40; // 减去内边距
 
-        // 渲染战斗期间气泡，位于Sans上方（居中，尾巴朝下）
+        FontMetrics fm = g.getFontMetrics(new Font("Monospaced", Font.BOLD, 18));
+        
+        // 预先排版，以获取包裹内容的实际尺寸宽度计算
+        List<String> wrappedLines = new ArrayList<>();
+        for (String line : combatDialogText.split("\n")) {
+            if (fm.stringWidth(line) <= maxContentWidth) {
+                wrappedLines.add(line);
+            } else {
+                StringBuilder current = new StringBuilder();
+                int currentW = 0;
+                for (int i = 0; i < line.length(); i++) {
+                    char c = line.charAt(i);
+                    int cw = fm.charWidth(c);
+                    if (currentW + cw > maxContentWidth) {
+                        wrappedLines.add(current.toString());
+                        current = new StringBuilder();
+                        currentW = 0;
+                    }
+                    current.append(c);
+                    currentW += cw;
+                }
+                if (current.length() > 0) {
+                    wrappedLines.add(current.toString());
+                }
+            }
+        }
+
+        int maxW = 0;
+        for (String l : wrappedLines) maxW = Math.max(maxW, fm.stringWidth(l));
+
+        int bw = maxW + 40;
+        int bh = wrappedLines.size() * 25 + 30;
+
+        // 渲染战斗期间气泡，位于Sans正上方（居中，尾巴朝下）
         int bx = anchorX - bw / 2;
-        int by = anchorY - 100;
-        drawUTBubble(g, combatDialogText, bx, by, true); // tailLeft=true 尾巴在左侧底部
+        int by = anchorY - bh - 20;
+
+        // 应用硬性边界限制
+        if (bx < minX) bx = minX;
+        if (bx + bw > maxX) bx = maxX - bw;
+
+        // 调用基础UT气泡方法：因为传入文本后也会经历同样的排版算法，所以大小会完美拟合
+        drawUTBubble(g, combatDialogText, bx, by, maxContentWidth, false, true);
     }
 }

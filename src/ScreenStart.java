@@ -26,6 +26,11 @@ public class ScreenStart extends JPanel {
     private boolean settingPressed = false;
     public static boolean isSoundOnStatic = true;
 
+    // 播放按钮跳动动画变量
+    private long playBtnAnimStartTime = 0;
+    private boolean isPlayBtnAnimating = false;
+    private boolean startAnimTriggered = false;
+
     private static final Font TITLE_FONT;
     private static final Color TITLE_SHADOW_COLOR_1 = new Color(0, 0, 0, 50);
     private static final Color TITLE_SHADOW_COLOR_2 = new Color(0, 0, 0, 30);
@@ -84,11 +89,33 @@ public class ScreenStart extends JPanel {
         initDecorMarbles();
 
         animationTimer = new javax.swing.Timer(16, e -> {
+            boolean active = false;
             if (fallOffset < 0) {
                 fallOffset += 8;
-                if (fallOffset > 0) fallOffset = 0;
+                if (fallOffset >= 0) {
+                    fallOffset = 0;
+                }
+                active = true;
+            }
+            
+            // 下落结束后，首次触发跳动按键
+            if (fallOffset == 0 && !startAnimTriggered) {
+                startAnimTriggered = true;
+                triggerPlayBtnAnimation();
+                active = true;
+            }
+            
+            if (isPlayBtnAnimating) {
+                long elapsed = System.currentTimeMillis() - playBtnAnimStartTime;
+                if (elapsed > 450) {
+                    isPlayBtnAnimating = false;
+                }
+                active = true;
+            }
+
+            if (active) {
                 repaint();
-            } else {
+            } else if (fallOffset == 0 && !isPlayBtnAnimating) {
                 animationTimer.stop();
             }
         });
@@ -112,6 +139,9 @@ public class ScreenStart extends JPanel {
                         repaint();
                     } else if (settingPressed) {
                         openSettings();
+                    } else {
+                        // 若不是点击按键，则同样触发跳动出场动效
+                        triggerPlayBtnAnimation();
                     }
                 }
             }
@@ -249,6 +279,8 @@ public class ScreenStart extends JPanel {
 
     private void startAnimation() {
         fallOffset = -300;
+        startAnimTriggered = false;
+        isPlayBtnAnimating = false;
         if (!animationTimer.isRunning()) {
             animationTimer.start();
         }
@@ -256,6 +288,8 @@ public class ScreenStart extends JPanel {
 
     public void restartAnimation() {
         fallOffset = -300;
+        startAnimTriggered = false;
+        isPlayBtnAnimating = false;
         if (!animationTimer.isRunning()) {
             animationTimer.start();
         }
@@ -268,8 +302,15 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    private void triggerPlayBtnAnimation() {
+        playBtnAnimStartTime = System.currentTimeMillis();
+        isPlayBtnAnimating = true;
+        if (!animationTimer.isRunning()) {
+            animationTimer.start();
+        }
+    }
+
     private void openSettings() {
-        // 只打开设置面板，不切换音效
         listener.onOpenSettings();
         settingPressed = false;
         repaint();
@@ -300,7 +341,6 @@ public class ScreenStart extends JPanel {
         settingX = 30;
         settingY = h - SETTING_SIZE - 30;
 
-        startBtnBounds.setBounds(startX, startY, BTN_WIDTH, BTN_HEIGHT);
         settingBtnBounds.setBounds(settingX, settingY, SETTING_SIZE, SETTING_SIZE);
 
         drawBackground(g2d, w, h);
@@ -383,14 +423,39 @@ public class ScreenStart extends JPanel {
     }
 
     private void drawStartButton(Graphics2D g2d) {
-        RoundRectangle2D btn = new RoundRectangle2D.Double(startX, startY, BTN_WIDTH, BTN_HEIGHT, 35, 35);
+        double scaleX = 1.0;
+        
+        // 当尚未触发入场动效时，按钮尺寸为0保持隐藏
+        if (!startAnimTriggered) {
+            scaleX = 0.0;
+        } else if (isPlayBtnAnimating) {
+            long elapsed = System.currentTimeMillis() - playBtnAnimStartTime;
+            if (elapsed < 150) {
+                scaleX = 12.0 / 13.0; // 首次极速挤压为12/13
+            } else if (elapsed < 300) {
+                scaleX = 1.0;         // 恢复原状
+            } else if (elapsed < 450) {
+                scaleX = 14.0 / 13.0; // 弹出拉伸至14/13
+            } else {
+                scaleX = 1.0;
+            }
+        }
+        
+        if (scaleX == 0.0) return;
+
+        // 根据挤压/拉伸缩放计算新的大小和中心坐标
+        int currentWidth = (int)(BTN_WIDTH * scaleX);
+        int currentX = startX + (BTN_WIDTH - currentWidth) / 2;
+
+        startBtnBounds.setBounds(currentX, startY, currentWidth, BTN_HEIGHT);
+        RoundRectangle2D btn = new RoundRectangle2D.Double(currentX, startY, currentWidth, BTN_HEIGHT, 35, 35);
 
         Color c1 = startPressed ? new Color(50, 140, 255) :
                 startHover ? new Color(100, 190, 255) : new Color(70, 150, 255);
         Color c2 = startPressed ? new Color(30, 110, 255) :
                 startHover ? new Color(50, 140, 255) : new Color(30, 110, 255);
 
-        LinearGradientPaint btnGrad = new LinearGradientPaint(startX, startY, startX, startY + BTN_HEIGHT,
+        LinearGradientPaint btnGrad = new LinearGradientPaint(currentX, startY, currentX, startY + BTN_HEIGHT,
                 new float[]{0, 1}, new Color[]{c1, c2});
         g2d.setPaint(btnGrad);
         g2d.fill(btn);
@@ -399,11 +464,27 @@ public class ScreenStart extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.draw(btn);
 
-        int x = startX + BTN_WIDTH / 2;
-        int y = startY + BTN_HEIGHT / 2;
-        int[] xP = {x - 18, x + 18, x - 18};
-        int[] yP = {y - 18, y, y + 18};
+        // 修改按钮文字和三角形呈现效果: "▶ PLAY"
+        g2d.setFont(new Font("Arial Black", Font.BOLD, 28));
+        String text = "PLAY";
+        FontMetrics fm = g2d.getFontMetrics();
+        int textW = fm.stringWidth(text);
+        
+        int triSize = 20;
+        int spacing = 10;
+        int totalW = triSize + spacing + textW;
+        
+        int drawX = currentX + (currentWidth - totalW) / 2;
+        int drawY = startY + BTN_HEIGHT / 2;
+        
+        // 绘制三角形 ▶
+        int[] xP = {drawX, drawX + triSize, drawX};
+        int[] yP = {drawY - triSize/2, drawY, drawY + triSize/2};
+        g2d.setColor(Color.WHITE);
         g2d.fillPolygon(xP, yP, 3);
+        
+        // 绘制文本
+        g2d.drawString(text, drawX + triSize + spacing, drawY + fm.getAscent()/2 - 3);
     }
 
     private void drawLevelSelectOverlay(Graphics2D g2d, int w, int h) {
@@ -423,7 +504,6 @@ public class ScreenStart extends JPanel {
         int gridStartY = panelH / 2 - LEVEL_BTN_SIZE / 2;
 
         Level levelManager = Level.getInstance();
-        int currentLevel = levelManager.getCurrentLevel();
         int unlockedCount = levelManager.getUnlockedLevelCount();
 
         for (int i = 0; i < Level.MAX_LEVEL; i++) {
