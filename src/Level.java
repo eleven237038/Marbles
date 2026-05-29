@@ -73,11 +73,11 @@ public class Level {
     /** 第4关配置 */
     public static class Level4 {
         public static final int WIN_SCORE = 2000;
-        public static final int COLOR_TYPE_COUNT = 4; 
+        public static final int COLOR_TYPE_COUNT = 4;
         public static final double FALL_SPEED_MULT = 1.0;
         // 匹配 150 BPM 节拍恒定底速 (四分音符) 的物理呈现
-        public static final double BASE_FALL_SPEED = 15.0; 
-        public static final double MAX_FALL_SPEED = 150.0;
+        public static final double BASE_FALL_SPEED = 7.5;
+        public static final double MAX_FALL_SPEED = 75.0;
         // 第4关不再加速，完全按乐理节拍硬核恒速下落
         public static final double SPEED_INCREASE_RATE = 0.0;
         public static final boolean HAS_BOSS_SANS = true;

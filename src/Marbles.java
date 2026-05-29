@@ -894,40 +894,55 @@ public class Marbles {
         }
     }
 
-    // 技能 3: 挑选一个活跃的正常弹珠及其周围的最多 3 个活跃正常弹珠，将其集体转为 Bedrock (总计生成4个相邻Bedrock)
+    // 技能 3: 在随机选中行生成3个不相邻的Bedrock
     public void skillBedrockRow() {
         if (marbles == null) return;
-        List<Marble> normalMarbles = new ArrayList<>();
+
+        // 找到所有有活跃弹珠的行
+        List<Integer> activeRows = new ArrayList<>();
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
+            boolean hasActive = false;
             for (Marble m : marbles[r]) {
-                if (isMarbleActive(m) && m.isNormalMarble() && m.getColorType() != Marble.HEART) {
-                    normalMarbles.add(m);
+                if (m != null && isMarbleActive(m) && m.isNormalMarble()) {
+                    hasActive = true;
+                    break;
                 }
             }
+            if (hasActive) activeRows.add(r);
         }
-        if (normalMarbles.isEmpty()) return;
+        if (activeRows.isEmpty()) return;
 
-        // 挑选核心转化目标
-        Marble center = normalMarbles.get(random.nextInt(normalMarbles.size()));
-        center.setColorType(Marble.BEDROCK);
+        // 随机选一行
+        int targetRow = activeRows.get(random.nextInt(activeRows.size()));
 
-        // 获取相邻目标池并过滤非法目标
-        List<Marble> neighbors = getNeighbors(center.getRow(), center.getCol());
-        List<Marble> validNeighbors = new ArrayList<>();
-        for (Marble n : neighbors) {
-            if (isMarbleActive(n) && n.isNormalMarble() && n.getColorType() != Marble.HEART) {
-                validNeighbors.add(n);
+        // 统计该行的列数
+        int cols = marbles[targetRow].length;
+
+        // 生成3个不相邻的随机位置
+        List<Integer> bedrockCols = new ArrayList<>();
+        int attempts = 0;
+        while (bedrockCols.size() < 3 && attempts < 100) {
+            int col = random.nextInt(cols);
+            // 检查是否与已有的bedrock相邻（相邻定义：列索引差 >= 2）
+            boolean adjacent = false;
+            for (int existingCol : bedrockCols) {
+                if (Math.abs(col - existingCol) < 2) {
+                    adjacent = true;
+                    break;
+                }
             }
+            if (!adjacent) {
+                bedrockCols.add(col);
+            }
+            attempts++;
         }
 
-        // 打乱并随机转化3个相邻位，实现精准生成4个相邻bedrock
-        java.util.Collections.shuffle(validNeighbors, random);
-        int count = 1;
-        for (Marble n : validNeighbors) {
-            if (count >= 4) break;
-            n.setColorType(Marble.BEDROCK);
-            count++;
+        // 将这些位置设置为Bedrock
+        for (int col : bedrockCols) {
+            if (marbles[targetRow][col] != null && isMarbleActive(marbles[targetRow][col])) {
+                marbles[targetRow][col].setColorType(Marble.BEDROCK);
+            }
         }
     }
 

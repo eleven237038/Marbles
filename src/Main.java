@@ -226,8 +226,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 if (sans.getHeartCount() == 2) {
                     ResourceManager.getInstance().playJusticeMusic();
                     sans.setCombatDialog("看来我不能继续偷懒了。\n准备好度过一段糟糕的时光了吗？");
-                    // 以节拍比例提速至 2.19x 等效的高潮致命坠落速度
-                    hexGrid.setCurrentFallSpeed(26.28);
+                    // 以节拍比例提速至 2.19x 等效的高潮致命坠落速度（减半后）
+                    hexGrid.setCurrentFallSpeed(13.14);
                 }
             }
 
