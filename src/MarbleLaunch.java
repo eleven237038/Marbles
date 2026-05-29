@@ -98,7 +98,7 @@ public class MarbleLaunch extends Marble {
         if (level2ShotCounter >= CREEPER_INTERVAL) {
             level2ShotCounter = 0;
             setColorType(CREEPER);
-        } else if (random.nextDouble() < 0.1667) {  // 1/6概率提前触发
+        } else if (random.nextDouble() < 1.0 / CREEPER_INTERVAL) {
             level2ShotCounter = 0;
             setColorType(CREEPER);
         }

@@ -234,6 +234,39 @@ public class Marbles {
         return null;
     }
 
+    // 新增：获取指定行列周围的邻居弹珠
+    private List<Marble> getNeighbors(int r, int c) {
+        List<Marble> neighbors = new ArrayList<>();
+        if (marbles == null || r < 0 || r >= marbles.length || marbles[r] == null || c < 0 || c >= marbles[r].length) {
+            return neighbors;
+        }
+        Marble current = marbles[r][c];
+        if (current == null) return neighbors;
+
+        double thresholdSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);
+
+        for (int dr = -1; dr <= 1; dr++) {
+            int nr = r + dr;
+            if (nr >= 0 && nr < marbles.length && marbles[nr] != null) {
+                for (int dc = -2; dc <= 2; dc++) {
+                    if (dr == 0 && dc == 0) continue;
+                    int nc = c + dc;
+                    if (nc >= 0 && nc < marbles[nr].length) {
+                        Marble neighbor = marbles[nr][nc];
+                        if (isMarbleActive(neighbor)) {
+                            double dx = current.getCenterX() - neighbor.getCenterX();
+                            double dy = current.getCenterY() - neighbor.getCenterY();
+                            if (dx * dx + dy * dy <= thresholdSq) {
+                                neighbors.add(neighbor);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return neighbors;
+    }
+
     public void attachMarble(Marble launchMarble, int screenWidth) {
         double lx = launchMarble.getCenterX();
         double ly = launchMarble.getCenterY();
@@ -336,16 +369,45 @@ public class Marbles {
         double exactX = targetBaseX + targetCol * xSpacing;
         double exactY = ref.getCenterY() - (targetRow - ref.getRow()) * ySpacing;
 
+        // 将新弹珠放置入网格
         marbles[targetRow][targetCol] = new Marble();
         marbles[targetRow][targetCol].setColorType(launchMarble.getColorType());
         marbles[targetRow][targetCol].init(exactX, exactY, targetRow, targetCol);
 
-        // 检查发射的弹珠本身是否为creeper（自爆）
-        if (launchMarble.getColorType() == Marble.CREEPER) {
-            creeperBlast(exactX, exactY);
+        // 新增：判断 Creeper 碰撞逻辑（仅包含：自身碰撞与被碰撞）
+        List<Marble> neighbors = getNeighbors(targetRow, targetCol);
+        boolean launchedIsCreeper = launchMarble.getColorType() == Marble.CREEPER;
+        boolean hitGridCreeper = false;
+        List<Marble> hitCreepers = new ArrayList<>();
+
+        for (Marble n : neighbors) {
+            if (n.getColorType() == Marble.CREEPER) {
+                hitGridCreeper = true;
+                hitCreepers.add(n);
+            }
         }
 
-        checkConnectedFromLaunch(targetRow, targetCol, launchMarble.getColorType());
+        if (launchedIsCreeper && hitGridCreeper) {
+            // 两个 Creeper 碰撞：核爆清屏
+            nukeBoard();
+            checkFloatingMarbles();
+            addRoundTotalScore();
+        } else if (launchedIsCreeper) {
+            // 自身碰撞：发射的Creeper落入网格，引发爆炸
+            creeperBlast(exactX, exactY);
+            checkFloatingMarbles();
+            addRoundTotalScore();
+        } else if (hitGridCreeper) {
+            // 被碰撞：发射的普通弹珠碰到了网格内的Creeper
+            for (Marble hc : hitCreepers) {
+                creeperBlast(hc.getCenterX(), hc.getCenterY());
+            }
+            checkFloatingMarbles();
+            addRoundTotalScore();
+        } else {
+            // 全都是普通弹珠 -> 执行正常的同色三消检测
+            checkConnectedFromLaunch(targetRow, targetCol, launchMarble.getColorType());
+        }
     }
 
     private void checkConnectedFromLaunch(int launchRow, int launchCol, int launchColor) {
@@ -366,15 +428,6 @@ public class Marbles {
 
             int groupSize = connectedGroup.size();
 
-            // 检查是否包含creeper
-            boolean hasCreeperInGroup = false;
-            for (Marble m : connectedGroup) {
-                if (m.getColorType() == Marble.CREEPER) {
-                    hasCreeperInGroup = true;
-                    break;
-                }
-            }
-
             if (groupSize == 3) {
                 ResourceManager.getInstance().playThreeClear();
             } else if (groupSize == 4) {
@@ -392,45 +445,21 @@ public class Marbles {
                 pointsPerMarble = 20;
             }
 
-            // Creeper爆炸：消除范围内所有普通弹珠
-            if (hasCreeperInGroup && launchM != null) {
-                // 找到connectedGroup中第一个creeper的位置并触发爆炸
-                for (Marble m : connectedGroup) {
-                    if (m.getColorType() == Marble.CREEPER) {
-                        creeperBlast(m.getCenterX(), m.getCenterY());
-                        break;
-                    }
+            // 普通同色消除
+            for (Marble m : connectedGroup) {
+                if (!m.isScored() && scoreListener != null) {
+                    scoreListener.accept(m, pointsPerMarble);
+                    m.setScored(true);
+                    lastRoundTotalScore += pointsPerMarble;
+                    Color marbleColor = getMarbleColor(m.getColorType());
+                    scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, pointsPerMarble, marbleColor));
                 }
-                // 先触发连接的弹珠消除
-                for (Marble m : connectedGroup) {
-                    if (!m.isScored() && scoreListener != null) {
-                        scoreListener.accept(m, pointsPerMarble);
-                        m.setScored(true);
-                        lastRoundTotalScore += pointsPerMarble;
-                        Color marbleColor = getMarbleColor(m.getColorType());
-                        scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, pointsPerMarble, marbleColor));
-                    }
-                    double dist = Math.sqrt(Math.pow(m.getCenterX() - originX, 2) + Math.pow(m.getCenterY() - originY, 2));
-                    double delay = dist / 600.0;
-                    m.startPop(delay);
+                double dist = 0;
+                if (launchM != null) {
+                    dist = Math.sqrt(Math.pow(m.getCenterX() - originX, 2) + Math.pow(m.getCenterY() - originY, 2));
                 }
-            } else {
-                // 普通消除
-                for (Marble m : connectedGroup) {
-                    if (!m.isScored() && scoreListener != null) {
-                        scoreListener.accept(m, pointsPerMarble);
-                        m.setScored(true);
-                        lastRoundTotalScore += pointsPerMarble;
-                        Color marbleColor = getMarbleColor(m.getColorType());
-                        scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, pointsPerMarble, marbleColor));
-                    }
-                    double dist = 0;
-                    if (launchM != null) {
-                        dist = Math.sqrt(Math.pow(m.getCenterX() - originX, 2) + Math.pow(m.getCenterY() - originY, 2));
-                    }
-                    double delay = dist / 600.0;
-                    m.startPop(delay);
-                }
+                double delay = dist / 600.0;
+                m.startPop(delay);
             }
 
             checkFloatingMarbles();
@@ -519,7 +548,7 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (isMarbleActive(m) && !visited[r][c]) {
-                    // Creeper在悬空检测中被消除时触发爆炸
+                    // "被消除" 触发：Creeper在悬空掉落（被消除）时触发爆炸
                     if (m.getColorType() == Marble.CREEPER) {
                         creeperBlast(m.getCenterX(), m.getCenterY());
                     } else {
@@ -700,12 +729,13 @@ public class Marbles {
         if (marbles == null) return;
 
         double blastRadiusSq = getBlastRadiusSq();
+        boolean playedSound = false;
 
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
-                if (m == null || !m.isInitialized() || m.isPopping() || m.isFalling()) continue;
+                if (m == null || !m.isInitialized() || m.isPopping() || m.isFalling() || m.isAlone()) continue;
 
                 if (m.isImmuneToCreeper()) continue;
 
@@ -723,8 +753,39 @@ public class Marbles {
                         scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
                     }
                     m.startPop(0);
+                    
+                    if (!playedSound) {
+                        ResourceManager.getInstance().playMassiveClear();
+                        playedSound = true;
+                    }
                 }
             }
         }
+    }
+
+    // 新增：Creeper核爆清屏处理
+    private void nukeBoard() {
+        if (marbles == null) return;
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            for (int c = 0; c < marbles[r].length; c++) {
+                Marble m = marbles[r][c];
+                if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone()) {
+                    // 忽略对清屏核爆免疫的弹珠（例如Bedrock）
+                    if (!m.isImmuneToCreeper()) {
+                        if (!m.isScored() && scoreListener != null) {
+                            scoreListener.accept(m, 20);
+                            m.setScored(true);
+                            lastRoundTotalScore += 20;
+                            Color marbleColor = getMarbleColor(m.getColorType());
+                            scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
+                        }
+                        // 略微随机的延迟爆炸带来非常酷炫的核爆视觉反馈
+                        m.startPop(random.nextDouble() * 0.3);
+                    }
+                }
+            }
+        }
+        ResourceManager.getInstance().playMassiveClear();
     }
 }

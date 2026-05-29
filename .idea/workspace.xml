@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化弹珠精灵图" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化creeper效果">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarbleLaunch.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarbleLaunch.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -143,15 +147,7 @@
       <workItem from="1779938602200" duration="24283000" />
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
-      <workItem from="1780026231602" duration="456000" />
-    </task>
-    <task id="LOCAL-00044" summary="将GameOver更名为ScreenGameOver">
-      <option name="closed" value="true" />
-      <created>1779850255941</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1779850255941</updated>
+      <workItem from="1780026231602" duration="1356000" />
     </task>
     <task id="LOCAL-00045" summary="更改窗口尺寸">
       <option name="closed" value="true" />
@@ -537,7 +533,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780026350836</updated>
     </task>
-    <option name="localTasksCounter" value="93" />
+    <task id="LOCAL-00093" summary="优化creeper效果">
+      <option name="closed" value="true" />
+      <created>1780027039056</created>
+      <option name="number" value="00093" />
+      <option name="presentableId" value="LOCAL-00093" />
+      <option name="project" value="LOCAL" />
+      <updated>1780027039056</updated>
+    </task>
+    <option name="localTasksCounter" value="94" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -555,7 +559,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="添加碰撞效果" />
     <MESSAGE value="优化炮台代码" />
     <MESSAGE value="合并UI,音效" />
     <MESSAGE value="添加关卡模式" />
@@ -580,6 +583,7 @@
     <MESSAGE value="统一字体" />
     <MESSAGE value="添加弹珠类型" />
     <MESSAGE value="优化弹珠精灵图" />
-    <option name="LAST_COMMIT_MESSAGE" value="优化弹珠精灵图" />
+    <MESSAGE value="优化creeper效果" />
+    <option name="LAST_COMMIT_MESSAGE" value="优化creeper效果" />
   </component>
 </project>
