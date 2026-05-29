@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="creeper和bedrock生成逻辑修正">
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="为Sans添加血量">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/BossSans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BossSans.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,15 +147,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
-      <workItem from="1780030147321" duration="324000" />
-    </task>
-    <task id="LOCAL-00050" summary="添加警告动画">
-      <option name="closed" value="true" />
-      <created>1779858418090</created>
-      <option name="number" value="00050" />
-      <option name="presentableId" value="LOCAL-00050" />
-      <option name="project" value="LOCAL" />
-      <updated>1779858418090</updated>
+      <workItem from="1780030147321" duration="970000" />
     </task>
     <task id="LOCAL-00051" summary="精简代码">
       <option name="closed" value="true" />
@@ -540,7 +533,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780029532068</updated>
     </task>
-    <option name="localTasksCounter" value="99" />
+    <task id="LOCAL-00099" summary="为Sans添加血量">
+      <option name="closed" value="true" />
+      <created>1780030658522</created>
+      <option name="number" value="00099" />
+      <option name="presentableId" value="LOCAL-00099" />
+      <option name="project" value="LOCAL" />
+      <updated>1780030658523</updated>
+    </task>
+    <option name="localTasksCounter" value="100" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -558,7 +559,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="添加关卡模式" />
     <MESSAGE value="更正晋级按钮" />
     <MESSAGE value="添加Sans实体" />
     <MESSAGE value="添加music文件" />
@@ -583,6 +583,7 @@
     <MESSAGE value="优化creeper效果" />
     <MESSAGE value="重新设置第三关" />
     <MESSAGE value="creeper和bedrock生成逻辑修正" />
-    <option name="LAST_COMMIT_MESSAGE" value="creeper和bedrock生成逻辑修正" />
+    <MESSAGE value="为Sans添加血量" />
+    <option name="LAST_COMMIT_MESSAGE" value="为Sans添加血量" />
   </component>
 </project>

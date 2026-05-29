@@ -56,7 +56,7 @@ public class BossSans {
     private Heart[] hearts = new Heart[6];
     private boolean heartsActive = false;
     private static final double HEART_SIZE = 30;
-    private static final double HEART_SPACING = 45;
+    private static final double HEART_SPACING = 30;
 
     // 内部类：独立的心形对象
     private static class Heart {
@@ -117,8 +117,14 @@ public class BossSans {
      * 在BossSans站立后，初始化6个heart在其下方一行
      */
     public void initHearts(double sansX, double sansY) {
-        double startX = sansX + 20;
-        double hy = sansY + 140;  // BossSans站立图下方
+        // 使第3、4颗heart的x中间位置与Sans中心对齐
+        // Sans站立图绘制宽度98*1.2=117.6，中心偏移=117.6/2=58.8
+        // heart索引2中心x = startX + 60，索引3中心x = startX + 90
+        // 两颗中点 = (60+90)/2 + startX = startX + 75
+        // 中点与Sans中心对齐: startX + 75 = sansX + 58.8 => startX = sansX - 16.2
+        double startX = sansX - 16.2;
+        // heart行的y最上位置与Sans的y最下位置间隔10个像素
+        double hy = sansY + 148 + 10 + 15;  // sansY + 173
 
         for (int i = 0; i < 6; i++) {
             double hx = startX + i * HEART_SPACING;
