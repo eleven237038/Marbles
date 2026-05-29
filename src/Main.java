@@ -55,8 +55,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private boolean sansAnimating = false;
     private javax.swing.Timer idleRepaintTimer = null;
 
-    // IntroDialog 对话系统
-    private IntroDialog introDialog = new IntroDialog();
+    // IntroDialog 对话系统 (已迁移到 BossSans)
+    private javax.swing.Timer dialogTimer = null;
     private boolean utStyleDone = false;
 
     // Undertale风格变化标记
@@ -185,7 +185,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         levelWon = false;
 
         utStyleDone = false;
-        introDialog.reset();
+        if (sans != null) sans.resetDialog();
 
         // 初始化 BossSans 角色并重置状态
         if (sans == null) {
@@ -500,7 +500,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sansAnimating = true;
 
         utStyleDone = false;
-        introDialog.reset();
+        if (sans != null) sans.resetDialog();
 
         // BossSans 停止位置：窗口左边界和游戏区左边界的中心，减去一半站立图宽度
         int targetX = LEFT_ZONE_WIDTH / 2 - 47;
@@ -539,12 +539,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 sans.play("Basic - Down", 500);
 
                 // ============= 启动对话系统 =============
-                introDialog.start();
+                sans.startDialog();
 
-                javax.swing.Timer dialogTimer = new javax.swing.Timer(100, null);
+                dialogTimer = new javax.swing.Timer(100, null);
                 dialogTimer.addActionListener(evt -> {
-                    introDialog.update();
-                    if (introDialog.isDone()) {
+                    sans.updateDialog();
+                    if (sans.isDialogDone()) {
                         ((javax.swing.Timer)evt.getSource()).stop();
                         checkIntroDone(); // 对话结束后检查是否需要启动风格转换
                     }
@@ -571,7 +571,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
      * 检查是否可以结束BossSans过场（对话和风格转化都结束）
      */
     private void checkIntroDone() {
-        if (introDialog.isDone() && !utStyleDone) {
+        if (sans != null && sans.isDialogDone() && !utStyleDone) {
             utStyleDone = true;
             // ============= 对话结束后开始传说之下风格转换动画 =============
             javax.swing.Timer styleTimer = new javax.swing.Timer(1000, null);
@@ -781,13 +781,13 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 @Override
                 public void mousePressed(MouseEvent e) {
                     Point p = e.getPoint();
-                    
+
                     // 主动点击：快进对话
-                    if (introDialog.isActive()) {
-                        introDialog.advance();
+                    if (sans != null && sans.isDialogActive()) {
+                        sans.advanceDialog();
                         return; // 对话过程中阻挡点击下面 UI 的行为
                     }
-                    
+
                     if (overlayMode == 0) {
                         if (gameStarted && pauseButtonRect != null && pauseButtonRect.contains(p)) {
                             pausePressed = true;
@@ -817,7 +817,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 public void mouseMoved(MouseEvent e) {
                     Point p = e.getPoint();
                     // 如果正在对话，不判定悬浮按钮（冻结UI）
-                    if (introDialog.isActive()) {
+                    if (sans != null && sans.isDialogActive()) {
                         setCursor(Cursor.getDefaultCursor());
                         return;
                     }
@@ -1070,7 +1070,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 // ==========================================
                 // 绘制对话框
                 // ==========================================
-                introDialog.draw(g2d, (int)sansX, (int)sansY);
+                sans.drawDialog(g2d, (int)sansX, (int)sansY);
             }
 
             if (overlayMode != 0) {
@@ -1392,8 +1392,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             if (animating) return true;
 
             // 对话未结束时，接管整个窗口点击（阻止误点按钮等其他逻辑）
-            if (introDialog.isActive()) {
-                return true; 
+            if (sans != null && sans.isDialogActive()) {
+                return true;
             }
 
             if (overlayMode == 0) {

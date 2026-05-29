@@ -13,6 +13,36 @@ import javax.imageio.ImageIO;
 public class BossSans {
     // 统一指向新的精灵图路径
     private static final String SPRITE_PATH = ResourceManager.getImagePath("Sans.png");
+
+    // ========== 开头对话系统 (原 IntroDialog) ==========
+    // 对话内容
+    private static final String[] DIALOG_TEXT = {
+        "好了好了,停止这糟糕的游戏吧",
+        "你说什么?",
+        "我为什么会在这里?",
+        "这些不重要孩子",
+        "搞不懂你是凭借什么意志撑到现在的",
+        "总之,由于这个制作组的无聊安排",
+        "现在,我看不下去你继续浪费自己的生命了",
+        "所以,你需要击败我才能继续游玩这个游戏"
+    };
+
+    // 对话框参数
+    private static final int MAX_CHARS_PER_LINE = 20;
+    private static final int TEXT_PADDING = 35;
+    private static final int LINE_HEIGHT = 30;
+    private static final int MIN_WIDTH = 300;
+    private static final int MAX_WIDTH = 450;
+    private static final int DIALOG_DURATION = 3000;  // 3秒
+
+    // 对话状态
+    private int dialogIndex = -1;
+    private long dialogShowTime = 0;
+    private BufferedImage dialogBubbleImg = null;
+    private boolean dialogDone = false;
+
+    // 回调接口
+    private Runnable onDialogDone;
     
     // 使用数组存储精灵图（当前仅需一个）
     private static BufferedImage[] spriteSheets = new BufferedImage[1];
@@ -91,6 +121,7 @@ public class BossSans {
     public BossSans() {
         loadSpriteSheets();
         loadHeartSprite();
+        loadDialogBubble();
         initActions();
         initHeartsArray();
 
@@ -351,5 +382,164 @@ public class BossSans {
 
     public void dispose() {
         stopAnimation();
+    }
+
+    // ========== 开头对话系统方法 (原 IntroDialog) ==========
+
+    private void loadDialogBubble() {
+        try {
+            String imagePath = ResourceManager.getImagePath("Text Bubbles/1.png");
+            dialogBubbleImg = ImageIO.read(new File(imagePath));
+        } catch (IOException e) {
+            System.err.println("未能加载对话框精灵图: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 开始对话
+     */
+    public void startDialog() {
+        dialogIndex = 0;
+        dialogShowTime = System.currentTimeMillis();
+        dialogDone = false;
+    }
+
+    /**
+     * 进入下一句对话
+     */
+    public void advanceDialog() {
+        if (dialogIndex >= 0 && dialogIndex < DIALOG_TEXT.length) {
+            dialogIndex++;
+            dialogShowTime = System.currentTimeMillis();
+            if (dialogIndex >= DIALOG_TEXT.length) {
+                dialogIndex = -1;
+                dialogDone = true;
+                if (onDialogDone != null) {
+                    onDialogDone.run();
+                }
+            }
+        }
+    }
+
+    /**
+     * 更新对话（每帧调用，返回是否自动推进）
+     */
+    public boolean updateDialog() {
+        if (dialogIndex >= 0 && dialogIndex < DIALOG_TEXT.length) {
+            if (System.currentTimeMillis() - dialogShowTime >= DIALOG_DURATION) {
+                advanceDialog();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 是否对话结束
+     */
+    public boolean isDialogDone() {
+        return dialogDone;
+    }
+
+    /**
+     * 当前是否有对话在进行
+     */
+    public boolean isDialogActive() {
+        return dialogIndex >= 0 && dialogIndex < DIALOG_TEXT.length;
+    }
+
+    /**
+     * 设置对话结束时的回调
+     */
+    public void setOnDialogDone(Runnable callback) {
+        this.onDialogDone = callback;
+    }
+
+    /**
+     * 重置对话
+     */
+    public void resetDialog() {
+        dialogIndex = -1;
+        dialogDone = false;
+        dialogShowTime = 0;
+    }
+
+    /**
+     * 绘制对话框（在指定位置）
+     */
+    public void drawDialog(Graphics2D g, int anchorX, int anchorY) {
+        if (!isDialogActive()) return;
+
+        String text = DIALOG_TEXT[dialogIndex];
+        Font font = new Font("SimHei", Font.BOLD, 18);
+        FontMetrics fm = g.getFontMetrics(font);
+
+        // 计算文字行数
+        String line1, line2;
+        int textWidth;
+        if (text.length() > MAX_CHARS_PER_LINE) {
+            line1 = text.substring(0, MAX_CHARS_PER_LINE);
+            line2 = text.length() > MAX_CHARS_PER_LINE * 2
+                ? text.substring(MAX_CHARS_PER_LINE * 2)
+                : text.substring(MAX_CHARS_PER_LINE);
+            textWidth = Math.max(fm.stringWidth(line1), fm.stringWidth(line2)) + TEXT_PADDING * 2;
+        } else {
+            line1 = text;
+            line2 = null;
+            textWidth = fm.stringWidth(text) + TEXT_PADDING * 2;
+        }
+        textWidth = Math.min(Math.max(textWidth, MIN_WIDTH), MAX_WIDTH);
+
+        int lines = line2 != null ? 2 : 1;
+        int bw = textWidth;
+        int bh = lines * LINE_HEIGHT + 30;
+
+        // 对话框位置（锚点在Sans头顶，偏移到右边）
+        int bx = anchorX + 115;
+        int by = anchorY - 50;
+
+        // 绘制背景
+        if (dialogBubbleImg != null) {
+            g.drawImage(dialogBubbleImg, bx, by, bw, bh, null);
+        } else {
+            // 回退效果
+            g.setColor(Color.WHITE);
+            g.fillRoundRect(bx, by, bw, bh, 20, 20);
+            g.setColor(Color.BLACK);
+            g.setStroke(new BasicStroke(3));
+            g.drawRoundRect(bx, by, bw, bh, 20, 20);
+            // 三角指向
+            int[] px = {bx, bx - 20, bx + 20};
+            int[] py = {by + bh / 2 - 10, by + bh / 2, by + bh / 2 + 10};
+            g.setColor(Color.WHITE);
+            g.fillPolygon(px, py, 3);
+            g.setColor(Color.BLACK);
+            g.drawLine(bx - 20, by + bh / 2, bx, by + bh / 2 - 10);
+            g.drawLine(bx - 20, by + bh / 2, bx + 20, by + bh / 2 + 10);
+        }
+
+        // 绘制文字内容（居中）
+        g.setColor(Color.BLACK);
+        g.setFont(font);
+
+        int totalTextWidth = Math.max(
+            fm.stringWidth(line1),
+            line2 != null ? fm.stringWidth(line2) : 0
+        );
+        int textX = bx + (bw - totalTextWidth) / 2;
+        int textY = by + 45;
+
+        g.drawString(line1, textX, textY);
+        if (line2 != null) {
+            g.drawString(line2, textX, textY + LINE_HEIGHT);
+        }
+    }
+
+    public String[] getDialogText() {
+        return DIALOG_TEXT;
+    }
+
+    public int getDialogIndex() {
+        return dialogIndex;
     }
 }

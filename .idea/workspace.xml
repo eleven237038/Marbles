@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加对话框聊天">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="修复bug">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Sans.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Sans.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/BossSans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BossSans.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -147,15 +149,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
-      <workItem from="1780030147321" duration="8564000" />
-    </task>
-    <task id="LOCAL-00057" summary="修复计分板bug">
-      <option name="closed" value="true" />
-      <created>1779873394074</created>
-      <option name="number" value="00057" />
-      <option name="presentableId" value="LOCAL-00057" />
-      <option name="project" value="LOCAL" />
-      <updated>1779873394074</updated>
+      <workItem from="1780030147321" duration="9260000" />
     </task>
     <task id="LOCAL-00058" summary="修复计分板bug">
       <option name="closed" value="true" />
@@ -541,7 +535,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780041246687</updated>
     </task>
-    <option name="localTasksCounter" value="106" />
+    <task id="LOCAL-00106" summary="修复bug">
+      <option name="closed" value="true" />
+      <created>1780043159042</created>
+      <option name="number" value="00106" />
+      <option name="presentableId" value="LOCAL-00106" />
+      <option name="project" value="LOCAL" />
+      <updated>1780043159042</updated>
+    </task>
+    <option name="localTasksCounter" value="107" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -572,7 +574,6 @@
     <MESSAGE value="Sans站立动态设置" />
     <MESSAGE value="Boss关初始化" />
     <MESSAGE value="下降速度配置" />
-    <MESSAGE value="修复bug" />
     <MESSAGE value="统一字体" />
     <MESSAGE value="添加弹珠类型" />
     <MESSAGE value="优化弹珠精灵图" />
@@ -584,6 +585,7 @@
     <MESSAGE value="添加第四关音乐" />
     <MESSAGE value="修改第四关弹珠样式" />
     <MESSAGE value="添加对话框聊天" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加对话框聊天" />
+    <MESSAGE value="修复bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="修复bug" />
   </component>
 </project>
