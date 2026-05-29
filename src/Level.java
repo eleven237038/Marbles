@@ -115,18 +115,11 @@ public class Level {
     }
 
     public int getUnlockedLevelCount() {
-        int unlocked = 1;
-        for (int i = 1; i <= currentLevel; i++) {
-            if (levelHighScores[i - 1] > 0) {
-                unlocked = i + 1;
-            }
-        }
-        return unlocked;
+        return MAX_LEVEL;
     }
 
     public boolean isLevelUnlocked(int level) {
-        if (level == 1) return true;
-        return level <= getUnlockedLevelCount();
+        return level >= 1 && level <= MAX_LEVEL;
     }
 
     public int getWinScore() {
