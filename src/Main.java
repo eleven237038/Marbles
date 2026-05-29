@@ -73,7 +73,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("弹珠游戏 - 豪华版");
+            JFrame frame = new JFrame("Please Must Play Level 4");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setResizable(false);
 
