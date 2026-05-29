@@ -143,15 +143,7 @@
       <workItem from="1779938602200" duration="24283000" />
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
-      <workItem from="1780026231602" duration="2991000" />
-    </task>
-    <task id="LOCAL-00049" summary="合并LaunchPad至BoardGame">
-      <option name="closed" value="true" />
-      <created>1779853607221</created>
-      <option name="number" value="00049" />
-      <option name="presentableId" value="LOCAL-00049" />
-      <option name="project" value="LOCAL" />
-      <updated>1779853607221</updated>
+      <workItem from="1780026231602" duration="3447000" />
     </task>
     <task id="LOCAL-00050" summary="添加警告动画">
       <option name="closed" value="true" />
@@ -537,7 +529,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780029142097</updated>
     </task>
-    <option name="localTasksCounter" value="98" />
+    <task id="LOCAL-00098" summary="creeper和bedrock生成逻辑修正">
+      <option name="closed" value="true" />
+      <created>1780029532068</created>
+      <option name="number" value="00098" />
+      <option name="presentableId" value="LOCAL-00098" />
+      <option name="project" value="LOCAL" />
+      <updated>1780029532068</updated>
+    </task>
+    <option name="localTasksCounter" value="99" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

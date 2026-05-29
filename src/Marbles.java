@@ -484,11 +484,15 @@ public class Marbles {
         if (launchedIsCreeper && hitGridCreeper) {
             // 两个 Creeper 碰撞：核爆清屏
             nukeBoard();
+            // 第一次检测：消除直接悬空的弹珠
+            checkFloatingMarbles();
+            // 第二次检测：处理因爆炸支撑消失而悬空的弹珠
             checkFloatingMarbles();
             addRoundTotalScore();
         } else if (launchedIsCreeper) {
             // 自身碰撞：发射的Creeper落入网格，引发爆炸
             creeperBlast(exactX, exactY);
+            checkFloatingMarbles();
             checkFloatingMarbles();
             addRoundTotalScore();
         } else if (hitGridCreeper) {
@@ -496,6 +500,7 @@ public class Marbles {
             for (Marble hc : hitCreepers) {
                 creeperBlast(hc.getCenterX(), hc.getCenterY());
             }
+            checkFloatingMarbles();
             checkFloatingMarbles();
             addRoundTotalScore();
         } else if (launchMarble.getColorType() == Marble.BEDROCK) {
