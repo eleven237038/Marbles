@@ -52,6 +52,10 @@ public class Marbles {
     private int creeperInGroup = 0;  // 当前4行中已生成的creeper数量
     private int bedrockInGroup = 0;  // 当前4行中已生成的bedrock数量
 
+    // 无敌帧状态（生成新行时生效）
+    private boolean newRowInvincible = false;
+    private int newestRow = -1;  // 最新生成的行号
+
     public Marbles() {
         this.marbles = null;
         this.rowCount = 0;
@@ -241,7 +245,13 @@ public class Marbles {
             bedrockInGroup = 0;
         }
 
+        newestRow = row;
+
         this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
+    }
+
+    public boolean isNewestRow(int row) {
+        return row == newestRow;
     }
 
     public void initRow(int screenWidth, int screenHeight) {
@@ -250,6 +260,9 @@ public class Marbles {
 
     public void update(double dt, double deadline) {
         if (marbles == null) return;
+
+        // 上一帧生成的新行，在本帧开始时取消无敌帧
+        newRowInvincible = false;
 
         updateScoreNumbers();
         updateGameTime(dt);
@@ -277,10 +290,13 @@ public class Marbles {
 
         accumulatedY += yMove;
         if (accumulatedY >= ySpacing) {
+            // 进入无敌帧状态（保持到下一帧开始）
+            newRowInvincible = true;
             int newRow = maxRowCount + rowCount;
             this.rowCount = rowCount + 1;
             AddMarbleRow(newRow, screenWidth, this.rowCount);
             accumulatedY -= ySpacing;
+            // 无敌帧在下一帧开始时取消
         }
 
         updateWarnState(deadline, dt);
@@ -630,6 +646,9 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (isMarbleActive(m) && !visited[r][c]) {
+                    // 无敌帧期间跳过最新生成的行
+                    if (newRowInvincible && isNewestRow(r)) continue;
+
                     // "被消除" 触发：Creeper在悬空掉落（被消除）时触发爆炸
                     if (m.getColorType() == Marble.CREEPER) {
                         creeperBlast(m.getCenterX(), m.getCenterY());
@@ -821,6 +840,9 @@ public class Marbles {
 
                 if (m.isImmuneToCreeper()) continue;
 
+                // 无敌帧期间跳过最新生成的行
+                if (newRowInvincible && isNewestRow(r)) continue;
+
                 double dx = m.getCenterX() - centerX;
                 double dy = m.getCenterY() - centerY;
                 double distSq = dx * dx + dy * dy;
@@ -835,7 +857,7 @@ public class Marbles {
                         scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
                     }
                     m.startPop(0);
-                    
+
                     if (!playedSound) {
                         ResourceManager.getInstance().playMassiveClear();
                         playedSound = true;
@@ -850,6 +872,9 @@ public class Marbles {
         if (marbles == null) return;
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
+            // 无敌帧期间跳过最新生成的行
+            if (newRowInvincible && isNewestRow(r)) continue;
+
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone()) {
