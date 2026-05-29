@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="creeper和bedrock生成逻辑修正" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="creeper和bedrock生成逻辑修正">
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -26,12 +28,12 @@
     &quot;assignee&quot;: &quot;eleven237038&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/eleven237038/Marbles.git",
-    "accountId": "51b9ef37-9ea4-4350-a8e0-a3ba4b7a1ab2"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/eleven237038/Marbles.git&quot;,
+    &quot;accountId&quot;: &quot;51b9ef37-9ea4-4350-a8e0-a3ba4b7a1ab2&quot;
   }
-}]]></component>
+}</component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/src/Main.java" root0="SKIP_HIGHLIGHTING" />
   </component>
@@ -144,6 +146,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
+      <workItem from="1780030147321" duration="324000" />
     </task>
     <task id="LOCAL-00050" summary="添加警告动画">
       <option name="closed" value="true" />

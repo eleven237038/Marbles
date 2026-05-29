@@ -497,6 +497,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     hexGrid.enableCreeperGeneration();
                 }
 
+                // 初始化 hearts: 在 BossSans 站立后，在其下方生成一行6个heart
+                sans.initHearts(sansX, sansY);
+
                 // 启动待机动画重绘定时器
                 idleRepaintTimer = new javax.swing.Timer(16, evt -> {
                     if (glassPane != null) {
@@ -890,6 +893,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     } else if (sansIdle) {
                         // 站立动画（2帧每秒切换）
                         sans.draw(g2d, (int) sansX, (int) sansY, 1.2);
+                        // 绘制 hearts
+                        sans.drawHearts(g2d);
                     }
                 }
             }

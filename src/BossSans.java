@@ -51,13 +51,89 @@ public class BossSans {
     private javax.swing.Timer animTimer;
     private boolean isAnimating = false;
 
+    // Hearts 数据
+    private static BufferedImage heartSprite = null;
+    private Heart[] hearts = new Heart[6];
+    private boolean heartsActive = false;
+    private static final double HEART_SIZE = 30;
+    private static final double HEART_SPACING = 45;
+
+    // 内部类：独立的心形对象
+    private static class Heart {
+        private double cx, cy;
+        private boolean initialized;
+
+        Heart() {
+            this.cx = 0;
+            this.cy = 0;
+            this.initialized = false;
+        }
+
+        void init(double cx, double cy) {
+            this.cx = cx;
+            this.cy = cy;
+            this.initialized = true;
+        }
+
+        void draw(Graphics2D g) {
+            if (!initialized || heartSprite == null) return;
+            int size = (int) HEART_SIZE;
+            int drawX = (int)(cx - size / 2);
+            int drawY = (int)(cy - size / 2);
+            g.drawImage(heartSprite, drawX, drawY, size, size, null);
+        }
+    }
+
     public BossSans() {
         loadSpriteSheets();
+        loadHeartSprite();
         initActions();
-        
+        initHeartsArray();
+
         // 默认设置为向下的基础动作
         if (actions.containsKey("Basic - Down")) {
             currentAction = "Basic - Down";
+        }
+    }
+
+    private void initHeartsArray() {
+        for (int i = 0; i < 6; i++) {
+            hearts[i] = new Heart();
+        }
+        heartsActive = false;
+    }
+
+    private void loadHeartSprite() {
+        try {
+            String imagePath = ResourceManager.getImagePath("heart.png");
+            heartSprite = ImageIO.read(new File(imagePath));
+            System.out.println("成功加载 heart 精灵图!");
+        } catch (IOException e) {
+            System.err.println("加载 heart 精灵图失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 在BossSans站立后，初始化6个heart在其下方一行
+     */
+    public void initHearts(double sansX, double sansY) {
+        double startX = sansX + 20;
+        double hy = sansY + 140;  // BossSans站立图下方
+
+        for (int i = 0; i < 6; i++) {
+            double hx = startX + i * HEART_SPACING;
+            hearts[i].init(hx, hy);
+        }
+        heartsActive = true;
+    }
+
+    /**
+     * 绘制 hearts（当BossSans站立时）
+     */
+    public void drawHearts(Graphics2D g) {
+        if (!heartsActive) return;
+        for (int i = 0; i < 6; i++) {
+            hearts[i].draw(g);
         }
     }
 
