@@ -405,7 +405,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 sans.setCombatDialog(s4Dialogs[random.nextInt(s4Dialogs.length)]);
                 break;
             case 5:
-                hexGrid.skillTeleportDown(2);
+                hexGrid.skillTeleportDown(1);
                 String[] s5Dialogs = {
                     "哎呀，重力又出问题了。",
                     "小小的捷径...直接往下。",

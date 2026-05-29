@@ -992,7 +992,7 @@ public class Marbles {
         }
     }
 
-    // 技能 5: 瞬间向下传送 2 行（物理坐标与存储槽索引同时同步向下位移，并补充空槽确保无缝连接）
+    // 技能 5: 瞬间向下传送 1 行（物理坐标与存储槽索引同时同步向下位移，并补充空槽确保无缝连接）
     public void skillTeleportDown(int rows) {
         if (marbles == null) return;
         
