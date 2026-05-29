@@ -27,34 +27,36 @@ public class Marbles {
     private double lastLaunchX = 0;
     private double lastLaunchY = 0;
 
-    // 弹珠颜色映射（与Marble类中的颜色保持一致）
+    // 弹珠颜色映射
     private static final Color[] MARBLE_BASE_COLORS = {
             null,
-            new Color(220, 30, 30),   // 红色
-            new Color(20, 80, 220),   // 蓝色
-            new Color(240, 200, 20),  // 黄色
-            new Color(160, 30, 200)   // 紫色
+            new Color(220, 30, 30),
+            new Color(20, 80, 220),
+            new Color(240, 200, 20),
+            new Color(160, 30, 200),
+            new Color(34, 139, 34),
+            new Color(105, 105, 105)
     };
 
-    private double currentFallSpeed;      // 当前下落速度
-    private double baseFallSpeed;         // 基础下落速度
-    private double maxFallSpeed;           // 最大下落速度
-    private double speedIncreaseRate;    // 每秒增加的速度
-    private double gameTimeInLevel = 0;          // 当前关卡游戏时间
+    private double currentFallSpeed;
+    private double baseFallSpeed;
+    private double maxFallSpeed;
+    private double speedIncreaseRate;
+    private double gameTimeInLevel = 0;
 
-    // 特殊弹珠生成配置
     private boolean hasCreeper = false;
     private boolean hasBedrock = false;
     private boolean hasHeart = false;
 
-    // 每4行特殊弹珠计数器
-    private int rowGroupCounter = 0;  // 0-3循环
-    private int creeperInGroup = 0;  // 当前4行中已生成的creeper数量
-    private int bedrockInGroup = 0;  // 当前4行中已生成的bedrock数量
+    private int rowGroupCounter = 0;
+    private int creeperInGroup = 0;
+    private int bedrockInGroup = 0;
 
-    // 无敌帧状态（生成新行时生效）
     private boolean newRowInvincible = false;
-    private int newestRow = -1;  // 最新生成的行号
+    private int newestRow = -1;
+    
+    // BossSans技能状态
+    private int alternateColorRows = 0;
 
     public Marbles() {
         this.marbles = null;
@@ -71,15 +73,8 @@ public class Marbles {
 
     public double getSide() { return side; }
     public int getMaxRowCount() { return maxRowCount; }
-
-    public void setMaxRowCount(int maxRowCount) {
-        this.maxRowCount = maxRowCount;
-    }
-
-    public void setFallSpeedMultiplier(double mult) {
-        this.fallSpeedMultiplier = mult;
-    }
-
+    public void setMaxRowCount(int maxRowCount) { this.maxRowCount = maxRowCount; }
+    public void setFallSpeedMultiplier(double mult) { this.fallSpeedMultiplier = mult; }
     public void setLastLaunchPosition(double x, double y) {
         this.lastLaunchX = x;
         this.lastLaunchY = y;
@@ -97,17 +92,8 @@ public class Marbles {
         scoreNumbers.removeIf(score -> !score.update());
     }
 
-    private void drawScoreNumbers(Graphics2D g) {
-        for (ScreenGame.ScoreNumber sn : scoreNumbers) {
-            sn.draw(g);
-        }
-    }
-
-    // 根据颜色类型获取弹珠颜色
     private Color getMarbleColor(int colorType) {
-        if (colorType >= 1 && colorType <= 4) {
-            return MARBLE_BASE_COLORS[colorType];
-        }
+        if (colorType >= 1 && colorType <= 6) return MARBLE_BASE_COLORS[colorType];
         return Color.WHITE;
     }
 
@@ -135,6 +121,20 @@ public class Marbles {
         }
     }
 
+    private int countHeartsOnBoard() {
+        int count = 0;
+        if (marbles == null) return 0;
+        for (Marble[] row : marbles) {
+            if (row == null) continue;
+            for (Marble m : row) {
+                if (m != null && m.getColorType() == Marble.HEART && m.isInitialized() && !m.isPopping() && !m.isDead() && !m.isFalling()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
     public void AddMarbleRow(int row, int screenWidth, int initialRowCount) {
         double baseY = -2 * side;
         double xSpacing = side * SQRT3;
@@ -144,7 +144,6 @@ public class Marbles {
             this.baseX = initialBaseX[random.nextInt(2)];
             this.rowCount = initialRowCount;
             this.marbles = new Marble[maxRowCount + initialRowCount][];
-            // 重置每4行计数器
             rowGroupCounter = 0;
             creeperInGroup = 0;
             bedrockInGroup = 0;
@@ -154,91 +153,88 @@ public class Marbles {
             this.marbles = newMarbles;
         }
 
-        // 更新每4行计数器
         rowGroupCounter++;
         boolean lastRowInGroup = (rowGroupCounter == 4);
 
         int perRow = (int)(screenWidth / xSpacing);
         this.marbles[row] = new Marble[perRow];
 
-        // 确定本行特殊弹珠数量
         int targetCreepers = 0;
         int targetBedrocks = 0;
 
         if (hasCreeper || hasBedrock) {
             if (hasCreeper) {
                 if (lastRowInGroup) {
-                    // 最后一行：确保1-3个creeper（总量1-3）
                     int remaining = 3 - creeperInGroup;
-                    if (remaining > 0) {
-                        targetCreepers = 1 + random.nextInt(remaining);
-                    }
+                    if (remaining > 0) targetCreepers = 1 + random.nextInt(remaining);
                 } else {
-                    // 前3行：每行最多1个creeper，总量不超过3
-                    if (creeperInGroup < 3 && random.nextDouble() < 0.3) {
-                        targetCreepers = 1;
-                    }
+                    if (creeperInGroup < 3 && random.nextDouble() < 0.3) targetCreepers = 1;
                 }
             }
             if (hasBedrock) {
                 if (lastRowInGroup) {
-                    // 最后一行：确保最少3个bedrock
                     targetBedrocks = Math.max(3 - bedrockInGroup, 0);
-                    if (targetBedrocks == 0 && bedrockInGroup < 3) {
-                        targetBedrocks = 3 - bedrockInGroup;
-                    }
-                    // 无上限，多多益善
+                    if (targetBedrocks == 0 && bedrockInGroup < 3) targetBedrocks = 3 - bedrockInGroup;
                     targetBedrocks = Math.max(targetBedrocks, 3) + random.nextInt(3);
                 } else {
-                    // 前3行：每行至少1个bedrock
                     targetBedrocks = 1 + random.nextInt(2);
                 }
             }
         }
 
-        // 分别收集creeper和bedrock的位置
         List<Integer> creeperPositions = new ArrayList<>();
         List<Integer> bedrockPositions = new ArrayList<>();
 
         for (int col = 0; col < perRow; col++) {
-            if (creeperPositions.size() < targetCreepers && random.nextDouble() < 0.15) {
-                creeperPositions.add(col);
-            }
-            if (bedrockPositions.size() < targetBedrocks && !creeperPositions.contains(col) && random.nextDouble() < 0.15) {
-                bedrockPositions.add(col);
-            }
+            if (creeperPositions.size() < targetCreepers && random.nextDouble() < 0.15) creeperPositions.add(col);
+            if (bedrockPositions.size() < targetBedrocks && !creeperPositions.contains(col) && random.nextDouble() < 0.15) bedrockPositions.add(col);
         }
 
-        // 确保达到最低数量
         while (creeperPositions.size() < targetCreepers && creeperPositions.size() < perRow) {
             int pos = random.nextInt(perRow);
-            if (!creeperPositions.contains(pos)) {
-                creeperPositions.add(pos);
-            }
+            if (!creeperPositions.contains(pos)) creeperPositions.add(pos);
         }
         while (bedrockPositions.size() < targetBedrocks) {
             int pos = random.nextInt(perRow);
-            if (!creeperPositions.contains(pos) && !bedrockPositions.contains(pos)) {
-                bedrockPositions.add(pos);
-            }
+            if (!creeperPositions.contains(pos) && !bedrockPositions.contains(pos)) bedrockPositions.add(pos);
         }
 
+        int currentHearts = countHeartsOnBoard();
+        boolean spawnHeart = false;
+        if (hasHeart && currentHearts == 0 && random.nextDouble() < 0.15) {
+            spawnHeart = true;
+        }
+
+        int lastColor = -1;
         for (int col = 0; col < perRow; col++) {
             this.marbles[row][col] = new Marble();
             this.marbles[row][col].init(baseX + col * xSpacing, baseY, row, col);
 
-            if (creeperPositions.contains(col)) {
+            if (targetCreepers > 0 && creeperPositions.contains(col)) {
                 this.marbles[row][col].setColorType(Marble.CREEPER);
                 creeperInGroup++;
-            } else if (bedrockPositions.contains(col)) {
+            } else if (targetBedrocks > 0 && bedrockPositions.contains(col)) {
                 this.marbles[row][col].setColorType(Marble.BEDROCK);
                 bedrockInGroup++;
-            } else if (hasHeart && random.nextDouble() < 0.02) {
+            } else if (spawnHeart) {
                 this.marbles[row][col].setColorType(Marble.HEART);
+                spawnHeart = false;
+            } else {
+                if (alternateColorRows > 0) {
+                    int cType;
+                    do {
+                        cType = random.nextInt(Level.getInstance().getColorTypeCount()) + 1;
+                    } while (cType == lastColor);
+                    lastColor = cType;
+                    this.marbles[row][col].setColorType(cType);
+                } else {
+                    this.marbles[row][col].setColorType(random.nextInt(Level.getInstance().getColorTypeCount()) + 1);
+                }
             }
         }
 
-        // 如果是每组最后一行，重置计数器
+        if (alternateColorRows > 0) alternateColorRows--;
+
         if (lastRowInGroup) {
             rowGroupCounter = 0;
             creeperInGroup = 0;
@@ -246,24 +242,16 @@ public class Marbles {
         }
 
         newestRow = row;
-
         this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
     }
 
-    public boolean isNewestRow(int row) {
-        return row == newestRow;
-    }
-
-    public void initRow(int screenWidth, int screenHeight) {
-        StartMarbles(screenWidth, screenHeight, 4);
-    }
+    public boolean isNewestRow(int row) { return row == newestRow; }
+    public void initRow(int screenWidth, int screenHeight) { StartMarbles(screenWidth, screenHeight, 4); }
 
     public void update(double dt, double deadline) {
         if (marbles == null) return;
 
-        // 上一帧生成的新行，在本帧开始时取消无敌帧
         newRowInvincible = false;
-
         updateScoreNumbers();
         updateGameTime(dt);
 
@@ -280,23 +268,18 @@ public class Marbles {
                     }
                     hex.update(dt);
                     hex.recalculateVerticesIfDirty();
-
-                    if (hex.isDead()) {
-                        marbles[r][c] = null;
-                    }
+                    if (hex.isDead()) marbles[r][c] = null;
                 }
             }
         }
 
         accumulatedY += yMove;
         if (accumulatedY >= ySpacing) {
-            // 进入无敌帧状态（保持到下一帧开始）
             newRowInvincible = true;
             int newRow = maxRowCount + rowCount;
-            this.rowCount = rowCount + 1;
+            this.rowCount++;
             AddMarbleRow(newRow, screenWidth, this.rowCount);
             accumulatedY -= ySpacing;
-            // 无敌帧在下一帧开始时取消
         }
 
         updateWarnState(deadline, dt);
@@ -309,26 +292,18 @@ public class Marbles {
         return null;
     }
 
-    public int getRowCount() {
-        return rowCount;
-    }
-
-    public int getMarblesLength() {
-        return marbles != null ? marbles.length : 0;
-    }
+    public int getRowCount() { return rowCount; }
+    public int getMarblesLength() { return marbles != null ? marbles.length : 0; }
 
     private boolean isMarbleActive(Marble m) {
-        return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone();
+        return m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone() && !m.isDead();
     }
 
     public Marble[] getRow(int row) {
-        if (marbles != null && row >= 0 && row < marbles.length) {
-            return marbles[row];
-        }
+        if (marbles != null && row >= 0 && row < marbles.length) return marbles[row];
         return null;
     }
 
-    // 新增：获取指定行列周围的邻居弹珠
     private List<Marble> getNeighbors(int r, int c) {
         List<Marble> neighbors = new ArrayList<>();
         if (marbles == null || r < 0 || r >= marbles.length || marbles[r] == null || c < 0 || c >= marbles[r].length) {
@@ -383,7 +358,6 @@ public class Marbles {
 
         int rowOffset = (int) Math.round((ref.getCenterY() - ly) / ySpacing);
         int targetRow = ref.getRow() + rowOffset;
-
         if (targetRow < 0) targetRow = 0;
 
         double refBaseX = ref.getCenterX() - ref.getCol() * xSpacing;
@@ -463,12 +437,10 @@ public class Marbles {
         double exactX = targetBaseX + targetCol * xSpacing;
         double exactY = ref.getCenterY() - (targetRow - ref.getRow()) * ySpacing;
 
-        // 将新弹珠放置入网格
         marbles[targetRow][targetCol] = new Marble();
         marbles[targetRow][targetCol].setColorType(launchMarble.getColorType());
         marbles[targetRow][targetCol].init(exactX, exactY, targetRow, targetCol);
 
-        // 新增：判断 Creeper 碰撞逻辑（仅包含：自身碰撞与被碰撞）
         List<Marble> neighbors = getNeighbors(targetRow, targetCol);
         boolean launchedIsCreeper = launchMarble.getColorType() == Marble.CREEPER;
         boolean hitGridCreeper = false;
@@ -482,21 +454,16 @@ public class Marbles {
         }
 
         if (launchedIsCreeper && hitGridCreeper) {
-            // 两个 Creeper 碰撞：核爆清屏
             nukeBoard();
-            // 第一次检测：消除直接悬空的弹珠
             checkFloatingMarbles();
-            // 第二次检测：处理因爆炸支撑消失而悬空的弹珠
             checkFloatingMarbles();
             addRoundTotalScore();
         } else if (launchedIsCreeper) {
-            // 自身碰撞：发射的Creeper落入网格，引发爆炸
             creeperBlast(exactX, exactY);
             checkFloatingMarbles();
             checkFloatingMarbles();
             addRoundTotalScore();
         } else if (hitGridCreeper) {
-            // 被碰撞：发射的普通弹珠碰到了网格内的Creeper
             for (Marble hc : hitCreepers) {
                 creeperBlast(hc.getCenterX(), hc.getCenterY());
             }
@@ -504,19 +471,16 @@ public class Marbles {
             checkFloatingMarbles();
             addRoundTotalScore();
         } else if (launchMarble.getColorType() == Marble.BEDROCK) {
-            // Bedrock无法触发同色相消，但触发碰撞动画
             ResourceManager.getInstance().playNoClear();
             triggerCollisionAnimation(targetRow, targetCol, exactX, exactY);
             checkFloatingMarbles();
             addRoundTotalScore();
         } else if (launchMarble.getColorType() == Marble.CREEPER) {
-            // Creeper无法触发同色相消，但触发碰撞动画
             ResourceManager.getInstance().playNoClear();
             triggerCollisionAnimation(targetRow, targetCol, exactX, exactY);
             checkFloatingMarbles();
             addRoundTotalScore();
         } else {
-            // 全都是普通弹珠 -> 执行正常的同色三消检测
             checkConnectedFromLaunch(targetRow, targetCol, launchMarble.getColorType());
         }
     }
@@ -538,25 +502,12 @@ public class Marbles {
             double originY = launchM != null ? launchM.getCenterY() : 0;
 
             int groupSize = connectedGroup.size();
+            if (groupSize == 3) ResourceManager.getInstance().playThreeClear();
+            else if (groupSize == 4) ResourceManager.getInstance().playFourClear();
+            else if (groupSize > 4) ResourceManager.getInstance().playMassiveClear();
 
-            if (groupSize == 3) {
-                ResourceManager.getInstance().playThreeClear();
-            } else if (groupSize == 4) {
-                ResourceManager.getInstance().playFourClear();
-            } else if (groupSize > 4) {
-                ResourceManager.getInstance().playMassiveClear();
-            }
+            int pointsPerMarble = (groupSize <= 3) ? 10 : (groupSize <= 6) ? 15 : 20;
 
-            int pointsPerMarble;
-            if (groupSize <= 3) {
-                pointsPerMarble = 10;
-            } else if (groupSize <= 6) {
-                pointsPerMarble = 15;
-            } else {
-                pointsPerMarble = 20;
-            }
-
-            // 普通同色消除
             for (Marble m : connectedGroup) {
                 if (!m.isScored() && scoreListener != null) {
                     scoreListener.accept(m, pointsPerMarble);
@@ -578,7 +529,6 @@ public class Marbles {
 
         } else {
             ResourceManager.getInstance().playNoClear();
-
             Marble launchM = marbles[launchRow][launchCol];
             if (launchM != null) {
                 double collisionX = launchM.getCenterX();
@@ -621,9 +571,7 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (isMarbleActive(m)) {
-                    if (m.getCenterY() < minY) {
-                        minY = m.getCenterY();
-                    }
+                    if (m.getCenterY() < minY) minY = m.getCenterY();
                 }
             }
         }
@@ -641,9 +589,7 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (isMarbleActive(m)) {
-                    if (m.getCenterY() <= minY + side * 1.5) {
-                        ceilingMarbles.add(m);
-                    }
+                    if (m.getCenterY() <= minY + side * 1.5) ceilingMarbles.add(m);
                 }
             }
         }
@@ -659,17 +605,14 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (isMarbleActive(m) && !visited[r][c]) {
-                    // 无敌帧期间跳过最新生成的行
                     if (newRowInvincible && isNewestRow(r)) continue;
 
-                    // "被消除" 触发：Creeper在悬空掉落（被消除）时触发爆炸
                     if (m.getColorType() == Marble.CREEPER) {
                         creeperBlast(m.getCenterX(), m.getCenterY());
                     } else {
                         if (!m.isScored() && scoreListener != null) {
                             scoreListener.accept(m, 20);
                             m.setScored(true);
-                            // 掉落弹珠使用其本身的颜色
                             Color marbleColor = getMarbleColor(m.getColorType());
                             scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
                             lastRoundTotalScore += 20;
@@ -690,7 +633,6 @@ public class Marbles {
         if (current == null || !current.isInitialized() || current.isPopping() || current.isFalling()) return;
 
         visited[r][c] = true;
-
         double thresholdSq = (side * SQRT3 * 1.2) * (side * SQRT3 * 1.2);
 
         for (int dr = -2; dr <= 2; dr++) {
@@ -747,9 +689,7 @@ public class Marbles {
         }
     }
 
-    public double getVerticalSpacing() {
-        return ySpacing;
-    }
+    public double getVerticalSpacing() { return ySpacing; }
 
     public void updateWarnState(double deadline, double dt) {
         if (marbles == null) return;
@@ -770,6 +710,17 @@ public class Marbles {
             }
         }
     }
+    
+    public boolean hasWarning() {
+        if (marbles == null) return false;
+        for (Marble[] row : marbles) {
+            if (row == null) continue;
+            for (Marble m : row) {
+                if (m != null && m.isWarn()) return true;
+            }
+        }
+        return false;
+    }
 
     public void draw(Graphics2D g) {
         if (marbles == null) return;
@@ -780,6 +731,12 @@ public class Marbles {
             }
         }
         drawScoreNumbers(g);
+    }
+
+    private void drawScoreNumbers(Graphics2D g) {
+        for (ScreenGame.ScoreNumber sn : scoreNumbers) {
+            sn.draw(g);
+        }
     }
 
     public void resetRow() {
@@ -810,16 +767,10 @@ public class Marbles {
         this.currentFallSpeed = baseSpeed;
     }
 
-    // 设置特殊弹珠生成配置
     public void setSpecialMarbleConfig(boolean creeper, boolean bedrock, boolean heart) {
         this.hasCreeper = creeper;
         this.hasBedrock = bedrock;
         this.hasHeart = heart;
-    }
-
-    // 启用creeper生成（由bossSans触发，用于第4关）
-    public void enableCreeperGeneration() {
-        this.hasCreeper = true;
     }
 
     public void updateGameTime(double dt) {
@@ -832,13 +783,11 @@ public class Marbles {
         return currentFallSpeed;
     }
 
-    // 获取creeper爆炸半径的平方
     private double getBlastRadiusSq() {
         double hexUnit = side * 1.5;
         return hexUnit * CREEPER_BLAST_RADIUS * hexUnit * CREEPER_BLAST_RADIUS;
     }
 
-    // Creeper爆炸：消除中心点周围+3六边形范围内所有普通弹珠
     private void creeperBlast(double centerX, double centerY) {
         if (marbles == null) return;
 
@@ -850,10 +799,7 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (m == null || !m.isInitialized() || m.isPopping() || m.isFalling() || m.isAlone()) continue;
-
                 if (m.isImmuneToCreeper()) continue;
-
-                // 无敌帧期间跳过最新生成的行
                 if (newRowInvincible && isNewestRow(r)) continue;
 
                 double dx = m.getCenterX() - centerX;
@@ -861,7 +807,6 @@ public class Marbles {
                 double distSq = dx * dx + dy * dy;
 
                 if (distSq <= blastRadiusSq) {
-                    // 触发消除
                     if (!m.isScored() && scoreListener != null) {
                         scoreListener.accept(m, 20);
                         m.setScored(true);
@@ -880,18 +825,15 @@ public class Marbles {
         }
     }
 
-    // 新增：Creeper核爆清屏处理
     private void nukeBoard() {
         if (marbles == null) return;
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
-            // 无敌帧期间跳过最新生成的行
             if (newRowInvincible && isNewestRow(r)) continue;
 
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (m != null && m.isInitialized() && !m.isPopping() && !m.isFalling() && !m.isAlone()) {
-                    // 忽略对清屏核爆免疫的弹珠（例如Bedrock）
                     if (!m.isImmuneToCreeper()) {
                         if (!m.isScored() && scoreListener != null) {
                             scoreListener.accept(m, 20);
@@ -900,12 +842,114 @@ public class Marbles {
                             Color marbleColor = getMarbleColor(m.getColorType());
                             scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
                         }
-                        // 略微随机的延迟爆炸带来非常酷炫的核爆视觉反馈
                         m.startPop(random.nextDouble() * 0.3);
                     }
                 }
             }
         }
         ResourceManager.getInstance().playMassiveClear();
+    }
+
+    // ================= BossSans 技能实现 =================
+
+    public void skillAlternateColors(int rows) {
+        this.alternateColorRows = rows;
+    }
+
+    public void skillBedrockRadius() {
+        if (marbles == null) return;
+        List<Marble> targets = new ArrayList<>();
+        for (Marble[] row : marbles) {
+            if (row == null) continue;
+            for (Marble m : row) {
+                if (isMarbleActive(m) && m.isNormalMarble()) {
+                    targets.add(m);
+                }
+            }
+        }
+        if (targets.isEmpty()) return;
+        Marble center = targets.get(random.nextInt(targets.size()));
+        double cx = center.getCenterX();
+        double cy = center.getCenterY();
+        double radiusSq = (side * SQRT3 * 3.2) * (side * SQRT3 * 3.2);
+
+        for (Marble[] row : marbles) {
+            if (row == null) continue;
+            for (Marble m : row) {
+                if (isMarbleActive(m) && m.isNormalMarble()) {
+                    double dx = m.getCenterX() - cx;
+                    double dy = m.getCenterY() - cy;
+                    if (dx*dx + dy*dy <= radiusSq) {
+                        m.setColorType(Marble.BEDROCK);
+                    }
+                }
+            }
+        }
+    }
+
+    public void skillBedrockRow() {
+        if (marbles == null) return;
+        List<Integer> validRows = new ArrayList<>();
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] == null) continue;
+            int normalCount = 0;
+            for (Marble m : marbles[r]) {
+                if (isMarbleActive(m) && m.isNormalMarble()) normalCount++;
+            }
+            if (normalCount > 1) validRows.add(r);
+        }
+        if (validRows.isEmpty()) return;
+        int chosenRow = validRows.get(random.nextInt(validRows.size()));
+
+        List<Marble> normalMarbles = new ArrayList<>();
+        for (Marble m : marbles[chosenRow]) {
+            if (isMarbleActive(m) && m.isNormalMarble()) {
+                normalMarbles.add(m);
+            }
+        }
+        if (normalMarbles.isEmpty()) return;
+
+        Marble keepNormal = normalMarbles.get(random.nextInt(normalMarbles.size()));
+        for (Marble m : normalMarbles) {
+            if (m != keepNormal) {
+                m.setColorType(Marble.BEDROCK);
+            }
+        }
+    }
+
+    public void skillTeleportDown(int rows) {
+        if (marbles == null) return;
+        // 物理坐标与行序号均发生移动
+        for(int r = 0; r < marbles.length; r++) {
+            if(marbles[r] != null) {
+                for(Marble m : marbles[r]) {
+                    if (m != null && !m.isFalling() && !m.isDead()) {
+                        m.setRow(Math.max(0, m.getRow() - rows)); 
+                        m.setCenter(m.getCenterX(), m.getCenterY() + ySpacing * rows);
+                    }
+                }
+            }
+        }
+
+        Marble[][] newMarbles = new Marble[marbles.length + rows][];
+        for(int r = rows; r < marbles.length; r++) {
+            newMarbles[r - rows] = marbles[r];
+        }
+        marbles = newMarbles;
+
+        for (int i = 0; i < rows; i++) {
+            this.rowCount++;
+            int newRowIdx = maxRowCount + this.rowCount - 1;
+            if (newRowIdx >= marbles.length) {
+                Marble[][] expanded = new Marble[newRowIdx + 5][];
+                System.arraycopy(marbles, 0, expanded, 0, marbles.length);
+                marbles = expanded;
+            }
+            AddMarbleRow(newRowIdx, screenWidth, this.rowCount);
+            double targetY = (-2 * side) + (rows - 1 - i) * ySpacing + accumulatedY;
+            for (Marble m : marbles[newRowIdx]) {
+                if (m != null) m.setCenter(m.getCenterX(), targetY);
+            }
+        }
     }
 }

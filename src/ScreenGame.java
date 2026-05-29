@@ -18,7 +18,9 @@ public class ScreenGame {
         new Color(220, 30, 30),
         new Color(20, 80, 220),
         new Color(240, 200, 20),
-        new Color(160, 30, 200)
+        new Color(160, 30, 200),
+        new Color(34, 139, 34),   // CREEPER (index 5)
+        new Color(105, 105, 105) // BEDROCK (index 6)
     };
 
     private static final Color BASE_COLOR_TOP = new Color(255, 180, 80);
@@ -126,7 +128,7 @@ public class ScreenGame {
 
     public int getNextMarbleColorType() { return nextMarbleColor; }
     public void setNextMarbleColorType(int type) {
-        if (type >= 1 && type <= 4) this.nextMarbleColor = type;
+        if (type >= 1 && type <= 6) this.nextMarbleColor = type;
     }
 
     public void updateScore(int score) {

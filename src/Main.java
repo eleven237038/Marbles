@@ -55,7 +55,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private boolean sansAnimating = false;
     private javax.swing.Timer idleRepaintTimer = null;
 
-    // IntroDialog 对话系统 (已迁移到 BossSans)
+    // BossSans 技能与计时器
+    private double sansSkillTimer = 30.0;
+    private int sansCreeperShots = 0;
+
     private javax.swing.Timer dialogTimer = null;
     private boolean utStyleDone = false;
 
@@ -194,6 +197,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sansActive = false;
         sansIdle = false;
         sansAnimating = false;
+        sansSkillTimer = 30.0;
+        sansCreeperShots = 0;
         if (idleRepaintTimer != null) {
             idleRepaintTimer.stop();
             idleRepaintTimer = null;
@@ -207,9 +212,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             // 检测heart掉落与消除
             if (marble != null && marble.getColorType() == Marble.HEART && sans != null && sansActive) {
                 sans.removeOneHeart();
-                // 当heart剩余2颗时，切换成正义之矛.mp3
+                // 当heart剩余2颗时，切换成正义之矛.mp3并放出非阻塞对话
                 if (sans.getHeartCount() == 2) {
                     ResourceManager.getInstance().playJusticeMusic();
+                    sans.setCombatDialog("看来我得稍微认真一点了...\n准备好迎接审判吧。");
                 }
             }
 
@@ -256,6 +262,15 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         if (frozen || gamePaused) return;
         if (hexGrid != null) hexGrid.update(dt, deadline);
 
+        // BossSans 战斗期技能计时
+        if (sansActive && gameStarted && !sansIdle) {
+            sansSkillTimer -= dt;
+            if (sansSkillTimer <= 0) {
+                triggerSansSkill();
+                sansSkillTimer = 30.0;
+            }
+        }
+
         if (launchPad != null) {
             boolean moved = false;
             if (upPressed) {
@@ -280,6 +295,52 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         if (launchMarble != null) launchMarble.update(dt);
         checkCollisions();
         collisionWithDeadline();
+    }
+
+    private void triggerSansSkill() {
+        if (hexGrid == null || sans == null) return;
+        int skillType;
+        if (hexGrid.hasWarning()) {
+            skillType = 6;
+        } else {
+            skillType = random.nextInt(6) + 1;
+        }
+
+        switch(skillType) {
+            case 1:
+                hexGrid.skillAlternateColors(2);
+                sans.setCombatDialog("接招吧！\n彩色混乱！");
+                break;
+            case 2:
+                hexGrid.skillBedrockRadius();
+                sans.setCombatDialog("给你加点障碍。\n感觉如何？");
+                break;
+            case 3:
+                hexGrid.skillBedrockRow();
+                sans.setCombatDialog("这行我都包了。\n不用谢。");
+                break;
+            case 4:
+                sans.setCombatDialog("本来想用个大招的...\n但是我懒得动了。");
+                break;
+            case 5:
+                hexGrid.skillTeleportDown(2);
+                sans.setCombatDialog("重力突变！\n小心点，孩子。");
+                break;
+            case 6:
+                sansCreeperShots = 5; 
+                if (launchMarble != null && !launchMarble.isLaunched()) {
+                    launchMarble.setColorType(Marble.CREEPER);
+                }
+                if (launchPad != null) {
+                    launchPad.setNextMarbleColorType(Marble.CREEPER);
+                }
+                if (hexGrid.hasWarning()) {
+                    sans.setCombatDialog("看你快不行了...\n给你点爆炸支援吧。");
+                } else {
+                    sans.setCombatDialog("炸弹派对时间！\n好好利用吧。");
+                }
+                break;
+        }
     }
 
     private void checkCollisions() {
@@ -334,14 +395,22 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             launchMarble.setColorType(nextColor);
             launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
 
-            // 第2关每6发必有一个creeper，第3关creeper+bedrock
-            int level = Level.getInstance().getCurrentLevel();
-            if (level == 2 || level == 3) {
-                launchMarble.setSpecialMarbleForLevel(random, level);
+            if (sansCreeperShots > 0) {
+                sansCreeperShots--;
+                if (sansCreeperShots > 0) {
+                    launchPad.setNextMarbleColorType(Marble.CREEPER);
+                } else {
+                    int colorTypeCount = Level.getInstance().getColorTypeCount();
+                    launchPad.setNextMarbleColorType(random.nextInt(colorTypeCount) + 1);
+                }
+            } else {
+                int level = Level.getInstance().getCurrentLevel();
+                if (level == 2 || level == 3) {
+                    launchMarble.setSpecialMarbleForLevel(random, level);
+                }
+                int colorTypeCount = Level.getInstance().getColorTypeCount();
+                launchPad.setNextMarbleColorType(random.nextInt(colorTypeCount) + 1);
             }
-
-            int colorTypeCount = Level.getInstance().getColorTypeCount();
-            launchPad.setNextMarbleColorType(random.nextInt(colorTypeCount) + 1);
         }
     }
 
@@ -610,10 +679,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         // 播放背景音乐：骨质疏松.mp3
         ResourceManager.getInstance().playBonelessMusic();
 
-        // BossSans触发creeper生成
-        if (hexGrid != null) {
-            hexGrid.enableCreeperGeneration();
-        }
+        sansCreeperShots = 0;
+        sansSkillTimer = 30.0;
 
         // 对话结束后显示血条
         sans.initHearts(sansX, sansY);
@@ -622,6 +689,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             sansIdle = false;
             sansAnimating = true;
             sans.play("Basic - Left", 150);
+            sans.setCombatDialog("呃...被你打败了...\n我要去格里尔比了...");
 
             // 启动向左走出窗口的动画
             javax.swing.Timer leaveTimer = new javax.swing.Timer(16, ev -> {
@@ -1053,7 +1121,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 }
                 
                 // ==========================================
-                // 绘制跨越面板的 BossSans
+                // 绘制跨越面板的 BossSans 与非阻塞对话框
                 // ==========================================
                 if (sansActive && sans != null) {
                     if (sansAnimating) {
@@ -1065,12 +1133,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                         // 绘制 hearts (对话结束进入实际战斗后，此判定才可能不为空)
                         sans.drawHearts(g2d);
                     }
+                    
+                    // 绘制对话框
+                    sans.drawDialog(g2d, (int)sansX, (int)sansY);
+                    sans.drawCombatDialog(g2d, (int)sansX, (int)sansY);
                 }
 
-                // ==========================================
-                // 绘制对话框
-                // ==========================================
-                sans.drawDialog(g2d, (int)sansX, (int)sansY);
             }
 
             if (overlayMode != 0) {

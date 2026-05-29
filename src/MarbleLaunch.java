@@ -128,6 +128,7 @@ public class MarbleLaunch extends Marble {
                 }
             }
         }
+        // 注意：Level 4不再在这里产生特殊弹珠，避免自然生成导致的逻辑错误
     }
 
     public static void resetCounters() {
