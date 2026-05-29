@@ -860,36 +860,63 @@ public class Marbles {
         this.alternateColorRows = rows;
     }
 
-    // 技能 2: 将一个严格以1个Marble边长为六边形范围转换为 bedrock (避开 heartMarble)
+    // 技能 2: 生成3个bedrock构成的正三角形或倒三角形结构
     public void skillBedrockRadius() {
         if (marbles == null) return;
-        List<Marble> targets = new ArrayList<>();
+
+        // 收集所有可作为三角形顶点的活跃正常弹珠
+        List<Marble> validApexes = new ArrayList<>();
         for (Marble[] row : marbles) {
             if (row == null) continue;
             for (Marble m : row) {
                 if (isMarbleActive(m) && m.isNormalMarble() && m.getColorType() != Marble.HEART) {
-                    targets.add(m);
+                    validApexes.add(m);
                 }
             }
         }
-        if (targets.isEmpty()) return;
-        Marble center = targets.get(random.nextInt(targets.size()));
-        double cx = center.getCenterX();
-        double cy = center.getCenterY();
-        
-        // 修改阈值：完美六边形半径调整为1.1，仅囊括中心本体与其直接相邻的6个相连弹珠 (共7颗)
-        double radiusSq = (side * SQRT3 * 1.1) * (side * SQRT3 * 1.1);
+        if (validApexes.isEmpty()) return;
 
-        for (Marble[] row : marbles) {
-            if (row == null) continue;
-            for (Marble m : row) {
-                if (isMarbleActive(m) && m.isNormalMarble() && m.getColorType() != Marble.HEART) {
-                    double dx = m.getCenterX() - cx;
-                    double dy = m.getCenterY() - cy;
-                    if (dx*dx + dy*dy <= radiusSq) {
-                        m.setColorType(Marble.BEDROCK);
-                    }
+        // 随机选择一个顶点
+        Marble apex = validApexes.get(random.nextInt(validApexes.size()));
+        int apexRow = apex.getRow();
+        int apexCol = apex.getCol();
+        boolean isUpward = random.nextBoolean(); // true=正三角, false=倒三角
+
+        // 正三角形（顶点朝上）：顶点在(row,col)，下方两点在(row+1, col-1)和(row+1, col)
+        // 倒三角形（顶点朝下）：顶点在(row,col)，上方两点在(row-1, col-1)和(row-1, col)
+        int[][] triangleOffsets;
+        if (isUpward) {
+            triangleOffsets = new int[][] {
+                {0, 0},           // 顶点
+                {1, -1},          // 左下
+                {1, 0}            // 右下
+            };
+        } else {
+            triangleOffsets = new int[][] {
+                {0, 0},           // 顶点
+                {-1, -1},         // 左上
+                {-1, 0}           // 右上
+            };
+        }
+
+        // 检查三个位置是否都有效，收集有效位置
+        List<Marble> triangleMarbles = new ArrayList<>();
+        for (int[] offset : triangleOffsets) {
+            int checkRow = apexRow + offset[0];
+            int checkCol = apexCol + offset[1];
+            if (checkRow >= 0 && checkRow < marbles.length &&
+                marbles[checkRow] != null && checkCol >= 0 && checkCol < marbles[checkRow].length) {
+                Marble m = marbles[checkRow][checkCol];
+                if (m != null && isMarbleActive(m) && m.isNormalMarble() && m.getColorType() != Marble.HEART) {
+                    triangleMarbles.add(m);
                 }
+            }
+        }
+
+        // 如果三个位置都有效，转换为bedrock
+        if (triangleMarbles.size() == 3) {
+            for (Marble m : triangleMarbles) {
+                m.setColorType(Marble.BEDROCK);
             }
         }
     }
