@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="为Sans添加血量">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="Level4开场效果">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/BossSans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BossSans.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/music/正义之矛.mp3" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/music/骨质疏松.mp3" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ScreenGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenGame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ResourceManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ResourceManager.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -150,15 +150,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
-      <workItem from="1780030147321" duration="2667000" />
-    </task>
-    <task id="LOCAL-00052" summary="优化警告效果">
-      <option name="closed" value="true" />
-      <created>1779859451942</created>
-      <option name="number" value="00052" />
-      <option name="presentableId" value="LOCAL-00052" />
-      <option name="project" value="LOCAL" />
-      <updated>1779859451943</updated>
+      <workItem from="1780030147321" duration="4225000" />
     </task>
     <task id="LOCAL-00053" summary="优化窗口弹出">
       <option name="closed" value="true" />
@@ -544,7 +536,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780031359679</updated>
     </task>
-    <option name="localTasksCounter" value="101" />
+    <task id="LOCAL-00101" summary="Level4开场效果">
+      <option name="closed" value="true" />
+      <created>1780032974918</created>
+      <option name="number" value="00101" />
+      <option name="presentableId" value="LOCAL-00101" />
+      <option name="project" value="LOCAL" />
+      <updated>1780032974918</updated>
+    </task>
+    <option name="localTasksCounter" value="102" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -562,7 +562,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="更正晋级按钮" />
     <MESSAGE value="添加Sans实体" />
     <MESSAGE value="添加music文件" />
     <MESSAGE value="添加Sans" />
@@ -587,6 +586,7 @@
     <MESSAGE value="重新设置第三关" />
     <MESSAGE value="creeper和bedrock生成逻辑修正" />
     <MESSAGE value="为Sans添加血量" />
-    <option name="LAST_COMMIT_MESSAGE" value="为Sans添加血量" />
+    <MESSAGE value="Level4开场效果" />
+    <option name="LAST_COMMIT_MESSAGE" value="Level4开场效果" />
   </component>
 </project>

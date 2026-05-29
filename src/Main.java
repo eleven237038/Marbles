@@ -199,6 +199,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             // 检测heart掉落与消除
             if (marble != null && marble.getColorType() == Marble.HEART && sans != null && sansActive) {
                 sans.removeOneHeart();
+                // 当heart剩余2颗时，切换成正义之矛.mp3
+                if (sans.getHeartCount() == 2) {
+                    ResourceManager.getInstance().playJusticeMusic();
+                }
             }
 
             currentScore += points;
@@ -382,6 +386,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     public void openPauseMenu() {
         gamePaused = true;
         ResourceManager.getInstance().playBackToMenu();
+        ResourceManager.getInstance().pauseMusic();
         if (glassPane != null) {
             glassPane.showOverlay(1, false);
         }
@@ -389,6 +394,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     public void closePauseMenu() {
         ResourceManager.getInstance().playBackToMenu();
+        ResourceManager.getInstance().resumeMusic();
 
         gamePaused = false;
         if (glassPane != null) {
@@ -402,6 +408,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             ResourceManager.getInstance().playGameFail();
         }
 
+        // 非第四关停止音乐
+        if (Level.getInstance().getCurrentLevel() != 4) {
+            ResourceManager.getInstance().stopMusic();
+        }
+
         frozen = true;
         gamePaused = true;
         if (glassPane != null) {
@@ -411,6 +422,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     private void returnToMenu() {
         ResourceManager.getInstance().playBackToMenu();
+        ResourceManager.getInstance().stopMusic();
 
         utBg = false;
         utFont = false;
@@ -442,6 +454,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     public void onRestart() {
         ResourceManager.getInstance().playBackToMenu();
+        // 不在第四关时停止音乐
+        if (Level.getInstance().getCurrentLevel() != 4) {
+            ResourceManager.getInstance().stopMusic();
+        }
 
         if (glassPane != null) {
             glassPane.hideOverlay();
@@ -529,7 +545,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                             // 三秒完全渐变结束后，自动解除冻结继续游戏
                             frozen = false;
                             gamePaused = false;
-                            
+
+                            // 播放背景音乐：骨质疏松.mp3
+                            ResourceManager.getInstance().playBonelessMusic();
+
                             // BossSans触发creeper生成
                             if (hexGrid != null) {
                                 hexGrid.enableCreeperGeneration();
@@ -592,6 +611,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     @Override
     public void onSelectLevel(int level) {
         ResourceManager.getInstance().playGameBegin();
+        // 不在第四关时停止音乐
+        if (level != 4) {
+            ResourceManager.getInstance().stopMusic();
+        }
         Level.getInstance().setCurrentLevel(level);
 
         cardLayout.show(mainPanel, "game");

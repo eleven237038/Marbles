@@ -21,6 +21,10 @@ public class ResourceManager {
     private Map<String, Boolean> soundLoaded;
     private boolean soundEnabled = true;
 
+    // 音乐管理
+    private Clip musicClip = null;
+    private String currentMusic = null;
+
     // 音效文件路径常量
     public static final String GAME_BEGIN = "GameBegin.wav";
     public static final String BACK_TO_MENU = "从菜单返回主页.wav";
@@ -31,6 +35,10 @@ public class ResourceManager {
     public static final String NO_CLEAR = "打击后黏附无消除.wav";
     public static final String GAME_FAIL = "晋级&失败.wav";
     public static final String THREE_CLEAR = "钝角三消.wav";
+
+    // 音乐文件路径常量
+    public static final String MUSIC_BONELESS = "骨质疏松.wav";
+    public static final String MUSIC_JUSTICE = "正义之矛.wav";
 
     private ResourceManager() {
         soundClips = new HashMap<>();
@@ -210,4 +218,84 @@ public class ResourceManager {
     public void playNoClear() { playSound(NO_CLEAR); }
     public void playGameFail() { playSound(GAME_FAIL); }
     public void playThreeClear() { playSound(THREE_CLEAR); }
+
+    // ========== 音乐播放方法 ==========
+
+    /**
+     * 获取音乐文件的完整路径
+     */
+    public static String getMusicPath(String fileName) {
+        return getResourceBasePath() + "resources" + File.separator + "music" + File.separator + fileName;
+    }
+
+    /**
+     * 播放背景音乐（循环）
+     */
+    public void playMusic(String fileName) {
+        if (!soundEnabled) return;
+
+        // 如果正在播放同一首音乐，不重复播放
+        if (fileName.equals(currentMusic) && musicClip != null && musicClip.isRunning()) {
+            return;
+        }
+
+        // 停止当前音乐
+        stopMusic();
+
+        try {
+            File musicFile = new File(getMusicPath(fileName));
+            if (musicFile.exists()) {
+                AudioInputStream audioStream = AudioSystem.getAudioInputStream(musicFile);
+                musicClip = AudioSystem.getClip();
+                musicClip.open(audioStream);
+                musicClip.loop(Clip.LOOP_CONTINUOUSLY);
+                currentMusic = fileName;
+                System.out.println("开始播放音乐: " + fileName);
+            } else {
+                System.err.println("音乐文件不存在: " + musicFile.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            System.err.println("播放音乐失败: " + fileName + " - " + e.getMessage());
+        }
+    }
+
+    /**
+     * 停止当前播放的音乐
+     */
+    public void stopMusic() {
+        if (musicClip != null) {
+            musicClip.stop();
+            musicClip.close();
+            musicClip = null;
+        }
+        currentMusic = null;
+    }
+
+    /**
+     * 暂停当前播放的音乐
+     */
+    public void pauseMusic() {
+        if (musicClip != null && musicClip.isRunning()) {
+            musicClip.stop();
+        }
+    }
+
+    /**
+     * 恢复暂停的音乐
+     */
+    public void resumeMusic() {
+        if (musicClip != null && !musicClip.isRunning()) {
+            musicClip.start();
+        }
+    }
+
+    /**
+     * 播放骨质疏松.mp3（背景音乐）
+     */
+    public void playBonelessMusic() { playMusic(MUSIC_BONELESS); }
+
+    /**
+     * 播放正义之矛.mp3（背景音乐）
+     */
+    public void playJusticeMusic() { playMusic(MUSIC_JUSTICE); }
 }
