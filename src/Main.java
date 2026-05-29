@@ -216,8 +216,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         launchPad.setCannonPosition(mWidth, mHeight);
         deadline = launchPad.getTopY();
 
-        // 重置第2关creeper计数器
-        MarbleLaunch.resetLevel2Counter();
+        // 重置特殊弹珠计数器
+        MarbleLaunch.resetCounters();
 
         launchMarble = new MarbleLaunch();
         launchMarble.setScreenSize(mWidth, mHeight);
@@ -308,9 +308,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             launchMarble.setColorType(nextColor);
             launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
 
-            // 第2关：每6发必有一个creeper
-            if (Level.getInstance().getCurrentLevel() == 2) {
-                launchMarble.setCreeperForLevel2(random);
+            // 第2关每6发必有一个creeper，第3关creeper+bedrock
+            int level = Level.getInstance().getCurrentLevel();
+            if (level == 2 || level == 3) {
+                launchMarble.setSpecialMarbleForLevel(random, level);
             }
 
             int colorTypeCount = Level.getInstance().getColorTypeCount();

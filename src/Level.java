@@ -65,8 +65,8 @@ public class Level {
         public static final double MAX_FALL_SPEED = 15.0;
         public static final double SPEED_INCREASE_RATE = 0.1;
         public static final boolean HAS_BOSS_SANS = false;
-        public static final boolean HAS_CREEPER = false;  // 第3关不生成creeper
-        public static final boolean HAS_BEDROCK = true;  // bedrock出现
+        public static final boolean HAS_CREEPER = true;   // creeper出现
+        public static final boolean HAS_BEDROCK = true;   // bedrock出现
         public static final boolean HAS_HEART = false;
     }
 

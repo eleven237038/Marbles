@@ -9,8 +9,10 @@ public class MarbleLaunch extends Marble {
     private int screenHeight;
     private double prevCx;
     private double prevCy;
-    private static int level2ShotCounter = 0;  // 第2关发射计数器
-    private static final int CREEPER_INTERVAL = 6;  // 每6发必有一个creeper
+    private static int creeperCounter = 0;
+    private static int bedrockCounter = 0;
+    private static final int CREEPER_INTERVAL = 6;
+    private static final int BEDROCK_INTERVAL = 12;
 
     public MarbleLaunch() {
         super();
@@ -92,19 +94,44 @@ public class MarbleLaunch extends Marble {
         this.launchSpeed = speed;
     }
 
-    // 第2关：每6发必有一个creeper
-    public void setCreeperForLevel2(Random random) {
-        level2ShotCounter++;
-        if (level2ShotCounter >= CREEPER_INTERVAL) {
-            level2ShotCounter = 0;
-            setColorType(CREEPER);
-        } else if (random.nextDouble() < 1.0 / CREEPER_INTERVAL) {
-            level2ShotCounter = 0;
-            setColorType(CREEPER);
+    // 设置特殊弹珠（第2关creeper，第3关creeper+bedrock）
+    public void setSpecialMarbleForLevel(Random random, int level) {
+        if (level == 2) {
+            creeperCounter++;
+            if (creeperCounter >= CREEPER_INTERVAL) {
+                creeperCounter = 0;
+                setColorType(CREEPER);
+            } else if (random.nextDouble() < 1.0 / CREEPER_INTERVAL) {
+                creeperCounter = 0;
+                setColorType(CREEPER);
+            }
+        } else if (level == 3) {
+            int originalColor = getColorType();
+            // creeper: 每6发必有一个，优先检查
+            creeperCounter++;
+            if (creeperCounter >= CREEPER_INTERVAL) {
+                creeperCounter = 0;
+                setColorType(CREEPER);
+            } else if (random.nextDouble() < 1.0 / CREEPER_INTERVAL) {
+                creeperCounter = 0;
+                setColorType(CREEPER);
+            }
+            // bedrock: 每12发必有一个（只有颜色未改变时才检查）
+            if (getColorType() == originalColor) {
+                bedrockCounter++;
+                if (bedrockCounter >= BEDROCK_INTERVAL) {
+                    bedrockCounter = 0;
+                    setColorType(BEDROCK);
+                } else if (random.nextDouble() < 1.0 / BEDROCK_INTERVAL) {
+                    bedrockCounter = 0;
+                    setColorType(BEDROCK);
+                }
+            }
         }
     }
 
-    public static void resetLevel2Counter() {
-        level2ShotCounter = 0;
+    public static void resetCounters() {
+        creeperCounter = 0;
+        bedrockCounter = 0;
     }
 }
