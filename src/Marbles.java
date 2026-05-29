@@ -499,7 +499,15 @@ public class Marbles {
             checkFloatingMarbles();
             addRoundTotalScore();
         } else if (launchMarble.getColorType() == Marble.BEDROCK) {
-            // Bedrock无法触发同色相消
+            // Bedrock无法触发同色相消，但触发碰撞动画
+            ResourceManager.getInstance().playNoClear();
+            triggerCollisionAnimation(targetRow, targetCol, exactX, exactY);
+            checkFloatingMarbles();
+            addRoundTotalScore();
+        } else if (launchMarble.getColorType() == Marble.CREEPER) {
+            // Creeper无法触发同色相消，但触发碰撞动画
+            ResourceManager.getInstance().playNoClear();
+            triggerCollisionAnimation(targetRow, targetCol, exactX, exactY);
             checkFloatingMarbles();
             addRoundTotalScore();
         } else {
