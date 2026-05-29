@@ -55,22 +55,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private boolean sansAnimating = false;
     private javax.swing.Timer idleRepaintTimer = null;
 
-    // BossSans 对话系统
-    private String[] sansDialog = {
-        "好了好了,停止这糟糕的游戏吧",
-        "你说什么?",
-        "我为什么会在这里?",
-        "这些不重要孩子",
-        "搞不懂你是凭借什么意志撑到现在的",
-        "总之,由于这个制作组的无聊安排",
-        "现在,我看不下去你继续浪费自己的生命了",
-        "所以,你需要击败我才能继续游玩这个游戏"
-    };
-    private int dialogIndex = -1;
-    private long dialogShowTime = 0;
-    private BufferedImage dialogBubbleImg = null;
+    // IntroDialog 对话系统
+    private IntroDialog introDialog = new IntroDialog();
     private boolean utStyleDone = false;
-    private boolean sansDialogDone = false;
 
     // Undertale风格变化标记
     public static boolean utBg = false;
@@ -153,13 +140,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     }
                 });
         highScore = loadHighScore();
-        
-        // 加载对话框精灵图
-        try {
-            dialogBubbleImg = ImageIO.read(new File(ResourceManager.getImagePath("Text Bubbles/1.png")));
-        } catch (Exception e) {
-            System.err.println("未能加载对话框精灵图: " + e.getMessage());
-        }
     }
 
     @Override
@@ -205,8 +185,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         levelWon = false;
 
         utStyleDone = false;
-        sansDialogDone = false;
-        dialogIndex = -1;
+        introDialog.reset();
 
         // 初始化 BossSans 角色并重置状态
         if (sans == null) {
@@ -521,8 +500,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sansAnimating = true;
 
         utStyleDone = false;
-        sansDialogDone = false;
-        dialogIndex = -1;
+        introDialog.reset();
 
         // BossSans 停止位置：窗口左边界和游戏区左边界的中心，减去一半站立图宽度
         int targetX = LEFT_ZONE_WIDTH / 2 - 47;
@@ -561,46 +539,17 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 sans.play("Basic - Down", 500);
 
                 // ============= 启动对话系统 =============
-                dialogIndex = 0;
-                dialogShowTime = System.currentTimeMillis();
-                
+                introDialog.start();
+
                 javax.swing.Timer dialogTimer = new javax.swing.Timer(100, null);
                 dialogTimer.addActionListener(evt -> {
-                    if (dialogIndex >= 0 && dialogIndex < sansDialog.length) {
-                        if (System.currentTimeMillis() - dialogShowTime >= 1000) {
-                            advanceDialog();
-                        }
-                    } else {
+                    introDialog.update();
+                    if (introDialog.isDone()) {
                         ((javax.swing.Timer)evt.getSource()).stop();
+                        checkIntroDone(); // 对话结束后检查是否需要启动风格转换
                     }
                 });
                 dialogTimer.start();
-
-                // ============= 开始传说之下风格转换动画 =============
-                javax.swing.Timer styleTimer = new javax.swing.Timer(1000, null);
-                styleTimer.addActionListener(new java.awt.event.ActionListener() {
-                    int step = 0;
-                    @Override
-                    public void actionPerformed(java.awt.event.ActionEvent evt) {
-                        step++;
-                        if (step == 1) {
-                            Main.utBg = true;
-                        } else if (step == 2) {
-                            Main.utFont = true;
-                        } else if (step == 3) {
-                            // 启用弹珠UT风格渲染
-                            Marble.utStyle = true;
-                            ((javax.swing.Timer)evt.getSource()).stop();
-                            
-                            utStyleDone = true;
-                            checkIntroDone(); // 尝试解除冻结（若对话也已结束）
-                        }
-                        if (glassPane != null) glassPane.repaint();
-                        if (mPanel != null) mPanel.repaint();
-                    }
-                });
-                styleTimer.start();
-                // ====================================================
 
                 // 启动待机动画重绘定时器
                 idleRepaintTimer = new javax.swing.Timer(16, evt -> {
@@ -619,64 +568,79 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     }
 
     /**
-     * 进入下一句对话
+     * 检查是否可以结束BossSans过场（对话和风格转化都结束）
      */
-    public void advanceDialog() {
-        if (dialogIndex >= 0 && dialogIndex < sansDialog.length) {
-            dialogIndex++;
-            dialogShowTime = System.currentTimeMillis();
-            if (dialogIndex >= sansDialog.length) {
-                sansDialogDone = true;
-                dialogIndex = -1;
-                checkIntroDone();
-            }
-            if (glassPane != null) glassPane.repaint();
+    private void checkIntroDone() {
+        if (introDialog.isDone() && !utStyleDone) {
+            utStyleDone = true;
+            // ============= 对话结束后开始传说之下风格转换动画 =============
+            javax.swing.Timer styleTimer = new javax.swing.Timer(1000, null);
+            styleTimer.addActionListener(new java.awt.event.ActionListener() {
+                int step = 0;
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    step++;
+                    if (step == 1) {
+                        Main.utBg = true;
+                    } else if (step == 2) {
+                        Main.utFont = true;
+                    } else if (step == 3) {
+                        // 启用弹珠UT风格渲染
+                        Marble.utStyle = true;
+                        ((javax.swing.Timer)evt.getSource()).stop();
+
+                        finishIntro(); // 完成过场
+                    }
+                    if (glassPane != null) glassPane.repaint();
+                    if (mPanel != null) mPanel.repaint();
+                }
+            });
+            styleTimer.start();
+            // ====================================================
         }
     }
 
     /**
-     * 检查是否可以结束BossSans过场（对话和风格转化都结束）
+     * 完成BossSans过场（风格转化也已结束）
      */
-    private void checkIntroDone() {
-        if (utStyleDone && sansDialogDone) {
-            frozen = false;
-            gamePaused = false;
+    private void finishIntro() {
+        frozen = false;
+        gamePaused = false;
 
-            // 播放背景音乐：骨质疏松.mp3
-            ResourceManager.getInstance().playBonelessMusic();
+        // 播放背景音乐：骨质疏松.mp3
+        ResourceManager.getInstance().playBonelessMusic();
 
-            // BossSans触发creeper生成
-            if (hexGrid != null) {
-                hexGrid.enableCreeperGeneration();
-            }
-            
-            // 对话结束后显示血条
-            sans.initHearts(sansX, sansY);
-            sans.setOnAllHeartsRemoved(() -> {
-                // 停止站立动画，开始向左走
-                sansIdle = false;
-                sansAnimating = true;
-                sans.play("Basic - Left", 150);
+        // BossSans触发creeper生成
+        if (hexGrid != null) {
+            hexGrid.enableCreeperGeneration();
+        }
 
-                // 启动向左走出窗口的动画
-                javax.swing.Timer leaveTimer = new javax.swing.Timer(16, ev -> {
-                    sansX -= 3;  // 向左移动
+        // 对话结束后显示血条
+        sans.initHearts(sansX, sansY);
+        sans.setOnAllHeartsRemoved(() -> {
+            // 停止站立动画，开始向左走
+            sansIdle = false;
+            sansAnimating = true;
+            sans.play("Basic - Left", 150);
+
+            // 启动向左走出窗口的动画
+            javax.swing.Timer leaveTimer = new javax.swing.Timer(16, ev -> {
+                sansX -= 3;  // 向左移动
+                if (glassPane != null) {
+                    glassPane.repaint();
+                }
+                // 当Sans完全走出窗口左侧时停止
+                if (sansX < -200) {
+                    ((javax.swing.Timer) ev.getSource()).stop();
+                    sansActive = false;
+                    sansAnimating = false;
                     if (glassPane != null) {
                         glassPane.repaint();
                     }
-                    // 当Sans完全走出窗口左侧时停止
-                    if (sansX < -200) {
-                        ((javax.swing.Timer) ev.getSource()).stop();
-                        sansActive = false;
-                        sansAnimating = false;
-                        if (glassPane != null) {
-                            glassPane.repaint();
-                        }
-                    }
-                });
-                leaveTimer.start();
+                }
             });
-        }
+            leaveTimer.start();
+        });
     }
 
     public void onNextLevel() {
@@ -819,8 +783,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     Point p = e.getPoint();
                     
                     // 主动点击：快进对话
-                    if (dialogIndex >= 0 && dialogIndex < sansDialog.length) {
-                        advanceDialog();
+                    if (introDialog.isActive()) {
+                        introDialog.advance();
                         return; // 对话过程中阻挡点击下面 UI 的行为
                     }
                     
@@ -853,7 +817,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 public void mouseMoved(MouseEvent e) {
                     Point p = e.getPoint();
                     // 如果正在对话，不判定悬浮按钮（冻结UI）
-                    if (dialogIndex >= 0 && dialogIndex < sansDialog.length) {
+                    if (introDialog.isActive()) {
                         setCursor(Cursor.getDefaultCursor());
                         return;
                     }
@@ -1106,45 +1070,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 // ==========================================
                 // 绘制对话框
                 // ==========================================
-                if (dialogIndex >= 0 && dialogIndex < sansDialog.length) {
-                    int bx = (int)sansX + 115;
-                    int by = (int)sansY - 50;
-                    int bw = 340;
-                    int bh = 110;
-                    
-                    // 背景
-                    if (dialogBubbleImg != null) {
-                        g2d.drawImage(dialogBubbleImg, bx, by, bw, bh, null);
-                    } else {
-                        // 回退效果，如果你没有正确放入图片路径的话
-                        g2d.setColor(Color.WHITE);
-                        g2d.fillRoundRect(bx, by, bw, bh, 20, 20);
-                        g2d.setColor(Color.BLACK);
-                        g2d.setStroke(new BasicStroke(3));
-                        g2d.drawRoundRect(bx, by, bw, bh, 20, 20);
-                        int[] px = {bx, bx - 20, bx + 20};
-                        int[] py = {by + bh / 2 - 10, by + bh / 2, by + bh / 2 + 10};
-                        g2d.setColor(Color.WHITE);
-                        g2d.fillPolygon(px, py, 3);
-                        g2d.setColor(Color.BLACK);
-                        g2d.drawLine(bx - 20, by + bh / 2, bx, by + bh / 2 - 10);
-                        g2d.drawLine(bx - 20, by + bh / 2, bx + 20, by + bh / 2 + 10);
-                    }
-
-                    // 绘制文字内容（简单截断换行）
-                    g2d.setColor(Color.BLACK);
-                    g2d.setFont(new Font("SimHei", Font.BOLD, 18));
-                    String text = sansDialog[dialogIndex];
-                    
-                    if (text.length() > 14) {
-                        String line1 = text.substring(0, 14);
-                        String line2 = text.substring(14);
-                        g2d.drawString(line1, bx + 45, by + 45);
-                        g2d.drawString(line2, bx + 45, by + 75);
-                    } else {
-                        g2d.drawString(text, bx + 45, by + 60);
-                    }
-                }
+                introDialog.draw(g2d, (int)sansX, (int)sansY);
             }
 
             if (overlayMode != 0) {
@@ -1466,7 +1392,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             if (animating) return true;
 
             // 对话未结束时，接管整个窗口点击（阻止误点按钮等其他逻辑）
-            if (dialogIndex >= 0 && dialogIndex < sansDialog.length) {
+            if (introDialog.isActive()) {
                 return true; 
             }
 

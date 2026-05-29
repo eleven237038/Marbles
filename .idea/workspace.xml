@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="修改第四关弹珠样式">
-      <change beforePath="$PROJECT_DIR$/resources/image/Text Bubbles/5.png" beforeDir="false" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加对话框聊天">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,15 +147,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
-      <workItem from="1780030147321" duration="6697000" />
-    </task>
-    <task id="LOCAL-00056" summary="合并BoardGame和BoardScreen,合并后文件更名为ScreenGame">
-      <option name="closed" value="true" />
-      <created>1779870375400</created>
-      <option name="number" value="00056" />
-      <option name="presentableId" value="LOCAL-00056" />
-      <option name="project" value="LOCAL" />
-      <updated>1779870375400</updated>
+      <workItem from="1780030147321" duration="8564000" />
     </task>
     <task id="LOCAL-00057" summary="修复计分板bug">
       <option name="closed" value="true" />
@@ -540,7 +533,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780040408316</updated>
     </task>
-    <option name="localTasksCounter" value="105" />
+    <task id="LOCAL-00105" summary="添加对话框聊天">
+      <option name="closed" value="true" />
+      <created>1780041246687</created>
+      <option name="number" value="00105" />
+      <option name="presentableId" value="LOCAL-00105" />
+      <option name="project" value="LOCAL" />
+      <updated>1780041246687</updated>
+    </task>
+    <option name="localTasksCounter" value="106" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -558,7 +559,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="添加Sans" />
     <MESSAGE value="将ScreenStart中的PLAY和Level按钮合并成PLAY按钮" />
     <MESSAGE value="将关卡选择界面的关卡按钮从左上角改到屏幕中间" />
     <MESSAGE value="优化" />
@@ -583,6 +583,7 @@
     <MESSAGE value="Level4开场效果" />
     <MESSAGE value="添加第四关音乐" />
     <MESSAGE value="修改第四关弹珠样式" />
-    <option name="LAST_COMMIT_MESSAGE" value="修改第四关弹珠样式" />
+    <MESSAGE value="添加对话框聊天" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加对话框聊天" />
   </component>
 </project>
