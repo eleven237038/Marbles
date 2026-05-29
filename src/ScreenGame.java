@@ -150,6 +150,15 @@ public class ScreenGame {
 
     public void drawLaunchPad(Graphics2D g, int w, int h) {
         setCannonPosition(w, h);
+        
+        if (Main.utBg) {
+            g.setColor(Color.WHITE);
+            g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 10, new float[]{10, 10}, 0));
+            g.drawLine(0, (int) topY, w, (int) topY);
+            g.setStroke(new BasicStroke(1));
+            return;
+        }
+
         g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 10, new float[]{10, 7}, 0));
         for (int i = 0; i < w; i += (int)(20 * SCALE)) {
             float hue = (float) (i / (float) w);
@@ -161,6 +170,49 @@ public class ScreenGame {
     }
 
     public void drawScoreBoard(Graphics2D g, int leftZoneWidth, int totalHeight) {
+        if (Main.utFont) {
+            int boardX = 25, boardY = 20;
+            int boardWidth = 200, boardHeight = 190;
+            
+            g.setColor(Color.BLACK);
+            g.fillRect(boardX, boardY, boardWidth, boardHeight);
+            g.setColor(Color.WHITE);
+            g.setStroke(new BasicStroke(4f));
+            g.drawRect(boardX, boardY, boardWidth, boardHeight);
+            
+            Font utFontText = new Font("Monospaced", Font.BOLD, 18);
+            Font utFontNum = new Font("Monospaced", Font.BOLD, 22);
+            FontMetrics fmText = g.getFontMetrics(utFontText);
+            FontMetrics fmNum = g.getFontMetrics(utFontNum);
+            
+            g.setFont(utFontText);
+            String levelText = "LV " + Level.getInstance().getCurrentLevel();
+            int levelTextX = boardX + (boardWidth - fmText.stringWidth(levelText)) / 2;
+            g.drawString(levelText, levelTextX, boardY + 30);
+            
+            String tText = "TARGET";
+            g.drawString(tText, boardX + 20, boardY + 70);
+            g.setFont(utFontNum);
+            String tVal = String.valueOf(levelWinScore);
+            g.drawString(tVal, boardX + boardWidth - 20 - fmNum.stringWidth(tVal), boardY + 70);
+            
+            g.setFont(utFontText);
+            String sText = "SCORE";
+            g.drawString(sText, boardX + 20, boardY + 110);
+            g.setFont(utFontNum);
+            String sVal = String.valueOf(currentScore);
+            g.drawString(sVal, boardX + boardWidth - 20 - fmNum.stringWidth(sVal), boardY + 110);
+            
+            g.setFont(utFontText);
+            String bText = "BEST";
+            g.drawString(bText, boardX + 20, boardY + 150);
+            g.setFont(utFontNum);
+            String bVal = String.valueOf(levelHighScore);
+            g.drawString(bVal, boardX + boardWidth - 20 - fmNum.stringWidth(bVal), boardY + 150);
+            
+            return;
+        }
+
         int boardX = 25, boardY = 20;
         int boardWidth = 200, boardHeight = 190;
 
@@ -258,6 +310,62 @@ public class ScreenGame {
     }
 
     public void drawCannon(Graphics2D g, double mx, double my) {
+        if (Main.utFont) {
+            updateCannonAngle(mx, my);
+            int baseX = (int)(cannon.x - currentBaseWidth/2);
+            int baseY = (int)(cannon.y - currentBaseHeight/2);
+            
+            g.setColor(Color.BLACK);
+            g.fillOval(baseX, baseY, currentBaseWidth, currentBaseHeight);
+            g.setColor(Color.WHITE);
+            g.setStroke(new BasicStroke(4f));
+            g.drawOval(baseX, baseY, currentBaseWidth, currentBaseHeight);
+            
+            int barrelStartX = (int)(cannon.x + Math.cos(headAngle) * (12 * SCALE));
+            int barrelStartY = (int)(cannon.y + Math.sin(headAngle) * (12 * SCALE));
+            int barrelEndX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
+            int barrelEndY = (int)(cannon.y + Math.sin(headAngle) * BARREL_LEN);
+            
+            g.setStroke(new BasicStroke((int)(12 * SCALE), BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
+            g.setColor(Color.WHITE);
+            g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
+            g.setStroke(new BasicStroke((int)(8 * SCALE), BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
+            g.setColor(Color.BLACK);
+            g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
+            
+            double dyToLine = cannon.y - topY;
+            double sinTheta = Math.sin(headAngle);
+            double distanceToLine = dyToLine / (-sinTheta);
+            if (distanceToLine < 0) distanceToLine = dyToLine;
+            int lineEndX = (int)(cannon.x + Math.cos(headAngle) * distanceToLine);
+            int lineEndY = (int)(topY);
+            
+            g.setColor(Color.WHITE);
+            g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, new float[]{10, 10}, 0));
+            g.drawLine((int)cannon.x, (int)cannon.y, lineEndX, lineEndY);
+            
+            g.setStroke(new BasicStroke(2f));
+            g.drawOval(lineEndX - 10, lineEndY - 10, 20, 20);
+            
+            int slotX = (int)(cannon.x + currentBaseWidth * AMMO_OFFSET_X_RATIO);
+            int slotY = (int)(cannon.y - currentBaseWidth * 0.15);
+            int size = AMMO_SLOT_SIZE;
+            g.setColor(Color.BLACK);
+            g.fillRect(slotX - size/2, slotY - size/2, size, size);
+            g.setColor(Color.WHITE);
+            g.setStroke(new BasicStroke(2f));
+            g.drawRect(slotX - size/2, slotY - size/2, size, size);
+            
+            if (nextMarbleColor >= 1 && nextMarbleColor <= 4) {
+                int marbleRadius = (int)(size * 0.4);
+                g.setColor(MARBLE_COLORS[nextMarbleColor]);
+                g.fillRect(slotX - marbleRadius, slotY - marbleRadius, marbleRadius*2, marbleRadius*2);
+                g.setColor(Color.WHITE);
+                g.drawRect(slotX - marbleRadius, slotY - marbleRadius, marbleRadius*2, marbleRadius*2);
+            }
+            return;
+        }
+
         updateCannonAngle(mx, my);
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -531,7 +639,7 @@ public class ScreenGame {
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, safeAlpha));
 
             int fontSize = isTotalScore ? (int)(28 * scale) : (int)(18 * scale);
-            Font font = new Font("Arial Black", Font.BOLD, fontSize);
+            Font font = Main.utFont ? new Font("Monospaced", Font.BOLD, fontSize) : new Font("Arial Black", Font.BOLD, fontSize);
             g2d.setFont(font);
 
             FontMetrics fm = g2d.getFontMetrics();

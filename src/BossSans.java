@@ -55,8 +55,12 @@ public class BossSans {
     private static BufferedImage heartSprite = null;
     private Heart[] hearts = new Heart[6];
     private boolean heartsActive = false;
+    private int heartCount = 6;  // 当前剩余heart数量
     private static final double HEART_SIZE = 30;
     private static final double HEART_SPACING = 30;
+
+    // 回调接口：当所有heart消失时的处理
+    private Runnable onAllHeartsRemoved;
 
     // 内部类：独立的心形对象
     private static class Heart {
@@ -100,7 +104,34 @@ public class BossSans {
         for (int i = 0; i < 6; i++) {
             hearts[i] = new Heart();
         }
+        heartCount = 6;
         heartsActive = false;
+    }
+
+    /**
+     * 移除一个heart，从右向左依次消失，当全部消失时触发回调
+     */
+    public void removeOneHeart() {
+        if (heartCount <= 0) return;
+
+        heartCount--;
+        if (heartCount <= 0) {
+            heartsActive = false;
+            if (onAllHeartsRemoved != null) {
+                onAllHeartsRemoved.run();
+            }
+        }
+    }
+
+    /**
+     * 设置当所有heart消失时的回调
+     */
+    public void setOnAllHeartsRemoved(Runnable callback) {
+        this.onAllHeartsRemoved = callback;
+    }
+
+    public int getHeartCount() {
+        return heartCount;
     }
 
     private void loadHeartSprite() {
@@ -130,15 +161,20 @@ public class BossSans {
             double hx = startX + i * HEART_SPACING;
             hearts[i].init(hx, hy);
         }
+        heartCount = 6;
         heartsActive = true;
     }
 
     /**
-     * 绘制 hearts（当BossSans站立时）
+     * 绘制 hearts（当BossSans站立时），实现从右向左依次消失的效果
+     * 因为 index 从 0 递增到 5，0 是最左，5 是最右。
+     * 要从右向左消失，我们应当只保留最左侧的 heartCount 个：即绘制 index 在 [0, heartCount - 1] 之间的 Hearts 即可。
      */
     public void drawHearts(Graphics2D g) {
-        if (!heartsActive) return;
-        for (int i = 0; i < 6; i++) {
+        if (!heartsActive || heartCount <= 0) return;
+        
+        // 仅绘制最左侧未扣除的 heartCount 颗，实现“最右侧先开始减少并向左蔓延”的效果
+        for (int i = 0; i < heartCount; i++) {
             hearts[i].draw(g);
         }
     }

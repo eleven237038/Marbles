@@ -53,6 +53,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private boolean sansAnimating = false;
     private javax.swing.Timer idleRepaintTimer = null;
 
+    // Undertale风格变化标记
+    public static boolean utBg = false;
+    public static boolean utFont = false;
+    public static boolean utMarble = false;
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("弹珠游戏 - 豪华版");
@@ -165,6 +170,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     @Override
     public void init() {
+        utBg = false;
+        utFont = false;
+        utMarble = false;
+
         Level level = Level.getInstance();
         levelWinScore = level.getWinScore();
         levelHighScore = level.getLevelHighScore();
@@ -187,6 +196,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         downPressed = false;
 
         hexGrid.setScoreListener((marble, points) -> {
+            // 检测heart掉落与消除
+            if (marble != null && marble.getColorType() == Marble.HEART && sans != null && sansActive) {
+                sans.removeOneHeart();
+            }
+
             currentScore += points;
             if (currentScore > levelHighScore) {
                 levelHighScore = currentScore;
@@ -340,17 +354,22 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         Graphics2D g2 = (Graphics2D) mGraphics;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        LinearGradientPaint bg = new LinearGradientPaint(
-                0, 0, 0, mHeight,
-                new float[]{0, 1},
-                new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
-        );
-        g2.setPaint(bg);
-        g2.fillRect(0, 0, mWidth, mHeight);
+        if (utBg) {
+            g2.setColor(Color.BLACK);
+            g2.fillRect(0, 0, mWidth, mHeight);
+        } else {
+            LinearGradientPaint bg = new LinearGradientPaint(
+                    0, 0, 0, mHeight,
+                    new float[]{0, 1},
+                    new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
+            );
+            g2.setPaint(bg);
+            g2.fillRect(0, 0, mWidth, mHeight);
 
-        g2.setColor(new Color(200, 220, 240, 180));
-        g2.setStroke(new BasicStroke(3));
-        g2.drawLine(0, 0, 0, mHeight);
+            g2.setColor(new Color(200, 220, 240, 180));
+            g2.setStroke(new BasicStroke(3));
+            g2.drawLine(0, 0, 0, mHeight);
+        }
 
         if (hexGrid != null) hexGrid.draw(g2);
         if (launchPad != null) {
@@ -392,6 +411,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     private void returnToMenu() {
         ResourceManager.getInstance().playBackToMenu();
+
+        utBg = false;
+        utFont = false;
+        utMarble = false;
 
         frozen = false;
         gamePaused = false;
@@ -443,7 +466,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     /**
      * BossSans出场动画处理：
      * 冻结游戏界面，让BossSans从屏幕左侧外使用Right动作走入到左侧面板居中空白处，
-     * 然后自动保持Down状态第一个动作，随即解除游戏界面冻结状态。
+     * 然后自动保持Down状态第一个动作。同时启动分三秒的传说之下风格渐变过程。
      */
     private void startBossSansIntro() {
         // 冻结游戏，暂停游戏逻辑
@@ -488,17 +511,62 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 sansIdle = true;
                 sans.play("Basic - Down", 500);
 
-                // 动画结束后，自动解除冻结继续游戏
-                frozen = false;
-                gamePaused = false;
+                // ============= 开始传说之下风格转换动画 =============
+                javax.swing.Timer styleTimer = new javax.swing.Timer(1000, null);
+                styleTimer.addActionListener(new java.awt.event.ActionListener() {
+                    int step = 0;
+                    @Override
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        step++;
+                        if (step == 1) {
+                            Main.utBg = true;
+                        } else if (step == 2) {
+                            Main.utFont = true;
+                        } else if (step == 3) {
+                            Main.utMarble = true;
+                            ((javax.swing.Timer)evt.getSource()).stop();
+                            
+                            // 三秒完全渐变结束后，自动解除冻结继续游戏
+                            frozen = false;
+                            gamePaused = false;
+                            
+                            // BossSans触发creeper生成
+                            if (hexGrid != null) {
+                                hexGrid.enableCreeperGeneration();
+                            }
+                            
+                            sans.initHearts(sansX, sansY);
+                            sans.setOnAllHeartsRemoved(() -> {
+                                // 停止站立动画，开始向左走
+                                sansIdle = false;
+                                sansAnimating = true;
+                                sans.play("Basic - Left", 150);
 
-                // BossSans触发creeper生成
-                if (hexGrid != null) {
-                    hexGrid.enableCreeperGeneration();
-                }
-
-                // 初始化 hearts: 在 BossSans 站立后，在其下方生成一行6个heart
-                sans.initHearts(sansX, sansY);
+                                // 启动向左走出窗口的动画
+                                javax.swing.Timer leaveTimer = new javax.swing.Timer(16, ev -> {
+                                    sansX -= 3;  // 向左移动
+                                    if (glassPane != null) {
+                                        glassPane.repaint();
+                                    }
+                                    // 当Sans完全走出窗口左侧时停止
+                                    if (sansX < -200) {
+                                        ((javax.swing.Timer) ev.getSource()).stop();
+                                        sansActive = false;
+                                        sansAnimating = false;
+                                        if (glassPane != null) {
+                                            glassPane.repaint();
+                                        }
+                                    }
+                                });
+                                leaveTimer.start();
+                            });
+                        }
+                        if (glassPane != null) glassPane.repaint();
+                        if (mPanel != null) mPanel.repaint();
+                    }
+                });
+                styleTimer.start();
+                // ====================================================
 
                 // 启动待机动画重绘定时器
                 idleRepaintTimer = new javax.swing.Timer(16, evt -> {
@@ -837,17 +905,27 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             if (w == 0 || h == 0) return;
 
             if (gameStarted) {
-                LinearGradientPaint leftBg = new LinearGradientPaint(
-                        0, 0, LEFT_ZONE_WIDTH, 0,
-                        new float[]{0f, 1f},
-                        new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
-                );
-                g2d.setPaint(leftBg);
-                g2d.fillRect(0, 0, LEFT_ZONE_WIDTH, h);
+                if (utBg) {
+                    g2d.setColor(Color.BLACK);
+                    g2d.fillRect(0, 0, LEFT_ZONE_WIDTH, h);
+                    if (utFont) {
+                        g2d.setColor(Color.WHITE);
+                        g2d.setStroke(new BasicStroke(3f));
+                        g2d.drawLine(LEFT_ZONE_WIDTH - 2, 0, LEFT_ZONE_WIDTH - 2, h);
+                    }
+                } else {
+                    LinearGradientPaint leftBg = new LinearGradientPaint(
+                            0, 0, LEFT_ZONE_WIDTH, 0,
+                            new float[]{0f, 1f},
+                            new Color[]{new Color(188, 195, 255), new Color(188, 195, 255)}
+                    );
+                    g2d.setPaint(leftBg);
+                    g2d.fillRect(0, 0, LEFT_ZONE_WIDTH, h);
 
-                g2d.setColor(new Color(180, 205, 235));
-                g2d.setStroke(new BasicStroke(1.5f));
-                g2d.drawLine(LEFT_ZONE_WIDTH - 2, 0, LEFT_ZONE_WIDTH - 2, h);
+                    g2d.setColor(new Color(180, 205, 235));
+                    g2d.setStroke(new BasicStroke(1.5f));
+                    g2d.drawLine(LEFT_ZONE_WIDTH - 2, 0, LEFT_ZONE_WIDTH - 2, h);
+                }
 
                 if (launchPad != null) {
                     launchPad.drawScoreBoard(g2d, LEFT_ZONE_WIDTH, h);
@@ -858,40 +936,55 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 int btnX = (LEFT_ZONE_WIDTH - btnW) / 2;
                 int btnY = h - btnH - 30;
                 pauseButtonRect = new Rectangle(btnX, btnY, btnW, btnH);
-
                 RoundRectangle2D btnShape = new RoundRectangle2D.Double(btnX, btnY, btnW, btnH, 18, 18);
-                if (pausePressed) {
-                    g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
-                            new Color[]{new Color(50, 130, 240, 230), new Color(30, 100, 220, 230)}));
-                } else if (pauseHover) {
-                    g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
-                            new Color[]{new Color(100, 180, 255, 230), new Color(50, 130, 240, 230)}));
+
+                if (utFont) {
+                    g2d.setColor(Color.BLACK);
+                    g2d.fill(btnShape);
+                    g2d.setColor(Color.WHITE);
+                    g2d.setStroke(new BasicStroke(4f));
+                    g2d.draw(btnShape);
+                    
+                    g2d.setFont(new Font("Monospaced", Font.BOLD, 22));
+                    String btnText = "PAUSE";
+                    FontMetrics fm = g2d.getFontMetrics();
+                    int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
+                    int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
+                    g2d.drawString(btnText, tx, ty);
                 } else {
-                    g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
-                            new Color[]{new Color(120, 190, 255, 180), new Color(70, 140, 240, 180)}));
+                    if (pausePressed) {
+                        g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
+                                new Color[]{new Color(50, 130, 240, 230), new Color(30, 100, 220, 230)}));
+                    } else if (pauseHover) {
+                        g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
+                                new Color[]{new Color(100, 180, 255, 230), new Color(50, 130, 240, 230)}));
+                    } else {
+                        g2d.setPaint(new LinearGradientPaint(btnX, btnY, btnX, btnY + btnH, new float[]{0, 1},
+                                new Color[]{new Color(120, 190, 255, 180), new Color(70, 140, 240, 180)}));
+                    }
+                    g2d.fill(btnShape);
+
+                    g2d.setColor(Color.WHITE);
+                    g2d.setStroke(new BasicStroke(2f));
+                    g2d.draw(btnShape);
+
+                    g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
+                    String btnText = "PAUSE";
+                    FontMetrics fm = g2d.getFontMetrics();
+                    int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
+                    int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
+                    g2d.drawString(btnText, tx, ty);
                 }
-                g2d.fill(btnShape);
-
-                g2d.setColor(Color.WHITE);
-                g2d.setStroke(new BasicStroke(2f));
-                g2d.draw(btnShape);
-
-                g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
-                String btnText = "PAUSE";
-                FontMetrics fm = g2d.getFontMetrics();
-                int tx = btnX + (btnW - fm.stringWidth(btnText)) / 2;
-                int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
-                g2d.drawString(btnText, tx, ty);
                 
                 // ==========================================
                 // 绘制跨越面板的 BossSans
                 // ==========================================
                 if (sansActive && sans != null) {
                     if (sansAnimating) {
-                        // 播放右走动画
+                        // 播放行走/离开动画
                         sans.draw(g2d, (int) sansX, (int) sansY, 1.2);
                     } else if (sansIdle) {
-                        // 站立动画（2帧每秒切换）
+                        // 站立动画
                         sans.draw(g2d, (int) sansX, (int) sansY, 1.2);
                         // 绘制 hearts
                         sans.drawHearts(g2d);
@@ -927,7 +1020,48 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             g2d.translate(0, -offsetY);
         }
 
+        private void drawUtButton(Graphics2D g2d, Rectangle rect, String text) {
+            g2d.setColor(Color.BLACK);
+            g2d.fillRect(rect.x, rect.y, rect.width, rect.height);
+            g2d.setColor(Color.WHITE);
+            g2d.setStroke(new BasicStroke(4f));
+            g2d.drawRect(rect.x, rect.y, rect.width, rect.height);
+            
+            g2d.setFont(new Font("Monospaced", Font.BOLD, 20));
+            FontMetrics fm = g2d.getFontMetrics();
+            int textX = rect.x + (rect.width - fm.stringWidth(text)) / 2;
+            int textY = rect.y + (rect.height + fm.getAscent() - fm.getDescent()) / 2;
+            g2d.drawString(text, textX, textY);
+        }
+
         private void drawPauseMenuOverlay(Graphics2D g2d, int cx, int cy) {
+            if (Main.utFont) {
+                g2d.setFont(new Font("Monospaced", Font.BOLD, 42));
+                g2d.setColor(Color.WHITE);
+                String title = "PAUSED";
+                FontMetrics fm = g2d.getFontMetrics();
+                g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 120);
+
+                int btnWidth = 220;
+                int btnHeight = 55;
+                int btnSpacing = 20;
+                int startY = cy - 40;
+
+                Rectangle resumeBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
+                drawUtButton(g2d, resumeBtn, "Resume");
+
+                Rectangle helpBtn = new Rectangle(cx - btnWidth / 2, startY + btnHeight + btnSpacing, btnWidth, btnHeight);
+                drawUtButton(g2d, helpBtn, "How to play");
+
+                Rectangle quitBtn = new Rectangle(cx - btnWidth / 2, startY + 2 * (btnHeight + btnSpacing), btnWidth, btnHeight);
+                drawUtButton(g2d, quitBtn, "Quit Game");
+
+                lastResumeBtn = resumeBtn;
+                lastHelpBtn = helpBtn;
+                lastQuitBtn = quitBtn;
+                return;
+            }
+
             g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 42));
             g2d.setColor(new Color(70, 150, 255));
             String title = "PAUSED";
@@ -954,6 +1088,44 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         private void drawScreenGameOverOverlay(Graphics2D g2d, int cx, int cy) {
+            if (Main.utFont) {
+                g2d.setFont(new Font("Monospaced", Font.BOLD, 42));
+                g2d.setColor(Color.WHITE);
+                String title = (levelWon || isScreenGameOverWin) ? "DETERMINATION" : "GAME OVER";
+                FontMetrics fm = g2d.getFontMetrics();
+                g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 130);
+
+                g2d.setFont(new Font("Monospaced", Font.BOLD, 26));
+                String scoreText = "SCORE: " + currentScore;
+                fm = g2d.getFontMetrics();
+                g2d.drawString(scoreText, cx - fm.stringWidth(scoreText) / 2, cy - 70);
+
+                String targetText = "TARGET: " + levelWinScore;
+                fm = g2d.getFontMetrics();
+                g2d.drawString(targetText, cx - fm.stringWidth(targetText) / 2, cy - 35);
+
+                int btnWidth = 220;
+                int btnHeight = 55;
+                int btnSpacing = 20;
+                int startY = cy + 10;
+
+                if (levelWon) {
+                    Rectangle nextLevelBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
+                    drawUtButton(g2d, nextLevelBtn, "Next Level");
+                    lastRestartBtn = nextLevelBtn;
+                } else if (!isScreenGameOverWin) {
+                    Rectangle restartBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
+                    drawUtButton(g2d, restartBtn, "Restart");
+                    lastRestartBtn = restartBtn;
+                }
+
+                int menuOffset = (levelWon || isScreenGameOverWin) ? (levelWon ? btnHeight + btnSpacing : 0) : btnHeight + btnSpacing;
+                Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + menuOffset, btnWidth, btnHeight);
+                drawUtButton(g2d, menuBtn, "Main Menu");
+                lastMenuBtn = menuBtn;
+                return;
+            }
+
             g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 42));
             if (levelWon) {
                 g2d.setColor(new Color(255, 215, 0));
@@ -1004,6 +1176,33 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
 
         private void drawSettingsOverlay(Graphics2D g2d, int cx, int cy) {
+            if (Main.utFont) {
+                g2d.setFont(new Font("Monospaced", Font.BOLD, 36));
+                g2d.setColor(Color.WHITE);
+                String title = "SETTINGS";
+                FontMetrics fm = g2d.getFontMetrics();
+                g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 100);
+
+                int btnWidth = 220;
+                int btnHeight = 55;
+                int btnSpacing = 20;
+                int startY = cy - 20;
+
+                Rectangle soundBtn = new Rectangle(cx - btnWidth / 2, startY, btnWidth, btnHeight);
+                String soundText = ResourceManager.getInstance().isSoundEnabled() ? "Sound: ON" : "Sound: OFF";
+                drawUtButton(g2d, soundBtn, soundText);
+                lastSettingsBtn = soundBtn;
+
+                Rectangle helpBtn = new Rectangle(cx - btnWidth / 2, startY + btnHeight + btnSpacing, btnWidth, btnHeight);
+                drawUtButton(g2d, helpBtn, "How to play");
+                lastHelpBtn = helpBtn;
+
+                Rectangle backBtn = new Rectangle(cx - btnWidth / 2, startY + 2 * (btnHeight + btnSpacing), btnWidth, btnHeight);
+                drawUtButton(g2d, backBtn, "Back");
+                lastQuitBtn = backBtn;
+                return;
+            }
+
             g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 36));
             g2d.setColor(new Color(70, 150, 255));
             String title = "SETTINGS";
@@ -1035,6 +1234,30 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     "2. 3 or more same-color connected marbles will be eliminated",
                     "3. Do not let marbles cross the bottom dashed line!"
             };
+
+            if (Main.utFont) {
+                g2d.setFont(new Font("Monospaced", Font.BOLD, 36));
+                g2d.setColor(Color.WHITE);
+                String title = "HOW TO PLAY";
+                FontMetrics fm = g2d.getFontMetrics();
+                g2d.drawString(title, cx - fm.stringWidth(title) / 2, cy - 100);
+
+                g2d.setFont(new Font("Monospaced", Font.BOLD, 18));
+                int lineHeight = 36;
+                int startY = cy - 20;
+                for (int i = 0; i < lines.length; i++) {
+                    fm = g2d.getFontMetrics();
+                    g2d.drawString(lines[i], cx - fm.stringWidth(lines[i]) / 2, startY + i * lineHeight);
+                }
+
+                int btnWidth = 220;
+                int btnHeight = 55;
+                int btnY = startY + lines.length * lineHeight + 30;
+                Rectangle backBtn = new Rectangle(cx - btnWidth / 2, btnY, btnWidth, btnHeight);
+                drawUtButton(g2d, backBtn, "Back");
+                lastQuitBtn = backBtn;
+                return;
+            }
 
             g2d.setFont(new Font("Comic Sans MS", Font.BOLD, 36));
             g2d.setColor(new Color(70, 150, 255));

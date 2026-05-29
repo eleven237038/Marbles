@@ -330,6 +330,59 @@ public class Marble {
     public void draw(Graphics2D g) {
         // 如果未初始化或动画已经播放完成完全消失，则不绘制
         if (!initialized || dead) return;
+
+        // 判断是否为传说之下风格的弹珠
+        if (Main.utMarble) {
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF); // 像素风不需要抗锯齿
+            double scale = 1.0;
+            if (popping && popDelay <= 0) {
+                scale = 1.0 + popProgress * 0.4;
+            }
+            double radius = side * 0.866 * scale;
+            double drawCx = cx + collisionOffsetX;
+            double drawCy = cy + collisionOffsetY;
+
+            if (colorType == CREEPER) {
+                g.setColor(new Color(0, 180, 0));
+                g.fillRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
+                g.setColor(Color.WHITE);
+                g.setStroke(new BasicStroke(2));
+                g.drawRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
+                g.setColor(Color.BLACK);
+                g.fillRect((int)drawCx - 8, (int)drawCy - 8, 4, 4);
+                g.fillRect((int)drawCx + 4, (int)drawCy - 8, 4, 4);
+                g.fillRect((int)drawCx - 2, (int)drawCy - 2, 4, 6);
+            } else if (colorType == BEDROCK) {
+                g.setColor(Color.DARK_GRAY);
+                g.fillRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
+                g.setColor(Color.WHITE);
+                g.setStroke(new BasicStroke(2));
+                g.drawRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
+            } else if (colorType == HEART) {
+                g.setColor(Color.RED);
+                g.fillRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
+                g.setColor(Color.WHITE);
+                g.setStroke(new BasicStroke(2));
+                g.drawRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
+            } else {
+                Color base = BASE_COLOR[colorType];
+                if (base == null) base = Color.WHITE;
+                g.setColor(base);
+                g.fillRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
+                g.setColor(Color.WHITE);
+                g.setStroke(new BasicStroke(2));
+                g.drawRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
+            }
+            
+            if (warn) {
+                g.setColor(Color.RED);
+                g.drawRect((int)(drawCx - radius - 2), (int)(drawCy - radius - 2), (int)(radius*2 + 4), (int)(radius*2 + 4));
+            }
+            
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            return;
+        }
+
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
