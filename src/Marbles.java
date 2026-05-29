@@ -340,36 +340,12 @@ public class Marbles {
         marbles[targetRow][targetCol].setColorType(launchMarble.getColorType());
         marbles[targetRow][targetCol].init(exactX, exactY, targetRow, targetCol);
 
-        // 检查是否触发creeper爆炸（creeper碰撞或被碰撞都触发）
-        checkCreeperExplosion(exactX, exactY);
+        // 检查发射的弹珠本身是否为creeper（自爆）
+        if (launchMarble.getColorType() == Marble.CREEPER) {
+            creeperBlast(exactX, exactY);
+        }
 
         checkConnectedFromLaunch(targetRow, targetCol, launchMarble.getColorType());
-    }
-
-    // 检查位置是否触发creeper爆炸
-    private void checkCreeperExplosion(double x, double y) {
-        if (marbles == null) return;
-
-        double blastRadiusSq = getBlastRadiusSq();
-
-        for (int r = 0; r < marbles.length; r++) {
-            if (marbles[r] == null) continue;
-            for (int c = 0; c < marbles[r].length; c++) {
-                Marble m = marbles[r][c];
-                if (m == null || !m.isInitialized() || m.isPopping() || m.isFalling()) continue;
-
-                if (m.getColorType() == Marble.CREEPER) {
-                    double dx = m.getCenterX() - x;
-                    double dy = m.getCenterY() - y;
-                    double distSq = dx * dx + dy * dy;
-
-                    if (distSq <= blastRadiusSq) {
-                        creeperBlast(m.getCenterX(), m.getCenterY());
-                        return;
-                    }
-                }
-            }
-        }
     }
 
     private void checkConnectedFromLaunch(int launchRow, int launchCol, int launchColor) {
@@ -418,6 +394,13 @@ public class Marbles {
 
             // Creeper爆炸：消除范围内所有普通弹珠
             if (hasCreeperInGroup && launchM != null) {
+                // 找到connectedGroup中第一个creeper的位置并触发爆炸
+                for (Marble m : connectedGroup) {
+                    if (m.getColorType() == Marble.CREEPER) {
+                        creeperBlast(m.getCenterX(), m.getCenterY());
+                        break;
+                    }
+                }
                 // 先触发连接的弹珠消除
                 for (Marble m : connectedGroup) {
                     if (!m.isScored() && scoreListener != null) {
@@ -431,8 +414,6 @@ public class Marbles {
                     double delay = dist / 600.0;
                     m.startPop(delay);
                 }
-                // Creeper爆炸：消除+3范围内所有普通弹珠
-                creeperBlast(launchM.getCenterX(), launchM.getCenterY());
             } else {
                 // 普通消除
                 for (Marble m : connectedGroup) {
@@ -538,16 +519,21 @@ public class Marbles {
             for (int c = 0; c < marbles[r].length; c++) {
                 Marble m = marbles[r][c];
                 if (isMarbleActive(m) && !visited[r][c]) {
-                    if (!m.isScored() && scoreListener != null) {
-                        scoreListener.accept(m, 20);
-                        m.setScored(true);
-                        // 掉落弹珠使用其本身的颜色
-                        Color marbleColor = getMarbleColor(m.getColorType());
-                        scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
-                        lastRoundTotalScore += 20;
-                        ResourceManager.getInstance().playDropAndScore();
+                    // Creeper在悬空检测中被消除时触发爆炸
+                    if (m.getColorType() == Marble.CREEPER) {
+                        creeperBlast(m.getCenterX(), m.getCenterY());
+                    } else {
+                        if (!m.isScored() && scoreListener != null) {
+                            scoreListener.accept(m, 20);
+                            m.setScored(true);
+                            // 掉落弹珠使用其本身的颜色
+                            Color marbleColor = getMarbleColor(m.getColorType());
+                            scoreNumbers.add(new ScreenGame.ScoreNumber(m.getCenterX(), m.getCenterY() - 15, 20, marbleColor));
+                            lastRoundTotalScore += 20;
+                            ResourceManager.getInstance().playDropAndScore();
+                        }
+                        m.startFalling(random.nextDouble() * 0.1);
                     }
-                    m.startFalling(random.nextDouble() * 0.1);
                 }
             }
         }

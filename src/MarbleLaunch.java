@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class MarbleLaunch extends Marble {
     private double vx;
     private double vy;
@@ -7,6 +9,8 @@ public class MarbleLaunch extends Marble {
     private int screenHeight;
     private double prevCx;
     private double prevCy;
+    private static int level2ShotCounter = 0;  // 第2关发射计数器
+    private static final int CREEPER_INTERVAL = 6;  // 每6发必有一个creeper
 
     public MarbleLaunch() {
         super();
@@ -86,5 +90,21 @@ public class MarbleLaunch extends Marble {
 
     public void setLaunchSpeed(double speed) {
         this.launchSpeed = speed;
+    }
+
+    // 第2关：每6发必有一个creeper
+    public void setCreeperForLevel2(Random random) {
+        level2ShotCounter++;
+        if (level2ShotCounter >= CREEPER_INTERVAL) {
+            level2ShotCounter = 0;
+            setColorType(CREEPER);
+        } else if (random.nextDouble() < 0.1667) {  // 1/6概率提前触发
+            level2ShotCounter = 0;
+            setColorType(CREEPER);
+        }
+    }
+
+    public static void resetLevel2Counter() {
+        level2ShotCounter = 0;
     }
 }

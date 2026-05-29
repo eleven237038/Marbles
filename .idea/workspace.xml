@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加弹珠类型">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/creeper.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Marbles/creeper.png" afterDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化弹珠精灵图" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -29,12 +26,12 @@
     &quot;assignee&quot;: &quot;eleven237038&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/eleven237038/Marbles.git&quot;,
-    &quot;accountId&quot;: &quot;4acd0f80-6334-42ba-9109-fa190d3451e0&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/eleven237038/Marbles.git",
+    "accountId": "51b9ef37-9ea4-4350-a8e0-a3ba4b7a1ab2"
   }
-}</component>
+}]]></component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/src/Main.java" root0="SKIP_HIGHLIGHTING" />
   </component>
@@ -146,14 +143,7 @@
       <workItem from="1779938602200" duration="24283000" />
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
-    </task>
-    <task id="LOCAL-00043" summary="将GameBoard更名为BoardGame">
-      <option name="closed" value="true" />
-      <created>1779850118119</created>
-      <option name="number" value="00043" />
-      <option name="presentableId" value="LOCAL-00043" />
-      <option name="project" value="LOCAL" />
-      <updated>1779850118119</updated>
+      <workItem from="1780026231602" duration="456000" />
     </task>
     <task id="LOCAL-00044" summary="将GameOver更名为ScreenGameOver">
       <option name="closed" value="true" />
@@ -539,7 +529,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779985251441</updated>
     </task>
-    <option name="localTasksCounter" value="92" />
+    <task id="LOCAL-00092" summary="优化弹珠精灵图">
+      <option name="closed" value="true" />
+      <created>1780026350836</created>
+      <option name="number" value="00092" />
+      <option name="presentableId" value="LOCAL-00092" />
+      <option name="project" value="LOCAL" />
+      <updated>1780026350836</updated>
+    </task>
+    <option name="localTasksCounter" value="93" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -557,7 +555,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="修改计分规则" />
     <MESSAGE value="添加碰撞效果" />
     <MESSAGE value="优化炮台代码" />
     <MESSAGE value="合并UI,音效" />
@@ -582,6 +579,7 @@
     <MESSAGE value="修复bug" />
     <MESSAGE value="统一字体" />
     <MESSAGE value="添加弹珠类型" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加弹珠类型" />
+    <MESSAGE value="优化弹珠精灵图" />
+    <option name="LAST_COMMIT_MESSAGE" value="优化弹珠精灵图" />
   </component>
 </project>
