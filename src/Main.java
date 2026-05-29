@@ -225,7 +225,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 // 当heart剩余2颗时，切换成正义之矛.mp3并放出非阻塞对话（并且下落速度切阶段）
                 if (sans.getHeartCount() == 2) {
                     ResourceManager.getInstance().playJusticeMusic();
-                    sans.setCombatDialog("看来我不能继续偷懒了。\n准备好度过一段糟糕的时光了吗？");
+                    sans.setCombatDialog("Guess I can't keep slackin' off.\nReady for a bad time?");
                     // 以节拍比例提速至 2.19x 等效的高潮致命坠落速度（减半后）
                     hexGrid.setCurrentFallSpeed(13.14);
                 }
@@ -280,7 +280,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             if (Level.getInstance().getCurrentLevel() == 4) {
                 level4Timer += dt;
                 if (level4Timer >= 600.0 && !sansLeaving) {
-                    triggerSansLeave(true, "呃...我们打了多久了？10分钟？\n你赢了，我太累了，先睡了。");
+                    triggerSansLeave(true, "Ugh... how long were we at it? 10 minutes?\nYou win. I'm too tired. Night.");
                     return;
                 }
             }
@@ -372,43 +372,43 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             case 1:
                 hexGrid.skillAlternateColors(2);
                 String[] s1Dialogs = {
-                    "嗯，颜色打乱。看看你有多喜欢彩虹吧。",
-                    "打乱一下盘面...保持新鲜感，不是吗？",
-                    "五彩缤纷的混乱来了。别头晕哦。"
+                    "Color shuffle. How do you like rainbows?",
+                    "Shufflin' the board... keeps things fresh, right?",
+                    "Here comes colorful chaos. Don't get dizzy."
                 };
                 sans.setCombatDialog(s1Dialogs[random.nextInt(s1Dialogs.length)]);
                 break;
             case 2:
                 hexGrid.skillBedrockRadius();
                 String[] s2Dialogs = {
-                    "不错的选择。字面意义上的。",
-                    "封锁一些路径。希望你不介意。",
-                    "给你一块 bedrock。"
+                    "Good choice. Literally.",
+                    "Blockin' some paths. Hope you don't mind.",
+                    "Here's some bedrock."
                 };
                 sans.setCombatDialog(s2Dialogs[random.nextInt(s2Dialogs.length)]);
                 break;
             case 3:
                 hexGrid.skillBedrockRow();
                 String[] s3Dialogs = {
-                    "只有一个缝隙。好好把握机会吧，孩子。",
-                    "几乎是一堵完整的墙。试试挤过去吧。"
+                    "Only one gap. Make it count, kid.",
+                    "Almost a full wall. Try squeezin' through."
                 };
                 sans.setCombatDialog(s3Dialogs[random.nextInt(s3Dialogs.length)]);
                 break;
             case 4:
                 String[] s4Dialogs = {
-                    "其实我应该攻击了...\n但我太累了。",
-                    "要不休息一下？什么都不做可是我的专长。",
-                    "我就站在这里不动。\n顺便说一句，你做得很好。"
+                    "I should be attackin'...\nbut I'm too tired.",
+                    "Wanna take a break? Doin' nothin' is my specialty.",
+                    "I'm just standin' here.\nBy the way, you're doin' great."
                 };
                 sans.setCombatDialog(s4Dialogs[random.nextInt(s4Dialogs.length)]);
                 break;
             case 5:
                 hexGrid.skillTeleportDown(1);
                 String[] s5Dialogs = {
-                    "哎呀，重力又出问题了。",
-                    "小小的捷径...直接往下。",
-                    "小心脚下。东西在往下滑。"
+                    "Oops, gravity's actin' up again.",
+                    "Little shortcut... straight down.",
+                    "Watch your step. Everythin's slidin' down."
                 };
                 sans.setCombatDialog(s5Dialogs[random.nextInt(s5Dialogs.length)]);
                 break;
@@ -429,16 +429,16 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
                 if (hexGrid.hasWarning()) {
                     String[] warnDialogs = {
-                        "看起来你处境很紧张。\n给你一些爆炸支援吧。",
-                        "哇，太近了。让我们清理一下空气。",
-                        "你看起来快输了。让我们炸点东西吧。"
+                        "You're in a tight spot.\nHere's some explosive support.",
+                        "Woah, too close. Let's clear the air.",
+                        "You look like you're losin'. Let's blow some stuff up."
                     };
                     sans.setCombatDialog(warnDialogs[random.nextInt(warnDialogs.length)]);
                 } else {
                     String[] s6Dialogs = {
-                        "爆炸快递。小心轻放哦，孩子。",
-                        "Boom 的时刻到了。别把自己炸上天了。",
-                        "给你，玩玩这些绿色的朋友吧。"
+                        "Explosive delivery. Handle with care, kid.",
+                        "Time for boom. Don't blow yourself up.",
+                        "Here, play with these green friends."
                     };
                     sans.setCombatDialog(s6Dialogs[random.nextInt(s6Dialogs.length)]);
                 }
@@ -779,7 +779,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sans.initHearts(sansX, sansY);
         sans.setOnAllHeartsRemoved(() -> {
             if (sansLeaving) return;
-            triggerSansLeave(true, "猜我只是... 太懒了躲不开。\npapyrus，你想要点什么吗？");
+            triggerSansLeave(true, "Guess I was just... too lazy to dodge.\nPapyrus, want some spaghetti?");
         });
     }
 

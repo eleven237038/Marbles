@@ -1,4 +1,115 @@
-点顶六边形蜂巢式排列
+==================== Sans 对话内容 ====================
+
+【开场对话 - DIALOG_TEXT】
+原文: "嘿，你挺忙的嘛，是吧？"
+翻译: "Hey, you're pretty busy, huh?"
+
+原文: "这糟糕的游戏还没结束吗？"
+翻译: "Is this lousy game still going?"
+
+原文: "你问我为什么在这儿？"
+翻译: "You wanna know why I'm here?"
+
+原文: "别在意这些细节，孩子。"
+翻译: "Don't worry about it, kid."
+
+原文: "我都不知道你凭什么坚持到现在。"
+翻译: "I don't know how you made it this far."
+
+原文: "总之，因为制作组的恶趣味..."
+翻译: "Anyway, the devs thought it'd be funny..."
+
+原文: "我得来给你找点乐子了。"
+翻译: "So I'm here to make things interesting."
+
+原文: "准备好度过一段糟糕的时光了吗？"
+翻译: "Ready for a bad time?"
+
+【战斗期间对话 - Combat Dialogs】
+
+技能1 - 打乱颜色:
+原文: "嗯，颜色打乱。看看你有多喜欢彩虹吧。"
+翻译: "Color shuffle. How do you like rainbows?"
+
+原文: "打乱一下盘面...保持新鲜感，不是吗？"
+翻译: "Shufflin' the board... keeps things fresh, right?"
+
+原文: "五彩缤纷的混乱来了。别头晕哦。"
+翻译: "Here comes colorful chaos. Don't get dizzy."
+
+技能2 - Bedrock半径:
+原文: "不错的选择。字面意义上的。"
+翻译: "Good choice. Literally."
+
+原文: "封锁一些路径。希望你不介意。"
+翻译: "Blockin' some paths. Hope you don't mind."
+
+原文: "给你一块 bedrock。"
+翻译: "Here's some bedrock."
+
+技能3 - Bedrock行:
+原文: "只有一个缝隙。好好把握机会吧，孩子。"
+翻译: "Only one gap. Make it count, kid."
+
+原文: "几乎是一堵完整的墙。试试挤过去吧。"
+翻译: "Almost a full wall. Try squeezin' through."
+
+技能4 - 无效果:
+原文: "其实我应该攻击了...\n但我太累了。"
+翻译: "I should be attackin'...\nbut I'm too tired."
+
+原文: "要不休息一下？什么都不做可是我的专长。"
+翻译: "Wanna take a break? Doin' nothin' is my specialty."
+
+原文: "我就站在这里不动。\n顺便说一句，你做得很好。"
+翻译: "I'm just standin' here.\nBy the way, you're doin' great."
+
+技能5 - 向下传送:
+原文: "哎呀，重力又出问题了。"
+翻译: "Oops, gravity's actin' up again."
+
+原文: "小小的捷径...直接往下。"
+翻译: "Little shortcut... straight down."
+
+原文: "小心脚下。东西在往下滑。"
+翻译: "Watch your step. Everythin's slidin' down."
+
+技能6 - Creeper:
+原文: "爆炸快递。小心轻放哦，孩子。"
+翻译: "Explosive delivery. Handle with care, kid."
+
+原文: "Boom 的时刻到了。别把自己炸上天了。"
+翻译: "Time for boom. Don't blow yourself up."
+
+原文: "给你，玩玩这些绿色的朋友吧。"
+翻译: "Here, play with these green friends."
+
+警告弹珠时:
+原文: "看起来你处境很紧张。\n给你一些爆炸支援吧。"
+翻译: "You're in a tight spot.\nHere's some explosive support."
+
+原文: "哇，太近了。让我们清理一下空气。"
+翻译: "Woah, too close. Let's clear the air."
+
+原文: "你看起来快输了。让我们炸点东西吧。"
+翻译: "You look like you're losin'. Let's blow some stuff up."
+
+Heart=2时:
+原文: "看来我不能继续偷懒了。\n准备好度过一段糟糕的时光了吗？"
+翻译: "Guess I can't keep slackin' off.\nReady for a bad time?"
+
+Heart=0时:
+原文: "猜我只是... 太懒了躲不开。\npapyrus，你想要点什么吗？"
+翻译: "Guess I was just... too lazy to dodge.\nPapyrus, want some spaghetti?"
+
+Sans离开对话:
+原文: "呃...我们打了多久了？10分钟？\n你赢了，我太累了，先睡了。"
+翻译: "Ugh... how long were we at it? 10 minutes?\nYou win. I'm too tired. Night."
+
+原文: "又是这个绿色的东西？\n看来你真的只知道用爆炸。\n我受够了，你自己玩吧。"
+翻译: "This green stuff again?\nGuess you really just wanna blow things up.\nI'm done. Figure it out yourself."
+
+【备注.txt原有内容 - 保留】
 mWidth=483,mHeigh=1080
 double centerX = initialCenterX[random.nextInt(2)];  hexGrid[r][col].setCenter(hexGrid[r][col].getCenterX(), hexGrid[r][col].getCenterY() + side * 1.5)
 六边形边长24.22

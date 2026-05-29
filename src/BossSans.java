@@ -19,14 +19,14 @@ public class BossSans {
     // ========== 开头对话系统 (更新为UT风格) ==========
     // 对话内容
     private static final String[] DIALOG_TEXT = {
-        "嘿，你挺忙的嘛，是吧？",
-        "这糟糕的游戏还没结束吗？",
-        "你问我为什么在这儿？",
-        "别在意这些细节，孩子。",
-        "我都不知道你凭什么坚持到现在。",
-        "总之，因为制作组的恶趣味...",
-        "我得来给你找点乐子了。",
-        "准备好度过一段糟糕的时光了吗？"
+        "Hey, you're pretty busy, huh?",
+        "Is this lousy game still going?",
+        "You wanna know why I'm here?",
+        "Don't worry about it, kid.",
+        "I don't know how you made it this far.",
+        "Anyway, the devs thought it'd be funny...",
+        "So I'm here to make things interesting.",
+        "Ready for a bad time?"
     };
 
     private static final int DIALOG_DURATION = 3500;  // 每句时长提升以利于阅读
