@@ -399,15 +399,15 @@ public class BossSans {
             combatDialogText = null;
             return;
         }
-        
+
         FontMetrics fm = g.getFontMetrics(new Font("Monospaced", Font.BOLD, 18));
         int maxW = 0;
-        for (String l : combatDialogText.split("\n")) maxW = Math.max(maxW, fm.stringWidth("* " + l));
+        for (String l : combatDialogText.split("\n")) maxW = Math.max(maxW, fm.stringWidth(l));
         int bw = maxW + 40;
-        
-        // 渲染战斗期间气泡，位于Sans左侧（尾巴朝右）不遮挡游戏盘
-        int bx = anchorX - bw - 20;
-        int by = anchorY - 60;
-        drawUTBubble(g, combatDialogText, bx, by, false);
+
+        // 渲染战斗期间气泡，位于Sans上方（居中，尾巴朝下）
+        int bx = anchorX - bw / 2;
+        int by = anchorY - 100;
+        drawUTBubble(g, combatDialogText, bx, by, true); // tailLeft=true 尾巴在左侧底部
     }
 }

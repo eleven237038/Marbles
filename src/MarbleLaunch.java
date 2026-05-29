@@ -67,7 +67,7 @@ public class MarbleLaunch extends Marble {
             double cy = prevCy + vy * dt;
             double radius = getSide() * 0.866;
 
-            // 左右壁碰撞 (包含半径，防止嵌入墙体)
+            // 左右壁碰撞
             if (cx <= radius) {
                 cx = radius;
                 vx = -vx;
@@ -94,7 +94,7 @@ public class MarbleLaunch extends Marble {
         this.launchSpeed = speed;
     }
 
-    // 设置特殊弹珠（第2关creeper，第3关creeper+bedrock）
+    // 设置特殊弹珠（第2关creeper，第3关creeper+bedrock，第4关避开自然生成）
     public void setSpecialMarbleForLevel(Random random, int level) {
         if (level == 2) {
             creeperCounter++;
@@ -107,7 +107,6 @@ public class MarbleLaunch extends Marble {
             }
         } else if (level == 3) {
             int originalColor = getColorType();
-            // creeper: 每6发必有一个，优先检查
             creeperCounter++;
             if (creeperCounter >= CREEPER_INTERVAL) {
                 creeperCounter = 0;
@@ -116,7 +115,6 @@ public class MarbleLaunch extends Marble {
                 creeperCounter = 0;
                 setColorType(CREEPER);
             }
-            // bedrock: 每12发必有一个（只有颜色未改变时才检查）
             if (getColorType() == originalColor) {
                 bedrockCounter++;
                 if (bedrockCounter >= BEDROCK_INTERVAL) {
@@ -128,7 +126,7 @@ public class MarbleLaunch extends Marble {
                 }
             }
         }
-        // 注意：Level 4不再在这里产生特殊弹珠，避免自然生成导致的逻辑错误
+        // FIXED: 第 4 关中不调用此逻辑以防止自然生成特殊弹珠。
     }
 
     public static void resetCounters() {

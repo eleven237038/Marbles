@@ -27,7 +27,6 @@ public class Marbles {
     private double lastLaunchX = 0;
     private double lastLaunchY = 0;
 
-    // 弹珠颜色映射
     private static final Color[] MARBLE_BASE_COLORS = {
             null,
             new Color(220, 30, 30),
@@ -852,17 +851,19 @@ public class Marbles {
 
     // ================= BossSans 技能实现 =================
 
+    // 技能 1: 新落下的两行变成隔色相邻
     public void skillAlternateColors(int rows) {
         this.alternateColorRows = rows;
     }
 
+    // 技能 2: 将一个 3 像素半径范围内的弹珠转换为 bedrock（避开 heartMarble）
     public void skillBedrockRadius() {
         if (marbles == null) return;
         List<Marble> targets = new ArrayList<>();
         for (Marble[] row : marbles) {
             if (row == null) continue;
             for (Marble m : row) {
-                if (isMarbleActive(m) && m.isNormalMarble()) {
+                if (isMarbleActive(m) && m.isNormalMarble() && m.getColorType() != Marble.HEART) {
                     targets.add(m);
                 }
             }
@@ -876,7 +877,7 @@ public class Marbles {
         for (Marble[] row : marbles) {
             if (row == null) continue;
             for (Marble m : row) {
-                if (isMarbleActive(m) && m.isNormalMarble()) {
+                if (isMarbleActive(m) && m.isNormalMarble() && m.getColorType() != Marble.HEART) {
                     double dx = m.getCenterX() - cx;
                     double dy = m.getCenterY() - cy;
                     if (dx*dx + dy*dy <= radiusSq) {
@@ -887,23 +888,32 @@ public class Marbles {
         }
     }
 
+    // 技能 3: 挑选一个完整行，除一个之外，其余全部变成 bedrock (避开 heartMarble)
     public void skillBedrockRow() {
         if (marbles == null) return;
         List<Integer> validRows = new ArrayList<>();
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
+            int activeCount = 0;
             int normalCount = 0;
             for (Marble m : marbles[r]) {
-                if (isMarbleActive(m) && m.isNormalMarble()) normalCount++;
+                if (isMarbleActive(m)) {
+                    activeCount++;
+                    if (m.isNormalMarble() && m.getColorType() != Marble.HEART) {
+                        normalCount++;
+                    }
+                }
             }
-            if (normalCount > 1) validRows.add(r);
+            if (activeCount >= 5 && normalCount > 1) {
+                validRows.add(r);
+            }
         }
         if (validRows.isEmpty()) return;
         int chosenRow = validRows.get(random.nextInt(validRows.size()));
 
         List<Marble> normalMarbles = new ArrayList<>();
         for (Marble m : marbles[chosenRow]) {
-            if (isMarbleActive(m) && m.isNormalMarble()) {
+            if (isMarbleActive(m) && m.isNormalMarble() && m.getColorType() != Marble.HEART) {
                 normalMarbles.add(m);
             }
         }
@@ -917,39 +927,28 @@ public class Marbles {
         }
     }
 
+    // 技能 5: 瞬间向下传送 2 行（物理坐标与存储槽索引同时同步向下位移）
     public void skillTeleportDown(int rows) {
         if (marbles == null) return;
-        // 物理坐标与行序号均发生移动
-        for(int r = 0; r < marbles.length; r++) {
-            if(marbles[r] != null) {
-                for(Marble m : marbles[r]) {
-                    if (m != null && !m.isFalling() && !m.isDead()) {
-                        m.setRow(Math.max(0, m.getRow() - rows)); 
+        
+        // 1. 创建扩容后的全新行数组
+        Marble[][] newMarbles = new Marble[marbles.length + rows][];
+        
+        // 2. 将原索引全部向后推移对应的行数，并物理向下位移
+        for (int r = 0; r < marbles.length; r++) {
+            if (marbles[r] != null) {
+                newMarbles[r + rows] = marbles[r];
+                for (Marble m : marbles[r]) {
+                    if (m != null) {
+                        m.setRow(r + rows);
                         m.setCenter(m.getCenterX(), m.getCenterY() + ySpacing * rows);
                     }
                 }
             }
         }
-
-        Marble[][] newMarbles = new Marble[marbles.length + rows][];
-        for(int r = rows; r < marbles.length; r++) {
-            newMarbles[r - rows] = marbles[r];
-        }
-        marbles = newMarbles;
-
-        for (int i = 0; i < rows; i++) {
-            this.rowCount++;
-            int newRowIdx = maxRowCount + this.rowCount - 1;
-            if (newRowIdx >= marbles.length) {
-                Marble[][] expanded = new Marble[newRowIdx + 5][];
-                System.arraycopy(marbles, 0, expanded, 0, marbles.length);
-                marbles = expanded;
-            }
-            AddMarbleRow(newRowIdx, screenWidth, this.rowCount);
-            double targetY = (-2 * side) + (rows - 1 - i) * ySpacing + accumulatedY;
-            for (Marble m : marbles[newRowIdx]) {
-                if (m != null) m.setCenter(m.getCenterX(), targetY);
-            }
-        }
+        
+        // 3. 覆盖指针并推进关卡累计行数，确保后续行继续正常追加
+        this.marbles = newMarbles;
+        this.rowCount += rows;
     }
 }

@@ -59,7 +59,7 @@ public class Level {
     /** 第3关配置 */
     public static class Level3 {
         public static final int WIN_SCORE = 1500;
-        public static final int COLOR_TYPE_COUNT = 5;
+        public static final int COLOR_TYPE_COUNT = 4;     // 限制为4以避免自然生成creeper
         public static final double FALL_SPEED_MULT = 1.0;
         public static final double BASE_FALL_SPEED = 3.0;
         public static final double MAX_FALL_SPEED = 15.0;
@@ -73,7 +73,8 @@ public class Level {
     /** 第4关配置 */
     public static class Level4 {
         public static final int WIN_SCORE = 2000;
-        public static final int COLOR_TYPE_COUNT = 5;
+        // FIXED: 修正为 4。防止将 CREEPER (5) 误算为普通颜色，从而解决了 level4 自然生成 creeper 的 bug。
+        public static final int COLOR_TYPE_COUNT = 4; 
         public static final double FALL_SPEED_MULT = 1.0;
         public static final double BASE_FALL_SPEED = 3.0;
         public static final double MAX_FALL_SPEED = 15.0;
