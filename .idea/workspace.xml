@@ -5,10 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="修改第四关弹珠样式">
-      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/blue.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Marbles/blue.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/purple.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Marbles/purple.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/red.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Marbles/red.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/yellow.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Marbles/yellow.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Text Bubbles/5.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -149,15 +146,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
-      <workItem from="1780030147321" duration="6037000" />
-    </task>
-    <task id="LOCAL-00055" summary="合并BoardGame和BoardScreen">
-      <option name="closed" value="true" />
-      <created>1779870141039</created>
-      <option name="number" value="00055" />
-      <option name="presentableId" value="LOCAL-00055" />
-      <option name="project" value="LOCAL" />
-      <updated>1779870141039</updated>
+      <workItem from="1780030147321" duration="6697000" />
     </task>
     <task id="LOCAL-00056" summary="合并BoardGame和BoardScreen,合并后文件更名为ScreenGame">
       <option name="closed" value="true" />
@@ -543,7 +532,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780039766963</updated>
     </task>
-    <option name="localTasksCounter" value="104" />
+    <task id="LOCAL-00104" summary="修改第四关弹珠样式">
+      <option name="closed" value="true" />
+      <created>1780040408316</created>
+      <option name="number" value="00104" />
+      <option name="presentableId" value="LOCAL-00104" />
+      <option name="project" value="LOCAL" />
+      <updated>1780040408316</updated>
+    </task>
+    <option name="localTasksCounter" value="105" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
