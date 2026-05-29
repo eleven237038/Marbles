@@ -24,6 +24,15 @@ public class Marble {
     private static BufferedImage bedrockSprite = null;
     private static BufferedImage heartSprite = null;
 
+    // 普通弹珠sprite图像（UT风格）
+    private static BufferedImage redSprite = null;
+    private static BufferedImage blueSprite = null;
+    private static BufferedImage yellowSprite = null;
+    private static BufferedImage purpleSprite = null;
+
+    // UT风格标记：启用时使用sprite图像渲染普通弹珠
+    public static boolean utStyle = false;
+
     // 动画状态相关
     private boolean popping = false;
     private boolean falling = false; // 新增：掉落状态
@@ -113,6 +122,10 @@ public class Marble {
             creeperSprite = ImageIO.read(new File(basePath + "creeper.png"));
             bedrockSprite = ImageIO.read(new File(basePath + "bedrock.png"));
             heartSprite = ImageIO.read(new File(basePath + "heart.png"));
+            redSprite = ImageIO.read(new File(basePath + "red.png"));
+            blueSprite = ImageIO.read(new File(basePath + "blue.png"));
+            yellowSprite = ImageIO.read(new File(basePath + "yellow.png"));
+            purpleSprite = ImageIO.read(new File(basePath + "purple.png"));
             System.out.println("成功加载特殊弹珠sprite!");
         } catch (IOException e) {
             System.err.println("加载特殊弹珠sprite失败: " + e.getMessage());
@@ -331,58 +344,6 @@ public class Marble {
         // 如果未初始化或动画已经播放完成完全消失，则不绘制
         if (!initialized || dead) return;
 
-        // 判断是否为传说之下风格的弹珠
-        if (Main.utMarble) {
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF); // 像素风不需要抗锯齿
-            double scale = 1.0;
-            if (popping && popDelay <= 0) {
-                scale = 1.0 + popProgress * 0.4;
-            }
-            double radius = side * 0.866 * scale;
-            double drawCx = cx + collisionOffsetX;
-            double drawCy = cy + collisionOffsetY;
-
-            if (colorType == CREEPER) {
-                g.setColor(new Color(0, 180, 0));
-                g.fillRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
-                g.setColor(Color.WHITE);
-                g.setStroke(new BasicStroke(2));
-                g.drawRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
-                g.setColor(Color.BLACK);
-                g.fillRect((int)drawCx - 8, (int)drawCy - 8, 4, 4);
-                g.fillRect((int)drawCx + 4, (int)drawCy - 8, 4, 4);
-                g.fillRect((int)drawCx - 2, (int)drawCy - 2, 4, 6);
-            } else if (colorType == BEDROCK) {
-                g.setColor(Color.DARK_GRAY);
-                g.fillRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
-                g.setColor(Color.WHITE);
-                g.setStroke(new BasicStroke(2));
-                g.drawRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
-            } else if (colorType == HEART) {
-                g.setColor(Color.RED);
-                g.fillRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
-                g.setColor(Color.WHITE);
-                g.setStroke(new BasicStroke(2));
-                g.drawRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
-            } else {
-                Color base = BASE_COLOR[colorType];
-                if (base == null) base = Color.WHITE;
-                g.setColor(base);
-                g.fillRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
-                g.setColor(Color.WHITE);
-                g.setStroke(new BasicStroke(2));
-                g.drawRect((int)(drawCx - radius), (int)(drawCy - radius), (int)(radius*2), (int)(radius*2));
-            }
-            
-            if (warn) {
-                g.setColor(Color.RED);
-                g.drawRect((int)(drawCx - radius - 2), (int)(drawCy - radius - 2), (int)(radius*2 + 4), (int)(radius*2 + 4));
-            }
-            
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            return;
-        }
-
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -409,7 +370,7 @@ public class Marble {
         double drawCx = cx + collisionOffsetX;
         double drawCy = cy + collisionOffsetY;
 
-        // 绘制特殊弹珠sprite
+        // 绘制特殊弹珠sprite（不受UT风格影响）
         if (colorType == CREEPER && creeperSprite != null) {
             int spriteSize = (int)(radius * 2);
             g.drawImage(creeperSprite, (int)(drawCx - radius), (int)(drawCy - radius), spriteSize, spriteSize, null);
@@ -419,47 +380,24 @@ public class Marble {
         } else if (colorType == HEART && heartSprite != null) {
             int spriteSize = (int)(radius * 2);
             g.drawImage(heartSprite, (int)(drawCx - radius), (int)(drawCy - radius), spriteSize, spriteSize, null);
+        } else if (utStyle) {
+            // UT风格：使用sprite图像渲染普通弹珠
+            BufferedImage sprite = null;
+            if (colorType == RED) sprite = redSprite;
+            else if (colorType == BLUE) sprite = blueSprite;
+            else if (colorType == YELLOW) sprite = yellowSprite;
+            else if (colorType == PURPLE) sprite = purpleSprite;
+
+            if (sprite != null) {
+                int spriteSize = (int)(radius * 2);
+                g.drawImage(sprite, (int)(drawCx - radius), (int)(drawCy - radius), spriteSize, spriteSize, null);
+            } else {
+                // 如果sprite未加载，回退到原始绘制
+                drawNormalMarble(g, drawCx, drawCy, radius, scale);
+            }
         } else {
             // 普通弹珠绘制
-            double x = drawCx - radius;
-            double y = drawCy - radius;
-            double diameter = radius * 2;
-
-            Color base = BASE_COLOR[colorType];
-            Color bright = BRIGHT_COLOR[colorType];
-            Color dark = DARK_COLOR[colorType];
-
-            // 阴影
-            g.setColor(SHADOW_COLOR);
-            g.fillOval((int)Math.round(x + 2 * scale), (int)Math.round(y + 2 * scale), (int)Math.round(diameter), (int)Math.round(diameter));
-
-            // 球体渐变
-            cachedCenter.setLocation(drawCx, drawCy);
-            Color[] gradColor = {bright, base, dark};
-            RadialGradientPaint ballGrad = new RadialGradientPaint(cachedCenter, (float)radius, GRADIENT_STOPS, gradColor);
-            g.setPaint(ballGrad);
-            g.fillOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
-
-            // 双层精致边框
-            g.setStroke(new BasicStroke(1.8f * (float)scale));
-            g.setColor(BORDER_COLOR);
-            g.drawOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
-
-            g.setStroke(new BasicStroke(0.8f * (float)scale));
-            g.setColor(INNER_BORDER_COLOR);
-            g.drawOval((int)Math.round(x + 1 * scale), (int)Math.round(y + 1 * scale), (int)Math.round(diameter - 2 * scale), (int)Math.round(diameter - 2 * scale));
-
-            // 主高光
-            g.setColor(HIGHLIGHT_COLOR);
-            double highlightR = radius * 0.32;
-            g.fillOval((int)Math.round(drawCx - radius * 0.48), (int)Math.round(drawCy - radius * 0.48), (int)Math.round(highlightR), (int)Math.round(highlightR));
-
-            // 玻璃反光点
-            g.setColor(REFLECTION_COLOR);
-            int reflect1Size = Math.max(1, (int)(4 * scale));
-            int reflect2Size = Math.max(1, (int)(3 * scale));
-            g.fillOval((int)Math.round(drawCx + radius * 0.25), (int)Math.round(drawCy - radius * 0.2), reflect1Size, reflect1Size);
-            g.fillOval((int)Math.round(drawCx - radius * 0.2), (int)Math.round(drawCy + radius * 0.3), reflect2Size, reflect2Size);
+            drawNormalMarble(g, drawCx, drawCy, radius, scale);
         }
 
         // 还原画布透明度
@@ -481,6 +419,51 @@ public class Marble {
                 g.drawOval((int)Math.round(drawCx - radius2 * 0.85), (int)Math.round(drawCy - radius2 * 0.85), (int)Math.round(radius2 * 1.7), (int)Math.round(radius2 * 1.7));
             }
         }
+    }
+
+    /**
+     * 绘制普通弹珠（非sprite模式）
+     */
+    private void drawNormalMarble(Graphics2D g, double drawCx, double drawCy, double radius, double scale) {
+        double x = drawCx - radius;
+        double y = drawCy - radius;
+        double diameter = radius * 2;
+
+        Color base = BASE_COLOR[colorType];
+        Color bright = BRIGHT_COLOR[colorType];
+        Color dark = DARK_COLOR[colorType];
+
+        // 阴影
+        g.setColor(SHADOW_COLOR);
+        g.fillOval((int)Math.round(x + 2 * scale), (int)Math.round(y + 2 * scale), (int)Math.round(diameter), (int)Math.round(diameter));
+
+        // 球体渐变
+        cachedCenter.setLocation(drawCx, drawCy);
+        Color[] gradColor = {bright, base, dark};
+        RadialGradientPaint ballGrad = new RadialGradientPaint(cachedCenter, (float)radius, GRADIENT_STOPS, gradColor);
+        g.setPaint(ballGrad);
+        g.fillOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
+
+        // 双层精致边框
+        g.setStroke(new BasicStroke(1.8f * (float)scale));
+        g.setColor(BORDER_COLOR);
+        g.drawOval((int)Math.round(x), (int)Math.round(y), (int)Math.round(diameter), (int)Math.round(diameter));
+
+        g.setStroke(new BasicStroke(0.8f * (float)scale));
+        g.setColor(INNER_BORDER_COLOR);
+        g.drawOval((int)Math.round(x + 1 * scale), (int)Math.round(y + 1 * scale), (int)Math.round(diameter - 2 * scale), (int)Math.round(diameter - 2 * scale));
+
+        // 主高光
+        g.setColor(HIGHLIGHT_COLOR);
+        double highlightR = radius * 0.32;
+        g.fillOval((int)Math.round(drawCx - radius * 0.48), (int)Math.round(drawCy - radius * 0.48), (int)Math.round(highlightR), (int)Math.round(highlightR));
+
+        // 玻璃反光点
+        g.setColor(REFLECTION_COLOR);
+        int reflect1Size = Math.max(1, (int)(4 * scale));
+        int reflect2Size = Math.max(1, (int)(3 * scale));
+        g.fillOval((int)Math.round(drawCx + radius * 0.25), (int)Math.round(drawCy - radius * 0.2), reflect1Size, reflect1Size);
+        g.fillOval((int)Math.round(drawCx - radius * 0.2), (int)Math.round(drawCy + radius * 0.3), reflect2Size, reflect2Size);
     }
 
     public void reset() {

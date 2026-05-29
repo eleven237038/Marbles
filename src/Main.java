@@ -56,7 +56,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     // Undertale风格变化标记
     public static boolean utBg = false;
     public static boolean utFont = false;
-    public static boolean utMarble = false;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -172,7 +171,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     public void init() {
         utBg = false;
         utFont = false;
-        utMarble = false;
+        Marble.utStyle = false;
 
         Level level = Level.getInstance();
         levelWinScore = level.getWinScore();
@@ -426,7 +425,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
         utBg = false;
         utFont = false;
-        utMarble = false;
+        Marble.utStyle = false;
 
         frozen = false;
         gamePaused = false;
@@ -539,7 +538,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                         } else if (step == 2) {
                             Main.utFont = true;
                         } else if (step == 3) {
-                            Main.utMarble = true;
+                            // 启用弹珠UT风格渲染（使用resources/image/Marbles里的sprite）
+                            Marble.utStyle = true;
                             ((javax.swing.Timer)evt.getSource()).stop();
                             
                             // 三秒完全渐变结束后，自动解除冻结继续游戏

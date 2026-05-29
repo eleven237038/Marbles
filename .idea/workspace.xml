@@ -4,12 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="Level4开场效果">
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加第四关音乐">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/music/正义之矛.mp3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/music/骨质疏松.mp3" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/readme.txt" beforeDir="false" afterPath="$PROJECT_DIR$/readme.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/三.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/叉.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/圆.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/方.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ResourceManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ResourceManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -150,15 +153,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
-      <workItem from="1780030147321" duration="4225000" />
-    </task>
-    <task id="LOCAL-00053" summary="优化窗口弹出">
-      <option name="closed" value="true" />
-      <created>1779868749719</created>
-      <option name="number" value="00053" />
-      <option name="presentableId" value="LOCAL-00053" />
-      <option name="project" value="LOCAL" />
-      <updated>1779868749720</updated>
+      <workItem from="1780030147321" duration="5478000" />
     </task>
     <task id="LOCAL-00054" summary="优化how to play窗口弹出">
       <option name="closed" value="true" />
@@ -544,7 +539,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780032974918</updated>
     </task>
-    <option name="localTasksCounter" value="102" />
+    <task id="LOCAL-00102" summary="添加第四关音乐">
+      <option name="closed" value="true" />
+      <created>1780038611483</created>
+      <option name="number" value="00102" />
+      <option name="presentableId" value="LOCAL-00102" />
+      <option name="project" value="LOCAL" />
+      <updated>1780038611483</updated>
+    </task>
+    <option name="localTasksCounter" value="103" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -562,7 +565,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="添加Sans实体" />
     <MESSAGE value="添加music文件" />
     <MESSAGE value="添加Sans" />
     <MESSAGE value="将ScreenStart中的PLAY和Level按钮合并成PLAY按钮" />
@@ -587,6 +589,7 @@
     <MESSAGE value="creeper和bedrock生成逻辑修正" />
     <MESSAGE value="为Sans添加血量" />
     <MESSAGE value="Level4开场效果" />
-    <option name="LAST_COMMIT_MESSAGE" value="Level4开场效果" />
+    <MESSAGE value="添加第四关音乐" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加第四关音乐" />
   </component>
 </project>
