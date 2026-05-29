@@ -107,6 +107,7 @@ public class Marbles {
         int totalRows = maxRowCount + initialRowCount;
         this.rowCount = initialRowCount;
         this.marbles = new Marble[totalRows][];
+        this.accumulatedY = 0; // 确保无残差干扰
 
         for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
             int actualRow = maxRowCount + generatedRows;
@@ -139,7 +140,8 @@ public class Marbles {
     }
 
     public void AddMarbleRow(int row, int screenWidth, int initialRowCount) {
-        double baseY = -2 * side;
+        // [修复BUG核心1]: 新生成的弹珠继承 AccumulatedY 造成的余位偏移，完美消除上下行产生的网格裂缝
+        double baseY = -2 * side + accumulatedY;
         double xSpacing = side * SQRT3;
 
         if (marbles == null || row == maxRowCount) {
@@ -245,7 +247,15 @@ public class Marbles {
         }
 
         newestRow = row;
-        this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
+        
+        // [修复BUG核心2]: 抛弃原有使用浮点取模造成的计算误差，转用更安全的距比判断，防止频繁生成新行导致阵列完全不对齐。
+        double state1 = side * SQRT3;
+        double state2 = side * SQRT3 / 2.0;
+        if (Math.abs(this.baseX - state1) < 0.1) {
+            this.baseX = state2;
+        } else {
+            this.baseX = state1;
+        }
     }
 
     public boolean isNewestRow(int row) { return row == newestRow; }
@@ -277,12 +287,14 @@ public class Marbles {
         }
 
         accumulatedY += yMove;
-        if (accumulatedY >= ySpacing) {
+        
+        // [修复BUG核心3]: 先减去 ySpacing，让内部传递出来的残余偏移(residual)保留在 accumulatedY 中
+        while (accumulatedY >= ySpacing) {
             newRowInvincible = true;
             int newRow = maxRowCount + rowCount;
             this.rowCount++;
+            accumulatedY -= ySpacing; 
             AddMarbleRow(newRow, screenWidth, this.rowCount);
-            accumulatedY -= ySpacing;
         }
 
         updateWarnState(deadline, dt);
@@ -991,6 +1003,8 @@ public class Marbles {
             // 在顶部立刻生成新的一行填补空隙
             int newRow = maxRowCount + rowCount;
             this.rowCount++;
+            // 经过上面底层的修复，AddMarbleRow 现在会自动将残留误差累加进生成的行中
+            // 不再发生瞬移裂缝。
             AddMarbleRow(newRow, screenWidth, this.rowCount);
         }
     }
