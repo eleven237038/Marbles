@@ -46,9 +46,11 @@ public class Marbles {
     private boolean hasCreeper = false;
     private boolean hasBedrock = false;
     private boolean hasHeart = false;
-    private double creeperChance = 0.05;
-    private double bedrockChance = 0.03;
-    private double heartChance = 0.02;
+
+    // 每4行特殊弹珠计数器
+    private int rowGroupCounter = 0;  // 0-3循环
+    private int creeperInGroup = 0;  // 当前4行中已生成的creeper数量
+    private int bedrockInGroup = 0;  // 当前4行中已生成的bedrock数量
 
     public Marbles() {
         this.marbles = null;
@@ -138,31 +140,107 @@ public class Marbles {
             this.baseX = initialBaseX[random.nextInt(2)];
             this.rowCount = initialRowCount;
             this.marbles = new Marble[maxRowCount + initialRowCount][];
+            // 重置每4行计数器
+            rowGroupCounter = 0;
+            creeperInGroup = 0;
+            bedrockInGroup = 0;
         } else if (row >= marbles.length) {
             Marble[][] newMarbles = new Marble[marbles.length + 1][];
             System.arraycopy(marbles, 0, newMarbles, 0, marbles.length);
             this.marbles = newMarbles;
         }
 
+        // 更新每4行计数器
+        rowGroupCounter++;
+        boolean lastRowInGroup = (rowGroupCounter == 4);
+
         int perRow = (int)(screenWidth / xSpacing);
         this.marbles[row] = new Marble[perRow];
+
+        // 确定本行特殊弹珠数量
+        int targetCreepers = 0;
+        int targetBedrocks = 0;
+
+        if (hasCreeper || hasBedrock) {
+            if (hasCreeper) {
+                if (lastRowInGroup) {
+                    // 最后一行：确保1-3个creeper（总量1-3）
+                    int remaining = 3 - creeperInGroup;
+                    if (remaining > 0) {
+                        targetCreepers = 1 + random.nextInt(remaining);
+                    }
+                } else {
+                    // 前3行：每行最多1个creeper，总量不超过3
+                    if (creeperInGroup < 3 && random.nextDouble() < 0.3) {
+                        targetCreepers = 1;
+                    }
+                }
+            }
+            if (hasBedrock) {
+                if (lastRowInGroup) {
+                    // 最后一行：确保最少3个bedrock
+                    targetBedrocks = Math.max(3 - bedrockInGroup, 0);
+                    if (targetBedrocks == 0 && bedrockInGroup < 3) {
+                        targetBedrocks = 3 - bedrockInGroup;
+                    }
+                    // 无上限，多多益善
+                    targetBedrocks = Math.max(targetBedrocks, 3) + random.nextInt(3);
+                } else {
+                    // 前3行：每行至少1个bedrock
+                    targetBedrocks = 1 + random.nextInt(2);
+                }
+            }
+        }
+
+        // 分别收集creeper和bedrock的位置
+        List<Integer> creeperPositions = new ArrayList<>();
+        List<Integer> bedrockPositions = new ArrayList<>();
+
+        for (int col = 0; col < perRow; col++) {
+            if (creeperPositions.size() < targetCreepers && random.nextDouble() < 0.15) {
+                creeperPositions.add(col);
+            }
+            if (bedrockPositions.size() < targetBedrocks && !creeperPositions.contains(col) && random.nextDouble() < 0.15) {
+                bedrockPositions.add(col);
+            }
+        }
+
+        // 确保达到最低数量
+        while (creeperPositions.size() < targetCreepers && creeperPositions.size() < perRow) {
+            int pos = random.nextInt(perRow);
+            if (!creeperPositions.contains(pos)) {
+                creeperPositions.add(pos);
+            }
+        }
+        while (bedrockPositions.size() < targetBedrocks) {
+            int pos = random.nextInt(perRow);
+            if (!creeperPositions.contains(pos) && !bedrockPositions.contains(pos)) {
+                bedrockPositions.add(pos);
+            }
+        }
 
         for (int col = 0; col < perRow; col++) {
             this.marbles[row][col] = new Marble();
             this.marbles[row][col].init(baseX + col * xSpacing, baseY, row, col);
 
-            // 根据概率生成特殊弹珠
-            if (hasCreeper || hasBedrock || hasHeart) {
-                double rand = random.nextDouble();
-                if (hasCreeper && rand < creeperChance) {
-                    this.marbles[row][col].setColorType(Marble.CREEPER);
-                } else if (hasBedrock && rand < creeperChance + bedrockChance) {
-                    this.marbles[row][col].setColorType(Marble.BEDROCK);
-                } else if (hasHeart && rand < creeperChance + bedrockChance + heartChance) {
-                    this.marbles[row][col].setColorType(Marble.HEART);
-                }
+            if (creeperPositions.contains(col)) {
+                this.marbles[row][col].setColorType(Marble.CREEPER);
+                creeperInGroup++;
+            } else if (bedrockPositions.contains(col)) {
+                this.marbles[row][col].setColorType(Marble.BEDROCK);
+                bedrockInGroup++;
+            } else if (hasHeart && random.nextDouble() < 0.02) {
+                this.marbles[row][col].setColorType(Marble.HEART);
             }
         }
+
+        // 如果是每组最后一行，重置计数器
+        if (lastRowInGroup) {
+            rowGroupCounter = 0;
+            creeperInGroup = 0;
+            bedrockInGroup = 0;
+        }
+
         this.baseX = baseX + (baseX % xSpacing == 0 ? -xSpacing / 2 : xSpacing / 2);
     }
 
@@ -402,6 +480,10 @@ public class Marbles {
             for (Marble hc : hitCreepers) {
                 creeperBlast(hc.getCenterX(), hc.getCenterY());
             }
+            checkFloatingMarbles();
+            addRoundTotalScore();
+        } else if (launchMarble.getColorType() == Marble.BEDROCK) {
+            // Bedrock无法触发同色相消
             checkFloatingMarbles();
             addRoundTotalScore();
         } else {

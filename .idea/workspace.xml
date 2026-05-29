@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化creeper效果" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="重新设置第三关" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -143,15 +143,7 @@
       <workItem from="1779938602200" duration="24283000" />
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
-      <workItem from="1780026231602" duration="2001000" />
-    </task>
-    <task id="LOCAL-00046" summary="更改装饰">
-      <option name="closed" value="true" />
-      <created>1779852240901</created>
-      <option name="number" value="00046" />
-      <option name="presentableId" value="LOCAL-00046" />
-      <option name="project" value="LOCAL" />
-      <updated>1779852240901</updated>
+      <workItem from="1780026231602" duration="2367000" />
     </task>
     <task id="LOCAL-00047" summary="更改装饰">
       <option name="closed" value="true" />
@@ -537,7 +529,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780027956965</updated>
     </task>
-    <option name="localTasksCounter" value="95" />
+    <task id="LOCAL-00095" summary="重新设置第三关">
+      <option name="closed" value="true" />
+      <created>1780028391691</created>
+      <option name="number" value="00095" />
+      <option name="presentableId" value="LOCAL-00095" />
+      <option name="project" value="LOCAL" />
+      <updated>1780028391691</updated>
+    </task>
+    <option name="localTasksCounter" value="96" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -555,7 +555,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="优化炮台代码" />
     <MESSAGE value="合并UI,音效" />
     <MESSAGE value="添加关卡模式" />
     <MESSAGE value="更正晋级按钮" />
@@ -580,6 +579,7 @@
     <MESSAGE value="添加弹珠类型" />
     <MESSAGE value="优化弹珠精灵图" />
     <MESSAGE value="优化creeper效果" />
-    <option name="LAST_COMMIT_MESSAGE" value="优化creeper效果" />
+    <MESSAGE value="重新设置第三关" />
+    <option name="LAST_COMMIT_MESSAGE" value="重新设置第三关" />
   </component>
 </project>
