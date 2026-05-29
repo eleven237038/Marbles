@@ -264,7 +264,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         if (frozen || gamePaused) return;
         if (hexGrid != null) hexGrid.update(dt, deadline);
 
-        // FIXED: 仅当过场动画结束、游戏正常开启且非暂停状态时，进行 Sans 的 30 秒攻击计时。
+        // 仅当过场动画结束、游戏正常开启且非暂停状态时，进行 Sans 的 30 秒攻击计时。
         if (sansActive && gameStarted && !frozen && !gamePaused) {
             sansSkillTimer -= dt;
             if (sansSkillTimer <= 0) {
@@ -410,6 +410,15 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         for (int i = 1; i <= steps; i++) {
             double checkX = prevX + dx * i / steps;
             double checkY = prevY + dy * i / steps;
+
+            // ===== [BUG修复] 顶部边界检测 =====
+            // 解决弹珠射出窗口上边缘后永远消失的问题。使其碰到顶端自动吸附。
+            if (checkY <= radius) {
+                collided = true;
+                launchMarble.setCenter(checkX, radius);
+                break;
+            }
+            // ===============================
 
             for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
                 Marble[] row = hexGrid.getRow(r);

@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="PLAY按钮优化">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化第四关弹珠">
       <change beforePath="$PROJECT_DIR$/resources/image/Marbles/heart.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Marbles/heart.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/purple.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Marbles/purple.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/image/Marbles/yellow.png" beforeDir="false" afterPath="$PROJECT_DIR$/resources/image/Marbles/yellow.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -149,15 +147,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
-      <workItem from="1780030147321" duration="15556000" />
-    </task>
-    <task id="LOCAL-00066" summary="优化代码">
-      <option name="closed" value="true" />
-      <created>1779898346392</created>
-      <option name="number" value="00066" />
-      <option name="presentableId" value="LOCAL-00066" />
-      <option name="project" value="LOCAL" />
-      <updated>1779898346392</updated>
+      <workItem from="1780030147321" duration="15857000" />
     </task>
     <task id="LOCAL-00067" summary="添加关卡模式">
       <option name="closed" value="true" />
@@ -543,7 +533,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780051301296</updated>
     </task>
-    <option name="localTasksCounter" value="115" />
+    <task id="LOCAL-00115" summary="优化第四关弹珠">
+      <option name="closed" value="true" />
+      <created>1780051775043</created>
+      <option name="number" value="00115" />
+      <option name="presentableId" value="LOCAL-00115" />
+      <option name="project" value="LOCAL" />
+      <updated>1780051775043</updated>
+    </task>
+    <option name="localTasksCounter" value="116" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -561,7 +559,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="尝试Sans出场" />
     <MESSAGE value="完成Sans出场" />
     <MESSAGE value=" 将ResourceUtil和SoundManager合并成一个新文件ResourceManager.Java文件" />
     <MESSAGE value="将Sans更名为BossSans" />
@@ -586,6 +583,7 @@
     <MESSAGE value="为Sans添加技能" />
     <MESSAGE value="为Sans修复技能" />
     <MESSAGE value="PLAY按钮优化" />
-    <option name="LAST_COMMIT_MESSAGE" value="PLAY按钮优化" />
+    <MESSAGE value="优化第四关弹珠" />
+    <option name="LAST_COMMIT_MESSAGE" value="优化第四关弹珠" />
   </component>
 </project>
