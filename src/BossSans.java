@@ -270,7 +270,7 @@ public class BossSans {
         FontMetrics fm = g.getFontMetrics();
 
         int maxW = 0;
-        for (String l : lines) maxW = Math.max(maxW, fm.stringWidth("* " + l));
+        for (String l : lines) maxW = Math.max(maxW, fm.stringWidth(l));
 
         int bw = maxW + 40;
         int bh = lines.length * 25 + 30;
@@ -309,7 +309,7 @@ public class BossSans {
 
         g.setColor(Color.BLACK);
         for (int i = 0; i < lines.length; i++) {
-            g.drawString("* " + lines[i], bx + 20, by + 30 + i * 25);
+            g.drawString(lines[i], bx + 20, by + 30 + i * 25);
         }
     }
 

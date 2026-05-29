@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment=" 设置第四关无法自然生成creeper和bedrock">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/BossSans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BossSans.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MarbleLaunch.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarbleLaunch.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ScreenGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenGame.java" afterDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="大跃进" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -152,23 +144,7 @@
       <workItem from="1780023210644" duration="7000" />
       <workItem from="1780023235359" duration="90000" />
       <workItem from="1780026231602" duration="3447000" />
-      <workItem from="1780030147321" duration="11078000" />
-    </task>
-    <task id="LOCAL-00060" summary="添加碰撞效果">
-      <option name="closed" value="true" />
-      <created>1779874730839</created>
-      <option name="number" value="00060" />
-      <option name="presentableId" value="LOCAL-00060" />
-      <option name="project" value="LOCAL" />
-      <updated>1779874730839</updated>
-    </task>
-    <task id="LOCAL-00061" summary="添加碰撞效果">
-      <option name="closed" value="true" />
-      <created>1779874864785</created>
-      <option name="number" value="00061" />
-      <option name="presentableId" value="LOCAL-00061" />
-      <option name="project" value="LOCAL" />
-      <updated>1779874864785</updated>
+      <workItem from="1780030147321" duration="11606000" />
     </task>
     <task id="LOCAL-00062" summary="优化炮台代码">
       <option name="closed" value="true" />
@@ -546,7 +522,23 @@
       <option name="project" value="LOCAL" />
       <updated>1780043838421</updated>
     </task>
-    <option name="localTasksCounter" value="109" />
+    <task id="LOCAL-00109" summary="大跃进">
+      <option name="closed" value="true" />
+      <created>1780045965887</created>
+      <option name="number" value="00109" />
+      <option name="presentableId" value="LOCAL-00109" />
+      <option name="project" value="LOCAL" />
+      <updated>1780045965887</updated>
+    </task>
+    <task id="LOCAL-00110" summary="大跃进">
+      <option name="closed" value="true" />
+      <created>1780045999299</created>
+      <option name="number" value="00110" />
+      <option name="presentableId" value="LOCAL-00110" />
+      <option name="project" value="LOCAL" />
+      <updated>1780045999299</updated>
+    </task>
+    <option name="localTasksCounter" value="111" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -564,7 +556,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="将关卡选择界面的关卡按钮从左上角改到屏幕中间" />
     <MESSAGE value="优化" />
     <MESSAGE value="优化代码" />
     <MESSAGE value="更新所有的路径,确保检索仅在本地仓库文件夹内进行而不是超过这个路径,保证其他人从远程仓库下载时可以正常读取加载" />
@@ -589,6 +580,7 @@
     <MESSAGE value="添加对话框聊天" />
     <MESSAGE value="修复bug" />
     <MESSAGE value=" 设置第四关无法自然生成creeper和bedrock" />
-    <option name="LAST_COMMIT_MESSAGE" value=" 设置第四关无法自然生成creeper和bedrock" />
+    <MESSAGE value="大跃进" />
+    <option name="LAST_COMMIT_MESSAGE" value="大跃进" />
   </component>
 </project>
