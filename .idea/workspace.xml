@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="保持关卡解锁状态" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更改为英文话语">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -146,15 +148,8 @@
       <workItem from="1780026231602" duration="3447000" />
       <workItem from="1780030147321" duration="17251000" />
       <workItem from="1780054676653" duration="1553000" />
-      <workItem from="1780057587087" duration="453000" />
-    </task>
-    <task id="LOCAL-00074" summary="将ScreenStart中的PLAY和Level按钮合并成PLAY按钮">
-      <option name="closed" value="true" />
-      <created>1779962252653</created>
-      <option name="number" value="00074" />
-      <option name="presentableId" value="LOCAL-00074" />
-      <option name="project" value="LOCAL" />
-      <updated>1779962252654</updated>
+      <workItem from="1780057587087" duration="1614000" />
+      <workItem from="1780121010930" duration="529000" />
     </task>
     <task id="LOCAL-00075" summary="将关卡选择界面的关卡按钮从左上角改到屏幕中间">
       <option name="closed" value="true" />
@@ -540,7 +535,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780057896578</updated>
     </task>
-    <option name="localTasksCounter" value="123" />
+    <task id="LOCAL-00123" summary="更改为英文话语">
+      <option name="closed" value="true" />
+      <created>1780058245012</created>
+      <option name="number" value="00123" />
+      <option name="presentableId" value="LOCAL-00123" />
+      <option name="project" value="LOCAL" />
+      <updated>1780058245012</updated>
+    </task>
+    <option name="localTasksCounter" value="124" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -558,7 +561,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="统一字体" />
     <MESSAGE value="添加弹珠类型" />
     <MESSAGE value="优化弹珠精灵图" />
     <MESSAGE value="优化creeper效果" />
@@ -583,6 +585,7 @@
     <MESSAGE value="修正Sans动作" />
     <MESSAGE value="降低技能5难度" />
     <MESSAGE value="保持关卡解锁状态" />
-    <option name="LAST_COMMIT_MESSAGE" value="保持关卡解锁状态" />
+    <MESSAGE value="更改为英文话语" />
+    <option name="LAST_COMMIT_MESSAGE" value="更改为英文话语" />
   </component>
 </project>

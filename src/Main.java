@@ -415,7 +415,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             case 6:
                 sansSkill6Count++;
                 if (sansSkill6Count > 5) {
-                    triggerSansLeave(false, "又是这个绿色的东西？\n看来你真的只知道用爆炸。\n我受够了，你自己玩吧。");
+                    triggerSansLeave(false, "This green stuff again?\nGuess you really just wanna blow things up.\nI'm done. Figure it out yourself.");
                     return;
                 }
             
@@ -538,7 +538,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 Marble marble = row[c];
                 if (marble != null && marble.isInitialized() && !marble.isPopping() && !marble.isFalling() && marble.getCenterY() + radius >= deadline) {
                     if (sansActive && Level.getInstance().getCurrentLevel() == 4) {
-                        triggerSansLeave(false, "看来你已经到极限了。\n那么，游戏到此为止吧。");
+                        triggerSansLeave(false, "Looks like you've hit your limit.\nWell, that's it for this game.");
                     } else {
                         openScreenGameOverMenu(false);
                     }
