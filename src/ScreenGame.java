@@ -191,26 +191,63 @@ public class ScreenGame {
             String levelText = "LV " + Level.getInstance().getCurrentLevel();
             int levelTextX = boardX + (boardWidth - fmText.stringWidth(levelText)) / 2;
             g.drawString(levelText, levelTextX, boardY + 30);
-            
-            String tText = "TARGET";
-            g.drawString(tText, boardX + 20, boardY + 70);
-            g.setFont(utFontNum);
-            String tVal = String.valueOf(levelWinScore);
-            g.drawString(tVal, boardX + boardWidth - 20 - fmNum.stringWidth(tVal), boardY + 70);
-            
-            g.setFont(utFontText);
-            String sText = "SCORE";
-            g.drawString(sText, boardX + 20, boardY + 110);
-            g.setFont(utFontNum);
-            String sVal = String.valueOf(currentScore);
-            g.drawString(sVal, boardX + boardWidth - 20 - fmNum.stringWidth(sVal), boardY + 110);
-            
-            g.setFont(utFontText);
-            String bText = "BEST";
-            g.drawString(bText, boardX + 20, boardY + 150);
-            g.setFont(utFontNum);
-            String bVal = String.valueOf(levelHighScore);
-            g.drawString(bVal, boardX + boardWidth - 20 - fmNum.stringWidth(bVal), boardY + 150);
+
+            // Level 4 in UT style has no target score (win via Sans hearts or timer)
+            boolean isLevel4NoTarget = Level.getInstance().getCurrentLevel() == 4 && Marble.utStyle;
+            if (!isLevel4NoTarget) {
+                String tText = "TARGET";
+                g.drawString(tText, boardX + 20, boardY + 70);
+                g.setFont(utFontNum);
+                String tVal = String.valueOf(levelWinScore);
+                g.drawString(tVal, boardX + boardWidth - 20 - fmNum.stringWidth(tVal), boardY + 70);
+
+                g.setFont(utFontText);
+                String sText = "SCORE";
+                g.drawString(sText, boardX + 20, boardY + 110);
+                g.setFont(utFontNum);
+                String sVal = String.valueOf(currentScore);
+                g.drawString(sVal, boardX + boardWidth - 20 - fmNum.stringWidth(sVal), boardY + 110);
+
+                g.setFont(utFontText);
+                String bText = "BEST";
+                g.drawString(bText, boardX + 20, boardY + 150);
+                g.setFont(utFontNum);
+                String bVal = String.valueOf(levelHighScore);
+                g.drawString(bVal, boardX + boardWidth - 20 - fmNum.stringWidth(bVal), boardY + 150);
+            } else {
+                // Level 4: show SCORE and BEST only, repositioned and centered
+                String sText = "SCORE";
+                int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
+                g.setFont(utFontText);
+                g.setColor(new Color(60, 40, 100, 90));
+                g.drawString(sText, sTextX + 1, boardY + 55);
+                g.setColor(new Color(180, 120, 255));
+                g.drawString(sText, sTextX, boardY + 55);
+
+                g.setFont(utFontNum);
+                String sVal = String.valueOf(currentScore);
+                int sValX = boardX + (boardWidth - fmNum.stringWidth(sVal)) / 2;
+                g.setColor(new Color(0, 0, 0, 50));
+                g.drawString(sVal, sValX + 2, boardY + 85);
+                g.setColor(new Color(40, 150, 255));
+                g.drawString(sVal, sValX, boardY + 85);
+
+                String bText = "BEST";
+                int bTextX = boardX + (boardWidth - fmText.stringWidth(bText)) / 2;
+                g.setFont(utFontText);
+                g.setColor(new Color(60, 40, 100, 90));
+                g.drawString(bText, bTextX + 1, boardY + 120);
+                g.setColor(new Color(180, 120, 255));
+                g.drawString(bText, bTextX, boardY + 120);
+
+                g.setFont(utFontNum);
+                String bVal = String.valueOf(levelHighScore);
+                int bValX = boardX + (boardWidth - fmNum.stringWidth(bVal)) / 2;
+                g.setColor(new Color(0, 0, 0, 50));
+                g.drawString(bVal, bValX + 2, boardY + 150);
+                g.setColor(new Color(255, 110, 30));
+                g.drawString(bVal, bValX, boardY + 150);
+            }
             
             return;
         }
@@ -251,64 +288,107 @@ public class ScreenGame {
         g.setColor(new Color(180, 120, 255));
         g.drawString(levelText, levelTextX, boardY + 22);
 
-        // ============ Target 目标分 ============
-        String tText = "TARGET";
-        int tTextX = boardX + 20;
-        g.setFont(SCORE_TEXT_FONT);
-        g.setColor(new Color(60, 40, 100, 90));
-        g.drawString(tText, tTextX + 1, boardY + 45);
-        g.setColor(new Color(180, 120, 255));
-        g.drawString(tText, tTextX, boardY + 45);
+        // Level 4 in UT style has no target score (win via Sans hearts or timer)
+        boolean isLevel4NoTarget = Level.getInstance().getCurrentLevel() == 4 && Marble.utStyle;
+        if (!isLevel4NoTarget) {
+            // ============ Target 目标分 ============
+            String tText = "TARGET";
+            int tTextX = boardX + 20;
+            g.setFont(SCORE_TEXT_FONT);
+            g.setColor(new Color(60, 40, 100, 90));
+            g.drawString(tText, tTextX + 1, boardY + 45);
+            g.setColor(new Color(180, 120, 255));
+            g.drawString(tText, tTextX, boardY + 45);
 
-        String tVal = String.valueOf(levelWinScore);
-        int tValX = boardX + boardWidth - 20 - fmNum.stringWidth(tVal);
-        g.setFont(SCORE_NUM_FONT);
-        g.setColor(new Color(0, 0, 0, 50));
-        g.drawString(tVal, tValX + 2, boardY + 70);
-        g.setColor(new Color(0, 200, 100));
-        g.drawString(tVal, tValX, boardY + 70);
+            String tVal = String.valueOf(levelWinScore);
+            int tValX = boardX + boardWidth - 20 - fmNum.stringWidth(tVal);
+            g.setFont(SCORE_NUM_FONT);
+            g.setColor(new Color(0, 0, 0, 50));
+            g.drawString(tVal, tValX + 2, boardY + 70);
+            g.setColor(new Color(0, 200, 100));
+            g.drawString(tVal, tValX, boardY + 70);
 
-        // ============ 分割线1 ============
-        g.setColor(new Color(200, 200, 200, 120));
-        g.drawLine(boardX + 15, boardY + 80, boardX + boardWidth - 15, boardY + 80);
+            // ============ 分割线1 ============
+            g.setColor(new Color(200, 200, 200, 120));
+            g.drawLine(boardX + 15, boardY + 80, boardX + boardWidth - 15, boardY + 80);
 
-        // ============ 当前分 SCORE ============
-        String sText = "SCORE";
-        int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
-        g.setFont(SCORE_TEXT_FONT);
-        g.setColor(new Color(60, 40, 100, 90));
-        g.drawString(sText, sTextX + 1, boardY + 102);
-        g.setColor(new Color(180, 120, 255));
-        g.drawString(sText, sTextX, boardY + 102);
+            // ============ 当前分 SCORE ============
+            String sText = "SCORE";
+            int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
+            g.setFont(SCORE_TEXT_FONT);
+            g.setColor(new Color(60, 40, 100, 90));
+            g.drawString(sText, sTextX + 1, boardY + 102);
+            g.setColor(new Color(180, 120, 255));
+            g.drawString(sText, sTextX, boardY + 102);
 
-        String sVal = String.valueOf(currentScore);
-        int sValX = boardX + (boardWidth - fmText.stringWidth(sVal)) / 2;
-        g.setFont(SCORE_NUM_FONT);
-        g.setColor(new Color(0, 0, 0, 50));
-        g.drawString(sVal, sValX + 2, boardY + 130);
-        g.setColor(new Color(40, 150, 255));
-        g.drawString(sVal, sValX, boardY + 130);
+            String sVal = String.valueOf(currentScore);
+            int sValX = boardX + (boardWidth - fmText.stringWidth(sVal)) / 2;
+            g.setFont(SCORE_NUM_FONT);
+            g.setColor(new Color(0, 0, 0, 50));
+            g.drawString(sVal, sValX + 2, boardY + 130);
+            g.setColor(new Color(40, 150, 255));
+            g.drawString(sVal, sValX, boardY + 130);
 
-        // ============ 分割线2 ============
-        g.setColor(new Color(200, 200, 200, 120));
-        g.drawLine(boardX + 15, boardY + 138, boardX + boardWidth - 15, boardY + 138);
+            // ============ 分割线2 ============
+            g.setColor(new Color(200, 200, 200, 120));
+            g.drawLine(boardX + 15, boardY + 138, boardX + boardWidth - 15, boardY + 138);
 
-        // ============ 最高分 BEST ============
-        String bText = "BEST";
-        int bTextX = boardX + 20;
-        g.setFont(SCORE_TEXT_FONT);
-        g.setColor(new Color(60, 40, 100, 90));
-        g.drawString(bText, bTextX + 1, boardY + 160);
-        g.setColor(new Color(180, 120, 255));
-        g.drawString(bText, bTextX, boardY + 160);
+            // ============ 最高分 BEST ============
+            String bText = "BEST";
+            int bTextX = boardX + 20;
+            g.setFont(SCORE_TEXT_FONT);
+            g.setColor(new Color(60, 40, 100, 90));
+            g.drawString(bText, bTextX + 1, boardY + 160);
+            g.setColor(new Color(180, 120, 255));
+            g.drawString(bText, bTextX, boardY + 160);
 
-        String bVal = String.valueOf(levelHighScore);
-        int bValX = boardX + boardWidth - 20 - fmNum.stringWidth(bVal);
-        g.setFont(SCORE_NUM_FONT);
-        g.setColor(new Color(0, 0, 0, 50));
-        g.drawString(bVal, bValX + 2, boardY + 185);
-        g.setColor(new Color(255, 110, 30));
-        g.drawString(bVal, bValX, boardY + 185);
+            String bVal = String.valueOf(levelHighScore);
+            int bValX = boardX + boardWidth - 20 - fmNum.stringWidth(bVal);
+            g.setFont(SCORE_NUM_FONT);
+            g.setColor(new Color(0, 0, 0, 50));
+            g.drawString(bVal, bValX + 2, boardY + 185);
+            g.setColor(new Color(255, 110, 30));
+            g.drawString(bVal, bValX, boardY + 185);
+        } else {
+            // Level 4: show SCORE and BEST only, repositioned and centered
+            // ============ 当前分 SCORE ============
+            String sText = "SCORE";
+            int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
+            g.setFont(SCORE_TEXT_FONT);
+            g.setColor(new Color(60, 40, 100, 90));
+            g.drawString(sText, sTextX + 1, boardY + 55);
+            g.setColor(new Color(180, 120, 255));
+            g.drawString(sText, sTextX, boardY + 55);
+
+            String sVal = String.valueOf(currentScore);
+            int sValX = boardX + (boardWidth - fmNum.stringWidth(sVal)) / 2;
+            g.setFont(SCORE_NUM_FONT);
+            g.setColor(new Color(0, 0, 0, 50));
+            g.drawString(sVal, sValX + 2, boardY + 85);
+            g.setColor(new Color(40, 150, 255));
+            g.drawString(sVal, sValX, boardY + 85);
+
+            // ============ 分割线 ============
+            g.setColor(new Color(200, 200, 200, 120));
+            g.drawLine(boardX + 15, boardY + 95, boardX + boardWidth - 15, boardY + 95);
+
+            // ============ 最高分 BEST ============
+            String bText = "BEST";
+            int bTextX = boardX + (boardWidth - fmText.stringWidth(bText)) / 2;
+            g.setFont(SCORE_TEXT_FONT);
+            g.setColor(new Color(60, 40, 100, 90));
+            g.drawString(bText, bTextX + 1, boardY + 120);
+            g.setColor(new Color(180, 120, 255));
+            g.drawString(bText, bTextX, boardY + 120);
+
+            String bVal = String.valueOf(levelHighScore);
+            int bValX = boardX + (boardWidth - fmNum.stringWidth(bVal)) / 2;
+            g.setFont(SCORE_NUM_FONT);
+            g.setColor(new Color(0, 0, 0, 50));
+            g.drawString(bVal, bValX + 2, boardY + 150);
+            g.setColor(new Color(255, 110, 30));
+            g.drawString(bVal, bValX, boardY + 150);
+        }
     }
 
     public void drawCannon(Graphics2D g, double mx, double my) {

@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化第四关结束界面">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenGame.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -151,15 +152,7 @@
       <workItem from="1780057587087" duration="1614000" />
       <workItem from="1780121010930" duration="1284000" />
       <workItem from="1780147629376" duration="3970000" />
-      <workItem from="1780155057677" duration="2217000" />
-    </task>
-    <task id="LOCAL-00080" summary="尝试Sans出场">
-      <option name="closed" value="true" />
-      <created>1779971024154</created>
-      <option name="number" value="00080" />
-      <option name="presentableId" value="LOCAL-00080" />
-      <option name="project" value="LOCAL" />
-      <updated>1779971024154</updated>
+      <workItem from="1780155057677" duration="3708000" />
     </task>
     <task id="LOCAL-00081" summary="尝试Sans出场">
       <option name="closed" value="true" />
@@ -545,7 +538,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780151821431</updated>
     </task>
-    <option name="localTasksCounter" value="129" />
+    <task id="LOCAL-00129" summary="优化第四关结束界面">
+      <option name="closed" value="true" />
+      <created>1780162464467</created>
+      <option name="number" value="00129" />
+      <option name="presentableId" value="LOCAL-00129" />
+      <option name="project" value="LOCAL" />
+      <updated>1780162464469</updated>
+    </task>
+    <option name="localTasksCounter" value="130" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

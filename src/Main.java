@@ -766,7 +766,13 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                         Marble.utStyle = true;
                         ((javax.swing.Timer)evt.getSource()).stop();
 
-                        finishIntro(); 
+                        if (glassPane != null) {
+                            glassPane.revalidate();
+                            glassPane.repaint();
+                        }
+                        if (mPanel != null) mPanel.repaint();
+
+                        finishIntro();
                     }
                     if (glassPane != null) glassPane.repaint();
                     if (mPanel != null) mPanel.repaint();
