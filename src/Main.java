@@ -63,6 +63,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private int sansSkill6Count = 0; // Tracking Skill 6 abuse
     private boolean sansLeaving = false; // Is Sans in the process of leaving?
     private double level4Timer = 0;      // Tracking 10 mins requirement
+    private boolean waitingForHeartsExit = false; // Level 4: waiting for hearts to exit screen before triggering Sans animation
 
     private javax.swing.Timer dialogTimer = null;
     private boolean utStyleDone = false;
@@ -275,7 +276,14 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
         // 仅当过场动画结束、游戏正常开启且非暂停状态时，进行 Sans 状态和攻击计时。
         if (sansActive && gameStarted && !frozen && !gamePaused) {
-            
+
+            // Level 4: 等待heart弹珠完全离开屏幕后触发Sans退场
+            if (waitingForHeartsExit && hexGrid != null && !hexGrid.hasAnyHeartsOnScreen()) {
+                waitingForHeartsExit = false;
+                triggerSansLeave(true, "Guess I was just... too lazy to dodge.\nPapyrus, want some spaghetti?");
+                return;
+            }
+
             // 10 分钟枯燥超时机制检查
             if (Level.getInstance().getCurrentLevel() == 4) {
                 level4Timer += dt;
@@ -284,7 +292,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     return;
                 }
             }
-            
+
             sansSkillTimer -= dt;
             if (sansSkillTimer <= 0) {
                 triggerSansSkill();
@@ -769,7 +777,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sans.initHearts(sansX, sansY);
         sans.setOnAllHeartsRemoved(() -> {
             if (sansLeaving) return;
-            triggerSansLeave(true, "Guess I was just... too lazy to dodge.\nPapyrus, want some spaghetti?");
+            // Level 4: 先标记等待状态，等所有heart弹珠完全离开屏幕后再触发Sans退场
+            if (Level.getInstance().getCurrentLevel() == 4) {
+                waitingForHeartsExit = true;
+            } else {
+                triggerSansLeave(true, "Guess I was just... too lazy to dodge.\nPapyrus, want some spaghetti?");
+            }
         });
 
         sans.startHeartGeneration(() -> {

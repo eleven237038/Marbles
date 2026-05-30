@@ -143,6 +143,22 @@ public class Marbles {
         return count;
     }
 
+    /**
+     * 检查是否还有存活的heart弹珠（包括正在下落的）
+     */
+    public boolean hasAnyHeartsOnScreen() {
+        if (marbles == null) return false;
+        for (Marble[] row : marbles) {
+            if (row == null) continue;
+            for (Marble m : row) {
+                if (m != null && m.getColorType() == Marble.HEART && m.isInitialized() && !m.isDead()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public void AddMarbleRow(int row, int screenWidth, int initialRowCount) {
         // [修复BUG核心1]: 新生成的弹珠继承 AccumulatedY 造成的余位偏移，完美消除上下行产生的网格裂缝
         double baseY = -2 * side + accumulatedY;

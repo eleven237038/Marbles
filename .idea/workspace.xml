@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更改为英文话语" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化第四关结束界面">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -148,15 +152,7 @@
       <workItem from="1780054676653" duration="1553000" />
       <workItem from="1780057587087" duration="1614000" />
       <workItem from="1780121010930" duration="1284000" />
-      <workItem from="1780147629376" duration="373000" />
-    </task>
-    <task id="LOCAL-00076" summary="优化">
-      <option name="closed" value="true" />
-      <created>1779962791618</created>
-      <option name="number" value="00076" />
-      <option name="presentableId" value="LOCAL-00076" />
-      <option name="project" value="LOCAL" />
-      <updated>1779962791618</updated>
+      <workItem from="1780147629376" duration="1475000" />
     </task>
     <task id="LOCAL-00077" summary="优化代码">
       <option name="closed" value="true" />
@@ -542,7 +538,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780121777882</updated>
     </task>
-    <option name="localTasksCounter" value="125" />
+    <task id="LOCAL-00125" summary="优化第四关结束界面">
+      <option name="closed" value="true" />
+      <created>1780148074568</created>
+      <option name="number" value="00125" />
+      <option name="presentableId" value="LOCAL-00125" />
+      <option name="project" value="LOCAL" />
+      <updated>1780148074568</updated>
+    </task>
+    <option name="localTasksCounter" value="126" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -560,7 +564,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="添加弹珠类型" />
     <MESSAGE value="优化弹珠精灵图" />
     <MESSAGE value="优化creeper效果" />
     <MESSAGE value="重新设置第三关" />
@@ -585,6 +588,7 @@
     <MESSAGE value="降低技能5难度" />
     <MESSAGE value="保持关卡解锁状态" />
     <MESSAGE value="更改为英文话语" />
-    <option name="LAST_COMMIT_MESSAGE" value="更改为英文话语" />
+    <MESSAGE value="优化第四关结束界面" />
+    <option name="LAST_COMMIT_MESSAGE" value="优化第四关结束界面" />
   </component>
 </project>
