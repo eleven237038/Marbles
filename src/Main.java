@@ -238,7 +238,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 level.updateLevelHighScore(levelHighScore);
             }
             if (!levelWon && level.isWinConditionMet(currentScore)) {
-                levelWon = true;
+                // Level 4: win only achieved when Sans is beaten (hearts cleared) or timer expires
+                // Score target alone doesn't grant victory on level 4
+                if (Level.getInstance().getCurrentLevel() != 4) {
+                    levelWon = true;
+                }
             }
             if (glassPane != null) {
                 glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
@@ -329,6 +333,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     // Sans 走过场触发通用逻辑
     private void triggerSansLeave(boolean win, String dialog) {
         if (sansLeaving) return;
+        if (win) {
+            levelWon = true; // Mark level as won for level 4 victory tracking
+        }
         sansLeaving = true;
         frozen = true; // 冻结整个弹珠与碰撞系统
         
