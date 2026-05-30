@@ -993,15 +993,16 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 }
             } else if (overlayMode == 2) {
                 boolean isLevel4Win = levelWon && Level.getInstance().getCurrentLevel() == 4;
+                boolean isLevel4Lose = !levelWon && Level.getInstance().getCurrentLevel() == 4;
                 if (levelWon && lastRestartBtn != null && lastRestartBtn.contains(p)) {
                     if (isLevel4Win) {
                         onBackToMenu();
                     } else {
                         onNextLevel();
                     }
-                } else if (!isScreenGameOverWin && !levelWon && lastRestartBtn != null && lastRestartBtn.contains(p)) {
+                } else if (!isScreenGameOverWin && lastRestartBtn != null && lastRestartBtn.contains(p)) {
                     onRestart();
-                } else if (!isLevel4Win && lastMenuBtn != null && lastMenuBtn.contains(p)) {
+                } else if (!isLevel4Win && (levelWon || isLevel4Lose) && lastMenuBtn != null && lastMenuBtn.contains(p)) {
                     onBackToMenu();
                 }
             } else if (overlayMode == 3) {
@@ -1036,8 +1037,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                             (lastQuitBtn != null && lastQuitBtn.contains(p));
                 } else if (overlayMode == 2) {
                     boolean isLevel4Win = levelWon && Level.getInstance().getCurrentLevel() == 4;
-                    hoveringAny = (levelWon && lastRestartBtn != null && lastRestartBtn.contains(p)) ||
-                            (!isLevel4Win && lastMenuBtn != null && lastMenuBtn.contains(p));
+                    boolean isLevel4Lose = !levelWon && Level.getInstance().getCurrentLevel() == 4;
+                    hoveringAny = (lastRestartBtn != null && lastRestartBtn.contains(p)) ||
+                            (!isLevel4Win && (levelWon || isLevel4Lose) && lastMenuBtn != null && lastMenuBtn.contains(p));
                 } else if (overlayMode == 3) {
                     hoveringAny = (lastSettingsBtn != null && lastSettingsBtn.contains(p)) ||
                             (lastHelpBtn != null && lastHelpBtn.contains(p)) ||
@@ -1335,6 +1337,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 int startY = cy + 10;
 
                 boolean isLevel4Win = levelWon && Level.getInstance().getCurrentLevel() == 4;
+                boolean isLevel4Lose = !levelWon && Level.getInstance().getCurrentLevel() == 4;
 
                 if (levelWon) {
                     if (isLevel4Win) {
@@ -1352,8 +1355,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     lastRestartBtn = restartBtn;
                 }
 
-                if (!isLevel4Win) {
-                    int menuOffset = (levelWon || isScreenGameOverWin) ? (levelWon ? btnHeight + btnSpacing : 0) : btnHeight + btnSpacing;
+                if (!isLevel4Win && (levelWon || !isScreenGameOverWin || isLevel4Lose)) {
+                    int menuOffset = isLevel4Lose ? (btnHeight + btnSpacing) : (levelWon ? btnHeight + btnSpacing : 0);
                     Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + menuOffset, btnWidth, btnHeight);
                     drawUtButton(g2d, menuBtn, "Main Menu");
                     lastMenuBtn = menuBtn;
@@ -1395,6 +1398,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             int startY = cy + 10;
 
             boolean isLevel4Win = levelWon && Level.getInstance().getCurrentLevel() == 4;
+            boolean isLevel4Lose = !levelWon && Level.getInstance().getCurrentLevel() == 4;
 
             if (levelWon) {
                 if (isLevel4Win) {
@@ -1412,8 +1416,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 lastRestartBtn = restartBtn;
             }
 
-            if (!isLevel4Win) {
-                int menuOffset = (levelWon || isScreenGameOverWin) ? (levelWon ? btnHeight + btnSpacing : 0) : btnHeight + btnSpacing;
+            if (!isLevel4Win && (levelWon || !isScreenGameOverWin || isLevel4Lose)) {
+                int menuOffset = isLevel4Lose ? (btnHeight + btnSpacing) : (levelWon ? btnHeight + btnSpacing : 0);
                 Rectangle menuBtn = new Rectangle(cx - btnWidth / 2, startY + menuOffset, btnWidth, btnHeight);
                 drawOverlayButton(g2d, menuBtn, "Main Menu", new Color(100, 190, 255));
                 lastMenuBtn = menuBtn;
