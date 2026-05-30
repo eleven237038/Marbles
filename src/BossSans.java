@@ -85,6 +85,10 @@ public class BossSans {
     private Heart[] hearts = new Heart[6];
     private boolean heartsActive = false;
     private int heartCount = 6;  // 当前剩余heart数量
+    private int visibleHeartCount = 0;  // 当前可见heart数量（生成动画用）
+    private boolean heartsGenerating = false;
+    private javax.swing.Timer heartGenTimer;
+    private Runnable onAllHeartsVisible;
     private static final double HEART_SIZE = 30;
     private static final double HEART_SPACING = 30;
 
@@ -167,20 +171,43 @@ public class BossSans {
 
     public void initHearts(double sansX, double sansY) {
         double startX = sansX - 16.2;
-        double hy = sansY + 148 + 10 + 15;  
+        double hy = sansY + 148 + 10 + 15;
 
         for (int i = 0; i < 6; i++) {
             double hx = startX + i * HEART_SPACING;
             hearts[i].init(hx, hy);
         }
         heartCount = 6;
-        heartsActive = true;
+        heartsActive = false;
+        visibleHeartCount = 0;
+        heartsGenerating = false;
+    }
+
+    public void startHeartGeneration(Runnable onComplete) {
+        this.onAllHeartsVisible = onComplete;
+        this.heartsGenerating = true;
+        this.visibleHeartCount = 0;
+        this.heartsActive = true;
+
+        heartGenTimer = new javax.swing.Timer(250, e -> {
+            visibleHeartCount++;
+            if (visibleHeartCount >= 6) {
+                ((javax.swing.Timer) e.getSource()).stop();
+                heartsGenerating = false;
+                if (onAllHeartsVisible != null) {
+                    onAllHeartsVisible.run();
+                }
+            }
+        });
+        heartGenTimer.start();
     }
 
     public void drawHearts(Graphics2D g) {
-        if (!heartsActive || heartCount <= 0) return;
-        
-        for (int i = 0; i < heartCount; i++) {
+        if (!heartsActive) return;
+        int count = heartsGenerating ? visibleHeartCount : heartCount;
+        if (count <= 0) return;
+
+        for (int i = 0; i < count; i++) {
             hearts[i].draw(g);
         }
     }

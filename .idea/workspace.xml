@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="更改为英文话语">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/BossSans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BossSans.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -149,15 +151,7 @@
       <workItem from="1780030147321" duration="17251000" />
       <workItem from="1780054676653" duration="1553000" />
       <workItem from="1780057587087" duration="1614000" />
-      <workItem from="1780121010930" duration="529000" />
-    </task>
-    <task id="LOCAL-00075" summary="将关卡选择界面的关卡按钮从左上角改到屏幕中间">
-      <option name="closed" value="true" />
-      <created>1779962523201</created>
-      <option name="number" value="00075" />
-      <option name="presentableId" value="LOCAL-00075" />
-      <option name="project" value="LOCAL" />
-      <updated>1779962523201</updated>
+      <workItem from="1780121010930" duration="1284000" />
     </task>
     <task id="LOCAL-00076" summary="优化">
       <option name="closed" value="true" />
@@ -543,7 +537,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780058245012</updated>
     </task>
-    <option name="localTasksCounter" value="124" />
+    <task id="LOCAL-00124" summary="更改为英文话语">
+      <option name="closed" value="true" />
+      <created>1780121777882</created>
+      <option name="number" value="00124" />
+      <option name="presentableId" value="LOCAL-00124" />
+      <option name="project" value="LOCAL" />
+      <updated>1780121777882</updated>
+    </task>
+    <option name="localTasksCounter" value="125" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

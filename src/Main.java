@@ -767,11 +767,6 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     }
 
     private void finishIntro() {
-        frozen = false;
-        gamePaused = false;
-
-        ResourceManager.getInstance().playBonelessMusic();
-
         sansCreeperShots = 0;
         sansCreeperActive = false;
         sansSkillTimer = 30.0;
@@ -780,6 +775,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sans.setOnAllHeartsRemoved(() -> {
             if (sansLeaving) return;
             triggerSansLeave(true, "Guess I was just... too lazy to dodge.\nPapyrus, want some spaghetti?");
+        });
+
+        sans.startHeartGeneration(() -> {
+            frozen = false;
+            gamePaused = false;
+            ResourceManager.getInstance().playBonelessMusic();
         });
     }
 
