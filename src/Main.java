@@ -603,10 +603,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             ResourceManager.getInstance().playGameFail();
         }
 
-        if (Level.getInstance().getCurrentLevel() != 4) {
-            ResourceManager.getInstance().stopMusic();
-        }
-
+        ResourceManager.getInstance().stopMusic();
         frozen = true;
         gamePaused = true;
         if (glassPane != null) {
@@ -648,9 +645,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
     public void onRestart() {
         ResourceManager.getInstance().playBackToMenu();
-        if (Level.getInstance().getCurrentLevel() != 4) {
-            ResourceManager.getInstance().stopMusic();
-        }
+        ResourceManager.getInstance().stopMusic();
 
         if (glassPane != null) {
             glassPane.hideOverlay();
