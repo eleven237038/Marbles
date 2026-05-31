@@ -1,3 +1,17 @@
+/**
+ * Marbles Game - A hex-grid marble shooting puzzle game
+ * Group: 21
+ *
+ * Team Members:
+ *   Chen Chen     - 24008980
+ *   Keyu Ding     - 24009027
+ *   Feng Dang     - 24008988
+ *   Chaoran Liu   - 24008977
+ *
+ * Course: Games Programming (3-2)
+ * Assignment 2
+ */
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.security.CodeSource;
@@ -8,24 +22,26 @@ import java.util.Map;
 
 /**
  * ResourceManager - 统一管理资源路径和音效
- * 合并了 ResourceUtil 和 SoundManager 的功能
+ * ResourceManager - Unified resource path and sound effect management
+ * 合并了ResourceUtil和SoundManager的功能
+ * Combines functionality of ResourceUtil and SoundManager
  */
 public class ResourceManager {
     private static ResourceManager instance;
 
-    // ========== 资源路径管理 (原 ResourceUtil) ==========
+    // ========== 资源路径管理 / Resource Path Management ==========
     private static String resourceBasePath;
 
-    // ========== 音效管理 (原 SoundManager) ==========
+    // ========== 音效管理 / Sound Effect Management ==========
     private Map<String, Clip> soundClips;
     private Map<String, Boolean> soundLoaded;
     private boolean soundEnabled = true;
 
-    // 音乐管理
+    // 音乐管理 / Music management
     private Clip musicClip = null;
     private String currentMusic = null;
 
-    // 音效文件路径常量
+    // 音效文件路径常量 / Sound effect file path constants
     public static final String GAME_BEGIN = "GameBegin.wav";
     public static final String BACK_TO_MENU = "从菜单返回主页.wav";
     public static final String BACK_TO_GAME = "从菜单返回游戏.wav";
@@ -36,7 +52,7 @@ public class ResourceManager {
     public static final String GAME_FAIL = "晋级&失败.wav";
     public static final String THREE_CLEAR = "钝角三消.wav";
 
-    // 音乐文件路径常量
+    // 音乐文件路径常量 / Music file path constants
     public static final String MUSIC_BONELESS = "骨质疏松.wav";
     public static final String MUSIC_JUSTICE = "正义之矛.wav";
 
@@ -46,6 +62,9 @@ public class ResourceManager {
         preloadAllSounds();
     }
 
+    /**
+     * 获取单例实例 / Get singleton instance
+     */
     public static ResourceManager getInstance() {
         if (instance == null) {
             instance = new ResourceManager();
@@ -53,10 +72,11 @@ public class ResourceManager {
         return instance;
     }
 
-    // ========== 资源路径方法 (原 ResourceUtil) ==========
+    // ========== 资源路径方法 / Resource Path Methods ==========
 
     /**
      * 获取资源文件夹的基础路径
+     * Get base path of resources folder
      */
     public static String getResourceBasePath() {
         if (resourceBasePath != null) {
@@ -74,14 +94,14 @@ public class ResourceManager {
                 }
             }
         } catch (URISyntaxException e) {
-            // 回退到当前工作目录
+            // 回退到当前工作目录 / Fallback to current working directory
         }
 
         if (resourceBasePath == null) {
             resourceBasePath = System.getProperty("user.dir") + File.separator;
         }
 
-        // 验证 resources 文件夹存在
+        // 验证resources文件夹存在 / Verify resources folder exists
         File resourcesDir = new File(resourceBasePath + "resources");
         if (!resourcesDir.exists() || !resourcesDir.isDirectory()) {
             File parent = new File(resourceBasePath).getParentFile();
@@ -95,6 +115,7 @@ public class ResourceManager {
 
     /**
      * 构建资源文件的完整路径
+     * Build complete path for resource file
      */
     public static String getResourcePath(String relativePath) {
         return getResourceBasePath() + "resources" + File.separator + relativePath;
@@ -102,6 +123,7 @@ public class ResourceManager {
 
     /**
      * 构建音效文件的完整路径
+     * Build complete path for sound file
      */
     public static String getSoundPath(String fileName) {
         return getResourceBasePath() + "resources" + File.separator + "sound" + File.separator + fileName;
@@ -109,13 +131,17 @@ public class ResourceManager {
 
     /**
      * 构建图片资源的完整路径
+     * Build complete path for image resource
      */
     public static String getImagePath(String fileName) {
         return getResourceBasePath() + "resources" + File.separator + "image" + File.separator + fileName;
     }
 
-    // ========== 音效方法 (原 SoundManager) ==========
+    // ========== 音效方法 / Sound Effect Methods ==========
 
+    /**
+     * 预加载所有音效 / Preload all sound effects
+     */
     private void preloadAllSounds() {
         preloadSound(GAME_BEGIN);
         preloadSound(BACK_TO_MENU);
@@ -128,6 +154,9 @@ public class ResourceManager {
         preloadSound(THREE_CLEAR);
     }
 
+    /**
+     * 预加载单个音效 / Preload single sound effect
+     */
     private void preloadSound(String fileName) {
         try {
             File soundFile = new File(getSoundPath(fileName));
@@ -154,6 +183,9 @@ public class ResourceManager {
         }
     }
 
+    /**
+     * 播放音效 / Play sound effect
+     */
     public void playSound(String fileName) {
         if (!soundEnabled) return;
 
@@ -179,6 +211,9 @@ public class ResourceManager {
         }
     }
 
+    /**
+     * 设置音效启用状态 / Set sound enabled state
+     */
     public void setSoundEnabled(boolean enabled) {
         this.soundEnabled = enabled;
         if (!enabled) {
@@ -190,6 +225,9 @@ public class ResourceManager {
         return soundEnabled;
     }
 
+    /**
+     * 停止所有音效 / Stop all sound effects
+     */
     public void stopAllSounds() {
         for (Clip clip : soundClips.values()) {
             if (clip != null && clip.isRunning()) {
@@ -198,6 +236,9 @@ public class ResourceManager {
         }
     }
 
+    /**
+     * 停止指定音效 / Stop specified sound effect
+     */
     public void stopSound(String fileName) {
         if (soundClips.containsKey(fileName)) {
             Clip clip = soundClips.get(fileName);
@@ -208,7 +249,7 @@ public class ResourceManager {
         }
     }
 
-    // 播放音效的便捷方法
+    // 播放音效的便捷方法 / Convenient methods for playing sound effects
     public void playGameBegin() { playSound(GAME_BEGIN); }
     public void playBackToMenu() { playSound(BACK_TO_MENU); }
     public void playBackToGame() { playSound(BACK_TO_GAME); }
@@ -219,10 +260,11 @@ public class ResourceManager {
     public void playGameFail() { playSound(GAME_FAIL); }
     public void playThreeClear() { playSound(THREE_CLEAR); }
 
-    // ========== 音乐播放方法 ==========
+    // ========== 音乐播放方法 / Music Playback Methods ==========
 
     /**
      * 获取音乐文件的完整路径
+     * Get complete path for music file
      */
     public static String getMusicPath(String fileName) {
         return getResourceBasePath() + "resources" + File.separator + "music" + File.separator + fileName;
@@ -230,16 +272,17 @@ public class ResourceManager {
 
     /**
      * 播放背景音乐（循环）
+     * Play background music (loop)
      */
     public void playMusic(String fileName) {
         if (!soundEnabled) return;
 
-        // 如果正在播放同一首音乐，不重复播放
+        // 如果正在播放同一首音乐，不重复播放 / If same music is playing, don't replay
         if (fileName.equals(currentMusic) && musicClip != null && musicClip.isRunning()) {
             return;
         }
 
-        // 停止当前音乐
+        // 停止当前音乐 / Stop current music
         stopMusic();
 
         try {
@@ -261,6 +304,7 @@ public class ResourceManager {
 
     /**
      * 停止当前播放的音乐
+     * Stop currently playing music
      */
     public void stopMusic() {
         if (musicClip != null) {
@@ -273,6 +317,7 @@ public class ResourceManager {
 
     /**
      * 暂停当前播放的音乐
+     * Pause currently playing music
      */
     public void pauseMusic() {
         if (musicClip != null && musicClip.isRunning()) {
@@ -282,6 +327,7 @@ public class ResourceManager {
 
     /**
      * 恢复暂停的音乐
+     * Resume paused music
      */
     public void resumeMusic() {
         if (musicClip != null && !musicClip.isRunning()) {
@@ -291,11 +337,13 @@ public class ResourceManager {
 
     /**
      * 播放骨质疏松.mp3（背景音乐）
+     * Play Boneless.mp3 (background music)
      */
     public void playBonelessMusic() { playMusic(MUSIC_BONELESS); }
 
     /**
      * 播放正义之矛.mp3（背景音乐）
+     * Play Justice.mp3 (background music)
      */
     public void playJusticeMusic() { playMusic(MUSIC_JUSTICE); }
 }

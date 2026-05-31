@@ -1,3 +1,17 @@
+/**
+ * Marbles Game - A hex-grid marble shooting puzzle game
+ * Group: 21
+ *
+ * Team Members:
+ *   Chen Chen     - 24008980
+ *   Keyu Ding     - 24009027
+ *   Feng Dang     - 24008988
+ *   Chaoran Liu   - 24008977
+ *
+ * Course: Games Programming (3-2)
+ * Assignment 2
+ */
+
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyEvent;
@@ -12,6 +26,10 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import javax.imageio.ImageIO;
 
+/**
+ * Main - 游戏主类，负责游戏主循环和状态管理
+ * Main - Game main class, responsible for game loop and state management
+ */
 public class Main extends GameEngine implements ScreenStart.ScreenStartListener {
     private Marbles hexGrid;
     private ScreenGame launchPad;
@@ -26,7 +44,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private Random random = new Random();
     private ScreenStart startScreen;
 
-    // 布局尺寸常量
+    // 布局尺寸常量 / Layout dimension constants
     public static final int GAME_ZONE_WIDTH = 483;
     public static final int LEFT_ZONE_WIDTH = 250;
     public static final int TOTAL_WIDTH = LEFT_ZONE_WIDTH + GAME_ZONE_WIDTH;
@@ -46,8 +64,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private boolean levelWon = false;
     private int highScore = 0;
     private CustomGlassPane glassPane;
-    
-    // BossSans 角色状态
+
+    // BossSans角色状态 / BossSans character state
     private BossSans sans;
     private boolean sansActive = false;
     private boolean sansIdle = false;
@@ -55,23 +73,26 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
     private boolean sansAnimating = false;
     private javax.swing.Timer idleRepaintTimer = null;
 
-    // BossSans 技能与计时器
+    // BossSans技能与计时器 / BossSans skills and timer
     private double sansSkillTimer = 30.0;
     private int sansCreeperShots = 0;
-    // 永久苦力怕发射台技能激活状态
+    // 永久creeper发射台技能激活状态 / Permanent creeper launcher skill activated
     private boolean sansCreeperActive = false;
-    private int sansSkill6Count = 0; // Tracking Skill 6 abuse
-    private boolean sansLeaving = false; // Is Sans in the process of leaving?
-    private double level4Timer = 0;      // Tracking 10 mins requirement
-    private boolean waitingForHeartsExit = false; // Level 4: waiting for hearts to exit screen before triggering Sans animation
+    private int sansSkill6Count = 0; // 跟踪技能6滥用 / Track Skill 6 abuse
+    private boolean sansLeaving = false; // Sans是否正在离开？/ Is Sans in the process of leaving?
+    private double level4Timer = 0;      // 跟踪10分钟要求 / Track 10 mins requirement
+    private boolean waitingForHeartsExit = false; // Level 4: 等待hearts离开屏幕后再触发Sans动画 / Level 4: waiting for hearts to exit screen before triggering Sans animation
 
     private javax.swing.Timer dialogTimer = null;
     private boolean utStyleDone = false;
 
-    // Undertale风格变化标记
+    // Undertale风格变化标记 / Undertale style change flags
     public static boolean utBg = false;
     public static boolean utFont = false;
 
+    /**
+     * 主程序入口 / Main program entry point
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Please Must Play Level 4");
@@ -118,6 +139,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         });
     }
 
+    /**
+     * 构造函数 / Constructor
+     */
     public Main(JFrame frame) {
         mFrame = frame;
         mPanel = new GamePanel();
@@ -151,6 +175,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         highScore = loadHighScore();
     }
 
+    /**
+     * 开始游戏回调 / Start game callback
+     */
     @Override
     public void onStartGame() {
         ResourceManager.getInstance().playGameBegin();
@@ -175,13 +202,16 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             glassPane.setVisible(true);
             glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
-        
-        // 如果该关有 BossSans 出场
+
+        // 如果该关有BossSans出场 / If level has BossSans appearance
         if (Level.getInstance().hasBossSans()) {
             startBossSansIntro();
         }
     }
 
+    /**
+     * 初始化游戏 / Initialize game
+     */
     @Override
     public void init() {
         utBg = false;
@@ -196,7 +226,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         utStyleDone = false;
         if (sans != null) sans.resetDialog();
 
-        // 初始化 BossSans 角色并重置状态
+        // 初始化BossSans角色并重置状态 / Initialize BossSans character and reset state
         if (sans == null) {
             sans = new BossSans();
         }
@@ -205,11 +235,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sansAnimating = false;
         sansSkillTimer = 30.0;
         sansCreeperShots = 0;
-        sansCreeperActive = false; // 重置苦力怕技能
+        sansCreeperActive = false; // 重置creeper技能 / Reset creeper skill
         sansSkill6Count = 0;
         sansLeaving = false;
         level4Timer = 0;
-        
+
         if (idleRepaintTimer != null) {
             idleRepaintTimer.stop();
             idleRepaintTimer = null;
@@ -220,14 +250,16 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         downPressed = false;
 
         hexGrid.setScoreListener((marble, points) -> {
-            // 检测heart掉落与消除
+            // 检测heart掉落与消除 / Detect heart drop and elimination
             if (marble != null && marble.getColorType() == Marble.HEART && sans != null && sansActive) {
                 sans.removeOneHeart();
                 // 当heart剩余2颗时，切换成正义之矛.mp3并放出非阻塞对话（并且下落速度切阶段）
+                // When hearts remain 2, switch to Justice.mp3 and show non-blocking dialog (and speed phase change)
                 if (sans.getHeartCount() == 2) {
                     ResourceManager.getInstance().playJusticeMusic();
                     sans.setCombatDialog("Guess I can't keep slackin' off.\nReady for a bad time?");
-                    // 以节拍比例提速至 2.19x 等效的高潮致命坠落速度（减半后）
+                    // 以节拍比例提速至2.19x等效的高潮致命坠落速度（减半后）
+                    // Speed up to 2.19x equivalent climactic fatal fall speed (halved)
                     hexGrid.setCurrentFallSpeed(13.14);
                 }
             }
@@ -238,8 +270,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 level.updateLevelHighScore(levelHighScore);
             }
             if (!levelWon && level.isWinConditionMet(currentScore)) {
+                // Level 4: 仅当Sans被击败（hearts清除）或计时器到期时才能获胜
                 // Level 4: win only achieved when Sans is beaten (hearts cleared) or timer expires
-                // Score target alone doesn't grant victory on level 4
                 if (Level.getInstance().getCurrentLevel() != 4) {
                     levelWon = true;
                 }
@@ -250,6 +282,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         });
     }
 
+    /**
+     * 初始化弹珠网格 / Initialize marble grid
+     */
     private void initMarbleGrid() {
         Level level = Level.getInstance();
         hexGrid = new Marbles();
@@ -257,8 +292,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         hexGrid.setMaxRowCount(18);
         hexGrid.setFallSpeedMultiplier(level.getFallSpeedMultiplier());
         hexGrid.setLevelSpeedParams(level.getBaseFallSpeed(), level.getMaxFallSpeed(), level.getSpeedIncreaseRate());
-        
-        // 如果是 level4，则彻底关闭自然生成 creeper 逻辑，交由 BossSans 的技能来动态触发
+
+        // 如果是level4，则彻底关闭自然生成creeper逻辑，交由BossSans的技能来动态触发
+        // If level 4, completely disable natural creeper logic, let BossSans skills trigger dynamically
         boolean enableCreeper = level.hasCreeper() && level.getCurrentLevel() != 4;
         hexGrid.setSpecialMarbleConfig(enableCreeper, level.hasBedrock(), level.hasHeart());
         hexGrid.initRow(mWidth, mHeight);
@@ -273,22 +309,27 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         launchPad.setNextMarbleColorType(random.nextInt(level.getColorTypeCount()) + 1);
     }
 
+    /**
+     * 更新游戏状态 / Update game state
+     */
     @Override
     public void update(double dt) {
         if (frozen || gamePaused) return;
         if (hexGrid != null) hexGrid.update(dt, deadline);
 
-        // 仅当过场动画结束、游戏正常开启且非暂停状态时，进行 Sans 状态和攻击计时。
+        // 仅当过场动画结束、游戏正常开启且非暂停状态时，进行Sans状态和攻击计时
+        // Only when cutscene ends, game normally started and not paused, proceed with Sans state and attack timer
         if (sansActive && gameStarted && !frozen && !gamePaused) {
 
             // Level 4: 等待heart弹珠完全离开屏幕后触发Sans退场
+            // Level 4: wait for hearts to completely leave screen before triggering Sans exit
             if (waitingForHeartsExit && hexGrid != null && !hexGrid.hasAnyHeartsOnScreen()) {
                 waitingForHeartsExit = false;
                 triggerSansLeave(true, "Guess I was just... too lazy to dodge.\nPapyrus, want some spaghetti?");
                 return;
             }
 
-            // 10 分钟枯燥超时机制检查
+            // 10分钟枯燥超时机制检查 / 10 minutes boring timeout mechanism check
             if (Level.getInstance().getCurrentLevel() == 4) {
                 level4Timer += dt;
                 if (level4Timer >= 600.0 && !sansLeaving) {
@@ -330,15 +371,17 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         collisionWithDeadline();
     }
 
-    // Sans 走过场触发通用逻辑
+    /**
+     * Sans走过场触发通用逻辑 / Sans cutscene trigger common logic
+     */
     private void triggerSansLeave(boolean win, String dialog) {
         if (sansLeaving) return;
         if (win) {
-            levelWon = true; // Mark level as won for level 4 victory tracking
+            levelWon = true; // 标记level4获胜追踪 / Mark level as won for level 4 victory tracking
         }
         sansLeaving = true;
-        frozen = true; // 冻结整个弹珠与碰撞系统
-        
+        frozen = true; // 冻结整个弹珠与碰撞系统 / Freeze entire marble and collision system
+
         sans.setCombatDialog(dialog);
         sansIdle = true;
         sansAnimating = false;
@@ -348,7 +391,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             sansIdle = false;
             sansAnimating = true;
             sans.play("Basic - Left", 150);
-            
+
             javax.swing.Timer leaveTimer = new javax.swing.Timer(16, ev2 -> {
                 sansX -= 3;
                 if (glassPane != null) {
@@ -366,19 +409,23 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         waitTimer.start();
     }
 
-    // Trigger Undertale Sans signature boss battle skills and dialogs
+    /**
+     * 触发Undertale Sans标志性boss战斗技能和对话
+     * Trigger Undertale Sans signature boss battle skills and dialogs
+     */
     private void triggerSansSkill() {
         if (hexGrid == null || sans == null || sansLeaving) return;
         int skillType;
-        
-        // 当出现警戒 Marble 时，Sans 的触发技能恒定锁定为 6 (Creeper 支持)
+
+        // 当出现警戒Marble时，Sans的触发技能恒定锁定为6（Creeper支持）
+        // When warning marbles appear, Sans's triggered skill is always locked to 6 (Creeper support)
         if (hexGrid.hasWarning()) {
             skillType = 6;
         } else {
             skillType = random.nextInt(6) + 1;
         }
 
-        // 非技能 6 时，解除恒定 creeper 发射状态
+        // 非技能6时，解除恒定creeper发射状态 / When not skill 6, release constant creeper launch state
         if (skillType != 6) {
             sansCreeperActive = false;
         }
@@ -433,7 +480,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     triggerSansLeave(false, "This green stuff again?\nGuess you really just wanna blow things up.\nI'm done. Figure it out yourself.");
                     return;
                 }
-            
+
                 sansCreeperActive = true;
                 if (launchMarble != null) {
                     launchMarble.setColorType(Marble.CREEPER);
@@ -461,6 +508,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
     }
 
+    /**
+     * 检查碰撞 / Check collisions
+     */
     private void checkCollisions() {
         if (launchMarble == null || !launchMarble.isLaunched() || hexGrid == null) return;
 
@@ -519,7 +569,8 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             launchMarble.setColorType(nextColor);
             launchMarble.init(launchPad.cannon.x, launchPad.cannon.y, 0, 0);
 
-            // 如果永久苦力怕技能被 Sans 开启，大炮子弹和下一发备用子弹恒设为 CREEPER
+            // 如果永久creeper技能被Sans开启，大炮子弹和下一发备用子弹恒设为CREEPER
+            // If permanent creeper skill is activated by Sans, cannon marble and next backup marble are always set to CREEPER
             if (sansCreeperActive) {
                 launchMarble.setColorType(Marble.CREEPER);
                 launchPad.setNextMarbleColorType(Marble.CREEPER);
@@ -542,8 +593,11 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
     }
 
+    /**
+     * 检查与截止线的碰撞 / Check collision with deadline
+     */
     private void collisionWithDeadline() {
-        if (sansLeaving) return; // 已执行过场时不重复触发
+        if (sansLeaving) return; // 已执行过场时不重复触发 / Don't trigger again after cutscene executed
         if (hexGrid == null) return;
         double radius = hexGrid.getSide() * 0.866;
         for (int r = 0; r < hexGrid.getMarblesLength(); r++) {
@@ -563,6 +617,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
     }
 
+    /**
+     * 绘制游戏画面 / Draw game画面
+     */
     @Override
     public void paintComponent() {
         Graphics2D g2 = (Graphics2D) mGraphics;
@@ -593,6 +650,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         if (launchMarble != null) launchMarble.draw(g2);
     }
 
+    /**
+     * 打开暂停菜单 / Open pause menu
+     */
     public void openPauseMenu() {
         gamePaused = true;
         ResourceManager.getInstance().playBackToMenu();
@@ -602,6 +662,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
     }
 
+    /**
+     * 关闭暂停菜单 / Close pause menu
+     */
     public void closePauseMenu() {
         ResourceManager.getInstance().playBackToMenu();
         ResourceManager.getInstance().resumeMusic();
@@ -613,6 +676,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         mPanel.repaint();
     }
 
+    /**
+     * 打开游戏结束菜单 / Open game over menu
+     */
     private void openScreenGameOverMenu(boolean win) {
         if (!win) {
             ResourceManager.getInstance().playGameFail();
@@ -626,6 +692,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
     }
 
+    /**
+     * 返回菜单 / Return to menu
+     */
     private void returnToMenu() {
         ResourceManager.getInstance().playBackToMenu();
         ResourceManager.getInstance().stopMusic();
@@ -658,6 +727,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         returnToMenu();
     }
 
+    /**
+     * 重新开始 / Restart
+     */
     public void onRestart() {
         ResourceManager.getInstance().playBackToMenu();
         ResourceManager.getInstance().stopMusic();
@@ -681,6 +753,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
     }
 
+    /**
+     * 开始BossSans开场 / Start BossSans intro
+     */
     private void startBossSansIntro() {
         frozen = true;
         gamePaused = true;
@@ -691,17 +766,17 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         if (sans != null) sans.resetDialog();
 
         int targetX = LEFT_ZONE_WIDTH / 2 - 47;
-        int targetY = GAME_HEIGHT - 320; 
-        
-        sansX = -80; 
+        int targetY = GAME_HEIGHT - 320;
+
+        sansX = -80;
         sansY = targetY;
 
         final double finalX = targetX;
         final double finalY = targetY;
-        
+
         sans.play("Basic - Right", 150);
 
-        final long ANIM_DURATION = 2000; 
+        final long ANIM_DURATION = 2000;
         final long startTime = System.currentTimeMillis();
 
         javax.swing.Timer sansTimer = new javax.swing.Timer(16, e -> {
@@ -729,7 +804,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     sans.updateDialog();
                     if (sans.isDialogDone()) {
                         ((javax.swing.Timer)evt.getSource()).stop();
-                        checkIntroDone(); 
+                        checkIntroDone();
                     }
                 });
                 dialogTimer.start();
@@ -749,6 +824,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sansTimer.start();
     }
 
+    /**
+     * 检查开场是否完成 / Check if intro is done
+     */
     private void checkIntroDone() {
         if (sans != null && sans.isDialogDone() && !utStyleDone) {
             utStyleDone = true;
@@ -782,6 +860,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
     }
 
+    /**
+     * 完成开场动画 / Finish intro animation
+     */
     private void finishIntro() {
         sansCreeperShots = 0;
         sansCreeperActive = false;
@@ -791,6 +872,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         sans.setOnAllHeartsRemoved(() -> {
             if (sansLeaving) return;
             // Level 4: 先标记等待状态，等所有heart弹珠完全离开屏幕后再触发Sans退场
+            // Level 4: First mark waiting state, wait for all heart marbles to completely leave screen before triggering Sans exit
             if (Level.getInstance().getCurrentLevel() == 4) {
                 waitingForHeartsExit = true;
             } else {
@@ -805,11 +887,17 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         });
     }
 
+    /**
+     * 进入下一关 / Go to next level
+     */
     public void onNextLevel() {
         Level.getInstance().nextLevel();
         onRestart();
     }
 
+    /**
+     * 选择关卡回调 / Select level callback
+     */
     @Override
     public void onSelectLevel(int level) {
         ResourceManager.getInstance().playGameBegin();
@@ -838,12 +926,15 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             glassPane.setVisible(true);
             glassPane.updateScores(currentScore, highScore, levelHighScore, levelWinScore);
         }
-        
+
         if (Level.getInstance().hasBossSans(level)) {
             startBossSansIntro();
         }
     }
 
+    /**
+     * 打开设置回调 / Open settings callback
+     */
     @Override
     public void onOpenSettings() {
         ResourceManager.getInstance().playBackToMenu();
@@ -883,6 +974,9 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         }
     }
 
+    /**
+     * 执行发射 / Perform launch
+     */
     private void performLaunch(double targetX, double targetY) {
         launchPad.updateCannonAngle(targetX, targetY);
         launchMarble.reset(launchPad.cannon.x, launchPad.cannon.y);
@@ -908,6 +1002,10 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
         Preferences.userNodeForPackage(Main.class).putInt("highScore", score);
     }
 
+    /**
+     * 自定义玻璃面板类 / Custom glass pane class
+     * 用于渲染暂停、游戏结束等覆盖层 / Used for rendering pause, game over and other overlays
+     */
     class CustomGlassPane extends JComponent {
         private Rectangle pauseButtonRect;
         private boolean pauseHover = false, pausePressed = false;
@@ -944,7 +1042,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
 
                     if (sans != null && sans.isDialogActive()) {
                         sans.advanceDialog();
-                        return; 
+                        return;
                     }
 
                     if (overlayMode == 0) {
@@ -1033,7 +1131,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 } else if (lastQuitBtn != null && lastQuitBtn.contains(p)) {
                     closeSettings();
                 }
-            
+
             } else if (overlayMode == 4) {
                 if (lastQuitBtn != null && lastQuitBtn.contains(p)) {
                     hideHelp();
@@ -1186,7 +1284,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     g2d.setColor(Color.WHITE);
                     g2d.setStroke(new BasicStroke(4f));
                     g2d.draw(btnShape);
-                    
+
                     g2d.setFont(new Font("Monospaced", Font.BOLD, 22));
                     String btnText = "PAUSE";
                     FontMetrics fm = g2d.getFontMetrics();
@@ -1217,7 +1315,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                     int ty = btnY + (btnH + fm.getAscent() - fm.getDescent()) / 2;
                     g2d.drawString(btnText, tx, ty);
                 }
-                
+
                 if (sansActive && sans != null) {
                     if (sansAnimating) {
                         sans.draw(g2d, (int) sansX, (int) sansY, 1.2);
@@ -1225,7 +1323,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                         sans.draw(g2d, (int) sansX, (int) sansY, 1.2);
                         sans.drawHearts(g2d);
                     }
-                    
+
                     sans.drawDialog(g2d, (int)sansX, (int)sansY);
                     sans.drawCombatDialog(g2d, (int)sansX, (int)sansY);
                 }
@@ -1266,7 +1364,7 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             g2d.setColor(Color.WHITE);
             g2d.setStroke(new BasicStroke(4f));
             g2d.drawRect(rect.x, rect.y, rect.width, rect.height);
-            
+
             g2d.setFont(new Font("Monospaced", Font.BOLD, 20));
             FontMetrics fm = g2d.getFontMetrics();
             int textX = rect.x + (rect.width - fm.stringWidth(text)) / 2;
@@ -1340,9 +1438,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
                 fm = g2d.getFontMetrics();
                 g2d.drawString(scoreText, cx - fm.stringWidth(scoreText) / 2, cy - 70);
 
-                String targetText = "TARGET: " + levelWinScore;
-                fm = g2d.getFontMetrics();
-                g2d.drawString(targetText, cx - fm.stringWidth(targetText) / 2, cy - 35);
+                boolean isLevel4 = Level.getInstance().getCurrentLevel() == 4;
+                if (!isLevel4) {
+                    String targetText = "TARGET: " + levelWinScore;
+                    fm = g2d.getFontMetrics();
+                    g2d.drawString(targetText, cx - fm.stringWidth(targetText) / 2, cy - 35);
+                }
 
                 int btnWidth = 220;
                 int btnHeight = 55;
@@ -1401,9 +1502,12 @@ public class Main extends GameEngine implements ScreenStart.ScreenStartListener 
             FontMetrics fm = g2d.getFontMetrics();
             g2d.drawString(scoreText, cx - fm.stringWidth(scoreText) / 2, cy - 70);
 
-            String targetText = "Target: " + levelWinScore;
-            fm = g2d.getFontMetrics();
-            g2d.drawString(targetText, cx - fm.stringWidth(targetText) / 2, cy - 35);
+            boolean isLevel4NonUt = Level.getInstance().getCurrentLevel() == 4;
+            if (!isLevel4NonUt) {
+                String targetText = "Target: " + levelWinScore;
+                fm = g2d.getFontMetrics();
+                g2d.drawString(targetText, cx - fm.stringWidth(targetText) / 2, cy - 35);
+            }
 
             int btnWidth = 220;
             int btnHeight = 55;

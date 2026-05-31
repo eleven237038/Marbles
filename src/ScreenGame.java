@@ -1,8 +1,23 @@
+/**
+ * Marbles Game - A hex-grid marble shooting puzzle game
+ * Group: 21
+ *
+ * Team Members:
+ *   Chen Chen     - 24008980
+ *   Keyu Ding     - 24009027
+ *   Feng Dang     - 24008988
+ *   Chaoran Liu   - 24008977
+ *
+ * Course: Games Programming (3-2)
+ * Assignment 2
+ */
+
 import java.awt.*;
 import java.awt.geom.Point2D;
 
 /**
  * ScreenGame - 大炮/发射台渲染 + 计分板
+ * ScreenGame - Cannon/launch pad rendering + scoreboard
  */
 public class ScreenGame {
     private static final double SCALE = 1.25;
@@ -13,6 +28,7 @@ public class ScreenGame {
     private static final double BASE_RATIO_W = 1.0 / 4.8;
     private static final double BASE_RATIO_H = 0.45;
 
+    // 弹珠颜色数组 / Marble color array
     private static final Color[] MARBLE_COLORS = {
         null,
         new Color(220, 30, 30),
@@ -35,15 +51,15 @@ public class ScreenGame {
     private static final Color EYE_PUPIL = new Color(40, 40, 60);
     private static final Color EYE_HIGHLIGHT = new Color(255, 255, 255);
 
-    // 角度边界计算相关常量
+    // 角度边界计算相关常量 / Angle boundary calculation constants
     private static final double ANGLE_CLAMP_EPSILON = -0.001;
     private static final double SQRT3 = Math.sqrt(3);
 
-    // Cached fonts for drawScoreBoard (avoid per-frame allocation)
+    // 计分板字体缓存 / Scoreboard font cache
     private static final Font SCORE_TEXT_FONT = new Font("Comic Sans MS", Font.BOLD, 13);
     private static final Font SCORE_NUM_FONT = new Font("Arial Black", Font.BOLD, 20);
 
-    // Cached rainbow border gradient colors
+    // 彩虹边框渐变颜色 / Rainbow border gradient colors
     private static final float[] RAINBOW_STOPS = {0, 0.25f, 0.5f, 0.75f, 1f};
     private static final Color[] RAINBOW_COLORS = {
         new Color(255, 90, 90), new Color(255, 180, 80),
@@ -62,7 +78,7 @@ public class ScreenGame {
     private double maxRightAngle;
     private boolean angleBoundsCached = false;
 
-    // 计分板数据
+    // 计分板数据 / Scoreboard data
     private int currentScore = 0;
     private int highScore = 0;
     private int levelHighScore = 0;
@@ -73,36 +89,45 @@ public class ScreenGame {
         this.nextMarbleColor = 1;
     }
 
+    /**
+     * 设置炮台位置 / Set cannon position
+     */
     public void setCannonPosition(int w, int h) {
         currentBaseWidth = (int)(w * BASE_RATIO_W);
         currentBaseHeight = (int)(currentBaseWidth * BASE_RATIO_H);
         screenWidth = w;
 
-        // 仅在初始化时设定炮台的原始位置和deadline (topY)。后续绘制时不覆盖此数据。
+        // 仅在初始化时设定炮台的原始位置和deadline / Only set initial position and deadline during initialization
         if (cannon.x == 0 && cannon.y == 0) {
             cannon.x = w / 2.0;
             cannon.y = h - (h / 5.0);
-            topY = cannon.y - currentBaseHeight; // topY就是我们的deadline基准线
+            topY = cannon.y - currentBaseHeight; // topY是deadline基准线 / topY is deadline baseline
         }
     }
 
     public double getTopY() { return topY; }
 
+    /**
+     * 获取炮口位置 / Get muzzle position
+     */
     public Point2D.Double getMuzzlePosition() {
         double muzzleX = cannon.x + Math.cos(headAngle) * BARREL_LEN;
         double muzzleY = cannon.y + Math.sin(headAngle) * BARREL_LEN;
         return new Point2D.Double(muzzleX, muzzleY);
     }
 
+    /**
+     * 更新炮台角度 / Update cannon angle
+     */
     public void updateCannonAngle(double mx, double my) {
         double dx = mx - cannon.x;
         double dy = my - cannon.y;
         headAngle = Math.atan2(dy, dx);
 
-        // 重新计算扇形边界角度
+        // 重新计算扇形边界角度 / Recalculate sector boundary angles
         recalculateAngleBounds();
 
-        // 限制炮台射击角度在动态扇形边界内
+        // 限制炮台射击角度在动态扇形边界内 / Limit cannon firing angle within dynamic sector boundary
         if (headAngle > 0) {
             if (headAngle > Math.PI / 2) {
                 headAngle = maxLeftAngle;
@@ -115,7 +140,9 @@ public class ScreenGame {
         }
     }
 
-    // 重新计算扇形边界角度（当炮台位置变化时调用）
+    /**
+     * 重新计算扇形边界角度（当炮台位置变化时调用）/ Recalculate sector boundary angles (called when cannon position changes)
+     */
     private void recalculateAngleBounds() {
         double leftDy = topY - cannon.y;
         double rightDy = topY - cannon.y;
@@ -150,9 +177,12 @@ public class ScreenGame {
     public int getLevelHighScore() { return levelHighScore; }
     public int getLevelWinScore() { return levelWinScore; }
 
+    /**
+     * 绘制发射台/截止线 / Draw launch pad/deadline line
+     */
     public void drawLaunchPad(Graphics2D g, int w, int h) {
         setCannonPosition(w, h);
-        
+
         if (Main.utBg) {
             g.setColor(Color.WHITE);
             g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 10, new float[]{10, 10}, 0));
@@ -171,27 +201,31 @@ public class ScreenGame {
         g.setStroke(new BasicStroke(1));
     }
 
+    /**
+     * 绘制计分板 / Draw scoreboard
+     */
     public void drawScoreBoard(Graphics2D g, int leftZoneWidth, int totalHeight) {
         if (Main.utFont) {
             int boardX = 25, boardY = 20;
             int boardWidth = 200, boardHeight = 190;
-            
+
             g.setColor(Color.BLACK);
             g.fillRect(boardX, boardY, boardWidth, boardHeight);
             g.setColor(Color.WHITE);
             g.setStroke(new BasicStroke(4f));
             g.drawRect(boardX, boardY, boardWidth, boardHeight);
-            
+
             Font utFontText = new Font("Monospaced", Font.BOLD, 18);
             Font utFontNum = new Font("Monospaced", Font.BOLD, 22);
             FontMetrics fmText = g.getFontMetrics(utFontText);
             FontMetrics fmNum = g.getFontMetrics(utFontNum);
-            
+
             g.setFont(utFontText);
             String levelText = "LV " + Level.getInstance().getCurrentLevel();
             int levelTextX = boardX + (boardWidth - fmText.stringWidth(levelText)) / 2;
             g.drawString(levelText, levelTextX, boardY + 30);
 
+            // Level 4在UT风格下没有目标分数（通过Sans hearts或计时器获胜）
             // Level 4 in UT style has no target score (win via Sans hearts or timer)
             boolean isLevel4NoTarget = Level.getInstance().getCurrentLevel() == 4 && Marble.utStyle;
             if (!isLevel4NoTarget) {
@@ -215,7 +249,7 @@ public class ScreenGame {
                 String bVal = String.valueOf(levelHighScore);
                 g.drawString(bVal, boardX + boardWidth - 20 - fmNum.stringWidth(bVal), boardY + 150);
             } else {
-                // Level 4: show SCORE and BEST only, repositioned and centered
+                // Level 4: 只显示SCORE和BEST，重新定位居中 / Level 4: show SCORE and BEST only, repositioned and centered
                 String sText = "SCORE";
                 int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
                 g.setFont(utFontText);
@@ -248,7 +282,7 @@ public class ScreenGame {
                 g.setColor(new Color(255, 110, 30));
                 g.drawString(bVal, bValX, boardY + 150);
             }
-            
+
             return;
         }
 
@@ -257,15 +291,15 @@ public class ScreenGame {
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // 阴影
+        // 阴影 / Shadow
         g.setColor(new Color(0, 0, 0, 30));
         g.fillRoundRect(boardX + 3, boardY + 3, boardWidth, boardHeight, 22, 22);
 
-        // 背景
+        // 背景 / Background
         g.setColor(new Color(255, 255, 250, 240));
         g.fillRoundRect(boardX, boardY, boardWidth, boardHeight, 22, 22);
 
-        // 彩虹渐变边框
+        // 彩虹渐变边框 / Rainbow gradient border
         LinearGradientPaint border = new LinearGradientPaint(boardX, boardY, boardX + boardWidth, boardY + boardHeight,
                 RAINBOW_STOPS, RAINBOW_COLORS);
         g.setStroke(new BasicStroke(3.0f));
@@ -279,7 +313,7 @@ public class ScreenGame {
         FontMetrics fmText = g.getFontMetrics(SCORE_TEXT_FONT);
         FontMetrics fmNum = g.getFontMetrics(SCORE_NUM_FONT);
 
-        // ============ Level 标题 ============
+        // ============ Level标题 / Level Title ============
         String levelText = "LEVEL " + Level.getInstance().getCurrentLevel();
         int levelTextX = boardX + (boardWidth - fmText.stringWidth(levelText)) / 2;
         g.setFont(SCORE_TEXT_FONT);
@@ -288,10 +322,10 @@ public class ScreenGame {
         g.setColor(new Color(180, 120, 255));
         g.drawString(levelText, levelTextX, boardY + 22);
 
-        // Level 4 in UT style has no target score (win via Sans hearts or timer)
+        // Level 4在UT风格下没有目标分数 / Level 4 in UT style has no target score
         boolean isLevel4NoTarget = Level.getInstance().getCurrentLevel() == 4 && Marble.utStyle;
         if (!isLevel4NoTarget) {
-            // ============ Target 目标分 ============
+            // ============ Target目标分 / Target Score ============
             String tText = "TARGET";
             int tTextX = boardX + 20;
             g.setFont(SCORE_TEXT_FONT);
@@ -308,11 +342,11 @@ public class ScreenGame {
             g.setColor(new Color(0, 200, 100));
             g.drawString(tVal, tValX, boardY + 70);
 
-            // ============ 分割线1 ============
+            // ============ 分割线1 / Divider 1 ============
             g.setColor(new Color(200, 200, 200, 120));
             g.drawLine(boardX + 15, boardY + 80, boardX + boardWidth - 15, boardY + 80);
 
-            // ============ 当前分 SCORE ============
+            // ============ 当前分SCORE / Current Score ============
             String sText = "SCORE";
             int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
             g.setFont(SCORE_TEXT_FONT);
@@ -329,11 +363,11 @@ public class ScreenGame {
             g.setColor(new Color(40, 150, 255));
             g.drawString(sVal, sValX, boardY + 130);
 
-            // ============ 分割线2 ============
+            // ============ 分割线2 / Divider 2 ============
             g.setColor(new Color(200, 200, 200, 120));
             g.drawLine(boardX + 15, boardY + 138, boardX + boardWidth - 15, boardY + 138);
 
-            // ============ 最高分 BEST ============
+            // ============ 最高分BEST / Best Score ============
             String bText = "BEST";
             int bTextX = boardX + 20;
             g.setFont(SCORE_TEXT_FONT);
@@ -350,8 +384,8 @@ public class ScreenGame {
             g.setColor(new Color(255, 110, 30));
             g.drawString(bVal, bValX, boardY + 185);
         } else {
-            // Level 4: show SCORE and BEST only, repositioned and centered
-            // ============ 当前分 SCORE ============
+            // Level 4: 只显示SCORE和BEST，重新定位居中 / Level 4: show SCORE and BEST only, repositioned and centered
+            // ============ 当前分SCORE / Current Score ============
             String sText = "SCORE";
             int sTextX = boardX + (boardWidth - fmText.stringWidth(sText)) / 2;
             g.setFont(SCORE_TEXT_FONT);
@@ -368,11 +402,11 @@ public class ScreenGame {
             g.setColor(new Color(40, 150, 255));
             g.drawString(sVal, sValX, boardY + 85);
 
-            // ============ 分割线 ============
+            // ============ 分割线 / Divider ============
             g.setColor(new Color(200, 200, 200, 120));
             g.drawLine(boardX + 15, boardY + 95, boardX + boardWidth - 15, boardY + 95);
 
-            // ============ 最高分 BEST ============
+            // ============ 最高分BEST / Best Score ============
             String bText = "BEST";
             int bTextX = boardX + (boardWidth - fmText.stringWidth(bText)) / 2;
             g.setFont(SCORE_TEXT_FONT);
@@ -391,44 +425,47 @@ public class ScreenGame {
         }
     }
 
+    /**
+     * 绘制大炮 / Draw cannon
+     */
     public void drawCannon(Graphics2D g, double mx, double my) {
         if (Main.utFont) {
             updateCannonAngle(mx, my);
             int baseX = (int)(cannon.x - currentBaseWidth/2);
             int baseY = (int)(cannon.y - currentBaseHeight/2);
-            
+
             g.setColor(Color.BLACK);
             g.fillOval(baseX, baseY, currentBaseWidth, currentBaseHeight);
             g.setColor(Color.WHITE);
             g.setStroke(new BasicStroke(4f));
             g.drawOval(baseX, baseY, currentBaseWidth, currentBaseHeight);
-            
+
             int barrelStartX = (int)(cannon.x + Math.cos(headAngle) * (12 * SCALE));
             int barrelStartY = (int)(cannon.y + Math.sin(headAngle) * (12 * SCALE));
             int barrelEndX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
             int barrelEndY = (int)(cannon.y + Math.sin(headAngle) * BARREL_LEN);
-            
+
             g.setStroke(new BasicStroke((int)(12 * SCALE), BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
             g.setColor(Color.WHITE);
             g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
             g.setStroke(new BasicStroke((int)(8 * SCALE), BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
             g.setColor(Color.BLACK);
             g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
-            
+
             double dyToLine = cannon.y - topY;
             double sinTheta = Math.sin(headAngle);
             double distanceToLine = dyToLine / (-sinTheta);
             if (distanceToLine < 0) distanceToLine = dyToLine;
             int lineEndX = (int)(cannon.x + Math.cos(headAngle) * distanceToLine);
             int lineEndY = (int)(topY);
-            
+
             g.setColor(Color.WHITE);
             g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, new float[]{10, 10}, 0));
             g.drawLine((int)cannon.x, (int)cannon.y, lineEndX, lineEndY);
-            
+
             g.setStroke(new BasicStroke(2f));
             g.drawOval(lineEndX - 10, lineEndY - 10, 20, 20);
-            
+
             int slotX = (int)(cannon.x + currentBaseWidth * AMMO_OFFSET_X_RATIO);
             int slotY = (int)(cannon.y - currentBaseWidth * 0.15);
             int size = AMMO_SLOT_SIZE;
@@ -437,7 +474,7 @@ public class ScreenGame {
             g.setColor(Color.WHITE);
             g.setStroke(new BasicStroke(2f));
             g.drawRect(slotX - size/2, slotY - size/2, size, size);
-            
+
             if (nextMarbleColor >= 1 && nextMarbleColor <= 4) {
                 int marbleRadius = (int)(size * 0.4);
                 g.setColor(MARBLE_COLORS[nextMarbleColor]);
@@ -480,6 +517,7 @@ public class ScreenGame {
         g.setColor(new Color(255, 255, 220, 100));
         g.fillRoundRect(turretX + (int)(5 * SCALE), turretY + (int)(2 * SCALE), turretWidth - (int)(10 * SCALE), (int)(8 * SCALE), (int)(5 * SCALE), (int)(5 * SCALE));
 
+        // 绘制眼睛 / Draw eyes
         int eyeRadius = (int)(currentBaseWidth * 0.1125);
         int leftEyeX = (int)(cannon.x - currentBaseWidth * 0.2);
         int leftEyeY = (int)(cannon.y - currentBaseWidth * 0.15);
@@ -501,6 +539,7 @@ public class ScreenGame {
         g.fillOval((int)(leftEyeX - 1 * SCALE + pupilOffsetX), (int)(leftEyeY - 4 * SCALE + pupilOffsetY), (int)(3 * SCALE), (int)(3 * SCALE));
         g.fillOval((int)(rightEyeX - 1 * SCALE + pupilOffsetX), (int)(rightEyeY - 4 * SCALE + pupilOffsetY), (int)(3 * SCALE), (int)(3 * SCALE));
 
+        // 绘制耳朵 / Draw ears
         g.setColor(new Color(255, 160, 80));
         int[] earXLeft = {
                 (int)(cannon.x - currentBaseWidth * 0.35),
@@ -525,6 +564,7 @@ public class ScreenGame {
         };
         g.fillPolygon(earXRight, earYRight, 3);
 
+        // 绘制炮管 / Draw barrel
         int barrelStartX = (int)(cannon.x + Math.cos(headAngle) * (12 * SCALE));
         int barrelStartY = (int)(cannon.y + Math.sin(headAngle) * (12 * SCALE));
         int barrelEndX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
@@ -542,6 +582,7 @@ public class ScreenGame {
         g.setColor(new Color(255, 200, 100, 60));
         g.drawLine(barrelStartX, barrelStartY, barrelEndX, barrelEndY);
 
+        // 绘制炮口 / Draw muzzle tip
         int tipX = (int)(cannon.x + Math.cos(headAngle) * BARREL_LEN);
         int tipY = (int)(cannon.y + Math.sin(headAngle) * BARREL_LEN);
         g.setStroke(new BasicStroke(1));
@@ -552,6 +593,7 @@ public class ScreenGame {
         g.setColor(Color.WHITE);
         g.fillOval(tipX - (int)(3 * SCALE), tipY - (int)(3 * SCALE), (int)(6 * SCALE), (int)(6 * SCALE));
 
+        // 绘制弹药槽 / Draw ammo slot
         int slotX = (int)(cannon.x + currentBaseWidth * AMMO_OFFSET_X_RATIO);
         int slotY = (int)(cannon.y - currentBaseWidth * 0.15);
         int size = AMMO_SLOT_SIZE;
@@ -566,6 +608,7 @@ public class ScreenGame {
         g.setStroke(new BasicStroke((float)(1.5 * SCALE)));
         g.drawRoundRect(slotX - size/2, slotY - size/2, size, size, (int)(8 * SCALE), (int)(8 * SCALE));
 
+        // 绘制下一颗弹珠预览 / Draw next marble preview
         int marbleRadius = (int)(size * 0.4);
         Color marbleColor = MARBLE_COLORS[nextMarbleColor];
         if (marbleColor != null) {
@@ -580,6 +623,7 @@ public class ScreenGame {
             g.fillOval(slotX - marbleRadius/2, slotY - marbleRadius/2, marbleRadius/2, marbleRadius/2);
         }
 
+        // 绘制瞄准线 / Draw aim line
         double dyToLine = cannon.y - topY;
         double sinTheta = Math.sin(headAngle);
         double distanceToLine = dyToLine / (-sinTheta);
@@ -608,7 +652,10 @@ public class ScreenGame {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
     }
 
-    // 分数数字动画类
+    /**
+     * 分数数字动画类
+     * Score number animation class
+     */
     public static class ScoreNumber {
         private double x, y;
         private String scoreText;
@@ -688,6 +735,10 @@ public class ScreenGame {
             return value;
         }
 
+        /**
+         * 更新动画状态
+         * Update animation state
+         */
         public boolean update() {
             long currentTime = System.currentTimeMillis();
             if (currentTime < startTime) {
@@ -707,6 +758,10 @@ public class ScreenGame {
             return true;
         }
 
+        /**
+         * 绘制分数
+         * Draw score
+         */
         public void draw(Graphics2D g2d) {
             long currentTime = System.currentTimeMillis();
             if (currentTime < startTime) {
@@ -739,6 +794,7 @@ public class ScreenGame {
                 drawColor = textColor;
             }
 
+            // 绘制阴影 / Draw shadow
             int shadowAlpha = (int)(80 * alpha);
             if (shadowAlpha < 0) shadowAlpha = 0;
             if (shadowAlpha > 255) shadowAlpha = 255;

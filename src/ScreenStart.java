@@ -1,3 +1,17 @@
+/**
+ * Marbles Game - A hex-grid marble shooting puzzle game
+ * Group: 21
+ *
+ * Team Members:
+ *   Chen Chen     - 24008980
+ *   Keyu Ding     - 24009027
+ *   Feng Dang     - 24008988
+ *   Chaoran Liu   - 24008977
+ *
+ * Course: Games Programming (3-2)
+ * Assignment 2
+ */
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.*;
@@ -11,7 +25,14 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
 
+/**
+ * ScreenStart - 游戏开始界面类
+ * ScreenStart - Game start screen class
+ */
 public class ScreenStart extends JPanel {
+    /**
+     * 界面监听器接口 / Screen listener interface
+     */
     public interface ScreenStartListener {
         void onStartGame();
         void onOpenSettings();
@@ -26,7 +47,7 @@ public class ScreenStart extends JPanel {
     private boolean settingPressed = false;
     public static boolean isSoundOnStatic = true;
 
-    // 播放按钮跳动动画变量
+    // 播放按钮跳动动画变量 / Play button bounce animation variables
     private long playBtnAnimStartTime = 0;
     private boolean isPlayBtnAnimating = false;
     private boolean startAnimTriggered = false;
@@ -46,7 +67,7 @@ public class ScreenStart extends JPanel {
     };
 
     static {
-        // 增大了主标题尺寸
+        // 增大了主标题尺寸 / Increased main title size
         TITLE_FONT = new Font("Comic Sans MS", Font.BOLD, 105);
     }
 
@@ -62,7 +83,7 @@ public class ScreenStart extends JPanel {
     private final int SETTING_SIZE = 60;
     private final int BTN_SPACING = 15;
 
-    // Level select grid constants
+    // Level select grid constants / 关卡选择网格常量
     private static final int LEVEL_BTN_SIZE = 55;
     private static final int LEVEL_BTN_SPACING = 10;
     private static final int LEVEL_GRID_COLUMNS = 4;
@@ -74,6 +95,10 @@ public class ScreenStart extends JPanel {
     private boolean showLevelSelectOverlay = false;
     private int[] levelHoverStates = new int[Level.MAX_LEVEL];
 
+    /**
+     * 构造函数 / Constructor
+     * @param listener Screen listener / 屏幕监听器
+     */
     public ScreenStart(ScreenStartListener listener) {
         this.listener = listener;
         setBackground(new Color(188, 195, 255));
@@ -89,6 +114,7 @@ public class ScreenStart extends JPanel {
 
         initDecorMarbles();
 
+        // 动画计时器 / Animation timer
         animationTimer = new javax.swing.Timer(16, e -> {
             boolean active = false;
             if (fallOffset < 0) {
@@ -98,14 +124,14 @@ public class ScreenStart extends JPanel {
                 }
                 active = true;
             }
-            
-            // 下落结束后，首次触发跳动按键
+
+            // 下落结束后，首次触发跳动按键 / After fall ends, trigger bounce animation for the first time
             if (fallOffset == 0 && !startAnimTriggered) {
                 startAnimTriggered = true;
                 triggerPlayBtnAnimation();
                 active = true;
             }
-            
+
             if (isPlayBtnAnimating) {
                 long elapsed = System.currentTimeMillis() - playBtnAnimStartTime;
                 if (elapsed > 450) {
@@ -123,6 +149,7 @@ public class ScreenStart extends JPanel {
 
         startAnimation();
 
+        // 鼠标事件监听器 / Mouse event listener
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -141,7 +168,7 @@ public class ScreenStart extends JPanel {
                     } else if (settingPressed) {
                         openSettings();
                     } else {
-                        // 若不是点击按键，则同样触发跳动出场动效
+                        // 若不是点击按键，则同样触发跳动出场动效 / If not clicking button, also trigger bounce animation
                         triggerPlayBtnAnimation();
                     }
                 }
@@ -185,6 +212,9 @@ public class ScreenStart extends JPanel {
         addMouseMotionListener(mouseAdapter);
     }
 
+    /**
+     * 更新悬停状态 / Update hover state
+     */
     private void updateHoverState(int mx, int my) {
         boolean oldStartHover = startHover;
         boolean oldSettingHover = settingHover;
@@ -207,6 +237,9 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    /**
+     * 更新关卡选择悬停状态 / Update level select overlay hover state
+     */
     private void updateLevelSelectOverlayHover(int mx, int my) {
         if (!showLevelSelectOverlay) return;
 
@@ -233,6 +266,9 @@ public class ScreenStart extends JPanel {
         if (changed) repaint();
     }
 
+    /**
+     * 处理关卡选择点击 / Handle level select overlay click
+     */
     private void handleLevelSelectOverlayClick(int mx, int my) {
         int panelW = getWidth();
         int panelH = getHeight();
@@ -270,6 +306,9 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    /**
+     * 初始化装饰弹珠 / Initialize decorative marbles
+     */
     private void initDecorMarbles() {
         for (int i = 0; i < 8; i++) {
             Marble m = new Marble();
@@ -278,6 +317,9 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    /**
+     * 开始入场动画 / Start entry animation
+     */
     private void startAnimation() {
         fallOffset = -300;
         startAnimTriggered = false;
@@ -287,6 +329,9 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    /**
+     * 重新开始动画 / Restart animation
+     */
     public void restartAnimation() {
         fallOffset = -300;
         startAnimTriggered = false;
@@ -297,12 +342,18 @@ public class ScreenStart extends JPanel {
         repaint();
     }
 
+    /**
+     * 停止动画 / Stop animation
+     */
     public void stopAnimation() {
         if (animationTimer != null) {
             animationTimer.stop();
         }
     }
 
+    /**
+     * 触发播放按钮动画 / Trigger play button animation
+     */
     private void triggerPlayBtnAnimation() {
         playBtnAnimStartTime = System.currentTimeMillis();
         isPlayBtnAnimating = true;
@@ -311,6 +362,9 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    /**
+     * 打开设置 / Open settings
+     */
     private void openSettings() {
         listener.onOpenSettings();
         settingPressed = false;
@@ -355,12 +409,18 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    /**
+     * 启用高质量渲染 / Enable high quality rendering
+     */
     private void enableHighQualityRender(Graphics2D g2d) {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
     }
 
+    /**
+     * 绘制背景 / Draw background
+     */
     private void drawBackground(Graphics2D g2d, int w, int h) {
         LinearGradientPaint bg = new LinearGradientPaint(
                 0, 0, 0, h,
@@ -371,13 +431,16 @@ public class ScreenStart extends JPanel {
         g2d.fillRect(0, 0, w, h);
     }
 
+    /**
+     * 绘制豪华标题 / Draw luxury title
+     */
     private void drawLuxuryTitle(Graphics2D g2d, int w, int h, int offset) {
         g2d.setFont(TITLE_FONT);
         String title = "MARBLE";
         FontMetrics fm = g2d.getFontMetrics();
         int titleWidth = fm.stringWidth(title);
         int baseX = w / 2 - titleWidth / 2;
-        // 标题向下轻微偏移，适配变大后的尺寸
+        // 标题向下轻微偏移，适配变大后的尺寸 / Title slightly offset down to fit larger size
         int baseY = h / 4 + offset + 20;
 
         g2d.setColor(TITLE_SHADOW_COLOR_1);
@@ -401,11 +464,14 @@ public class ScreenStart extends JPanel {
         g2d.drawString(title, baseX, baseY);
     }
 
+    /**
+     * 绘制装饰弹珠 / Draw decorative marbles
+     */
     private void drawCompactMarbles(Graphics2D g2d, int w, int h, int offset) {
         int centerX = w / 2;
         int titleY = h / 4 + offset + 20;
 
-        // 扩宽弹珠与中心标题的距离，适配巨幅标题
+        // 扩宽弹珠与中心标题的距离，适配巨幅标题 / Expand distance between marbles and title to fit larger title
         int[][] positions = {
                 {centerX - 240, titleY - 80},
                 {centerX + 240, titleY - 80},
@@ -425,25 +491,28 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    /**
+     * 绘制开始按钮 / Draw start button
+     */
     private void drawStartButton(Graphics2D g2d) {
         double scaleX = 1.0;
 
-        // 按钮入场动画：从0平滑展开到1，带轻微弹性
+        // 按钮入场动画：从0平滑展开到1，带轻微弹性 / Button entry animation: smooth expand from 0 to 1 with slight bounce
         if (isPlayBtnAnimating) {
             long elapsed = System.currentTimeMillis() - playBtnAnimStartTime;
-            double t = Math.min(elapsed / 800.0, 1.0); // 800ms展开
+            double t = Math.min(elapsed / 800.0, 1.0); // 800ms展开 / 800ms expand
 
-            // 从0到1的平滑过渡 + 微幅弹性
+            // 从0到1的平滑过渡 + 微幅弹性 / Smooth transition from 0 to 1 + slight bounce
             scaleX = 0.0
-                + 1.0 * easeOutBack(t)      // 主展开，带轻微回弹
-                + 0.03 * sineWave(t, 0.4);  // 到达后的微幅振荡
+                + 1.0 * easeOutBack(t)      // 主展开，带轻微回弹 / Main expand with slight bounce
+                + 0.03 * sineWave(t, 0.4);  // 到达后的微幅振荡 / Slight oscillation after arrival
         } else if (!startAnimTriggered) {
             scaleX = 0.0;
         }
 
         if (scaleX == 0.0) return;
 
-        // 根据缩放计算新的大小和中心坐标
+        // 根据缩放计算新的大小和中心坐标 / Calculate new size and center coordinates based on scale
         int currentWidth = (int)(BTN_WIDTH * scaleX);
         int currentX = startX + (BTN_WIDTH - currentWidth) / 2;
 
@@ -464,7 +533,7 @@ public class ScreenStart extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.draw(btn);
 
-        // 修改按钮文字和三角形呈现效果: "▶ PLAY"
+        // 修改按钮文字和三角形呈现效果："▶ PLAY" / Button text and triangle: "▶ PLAY"
         g2d.setFont(new Font("Arial Black", Font.BOLD, 28));
         String text = "PLAY";
         FontMetrics fm = g2d.getFontMetrics();
@@ -477,17 +546,19 @@ public class ScreenStart extends JPanel {
         int drawX = currentX + (currentWidth - totalW) / 2;
         int drawY = startY + BTN_HEIGHT / 2;
 
-        // 绘制三角形 ▶
+        // 绘制三角形 ▶ / Draw triangle ▶
         int[] xP = {drawX, drawX + triSize, drawX};
         int[] yP = {drawY - triSize/2, drawY, drawY + triSize/2};
         g2d.setColor(Color.WHITE);
         g2d.fillPolygon(xP, yP, 3);
 
-        // 绘制文本
+        // 绘制文本 / Draw text
         g2d.drawString(text, drawX + triSize + spacing, drawY + fm.getAscent()/2 - 3);
     }
 
-    // easeOutBack：先回弹再超调
+    /**
+     * easeOutBack：先回弹再超调 / easeOutBack: bounce then overshoot
+     */
     private double easeOutBack(double t) {
         if (t <= 0) return 0;
         if (t >= 1) return 1;
@@ -496,13 +567,18 @@ public class ScreenStart extends JPanel {
         return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
     }
 
-    // 正弦波：用于到达后的微幅振荡
+    /**
+     * 正弦波：用于到达后的微幅振荡 / Sine wave: for slight oscillation after arrival
+     */
     private double sineWave(double t, double damping) {
         if (t <= 0) return 0;
         if (t >= 1) return 0;
         return Math.sin(t * Math.PI * 3) * Math.exp(-t / damping) * 0.5;
     }
 
+    /**
+     * 绘制关卡选择覆盖层 / Draw level select overlay
+     */
     private void drawLevelSelectOverlay(Graphics2D g2d, int w, int h) {
         g2d.setColor(new Color(0, 0, 0, 200));
         g2d.fillRect(0, 0, w, h);
@@ -567,6 +643,7 @@ public class ScreenStart extends JPanel {
             g2d.drawString(levelText, textX, textY);
         }
 
+        // 绘制关闭按钮 / Draw close button
         int closeBtnW = 120;
         int closeBtnH = 45;
         int closeBtnX = (panelW - closeBtnW) / 2;
@@ -591,6 +668,9 @@ public class ScreenStart extends JPanel {
         g2d.drawString(closeText, closeTextX, closeTextY);
     }
 
+    /**
+     * 绘制标准齿轮按钮 / Draw standard gear button
+     */
     private void drawStandardGearButton(Graphics2D g2d, int h) {
         int x = settingX;
         int y = settingY;
@@ -617,6 +697,9 @@ public class ScreenStart extends JPanel {
         }
     }
 
+    /**
+     * 绘制标准齿轮图形 / Draw standard gear shape
+     */
     private void drawStandardGear(Graphics2D g2d, double cx, double cy, double outerR, double innerR, int teeth) {
         GeneralPath gear = new GeneralPath();
         double angleStep = Math.PI / teeth;
@@ -635,6 +718,9 @@ public class ScreenStart extends JPanel {
         g2d.fillOval((int) cx - 6, (int) cy - 6, 12, 12);
     }
 
+    /**
+     * 加载图标 / Load icon
+     */
     public static BufferedImage loadIcon(String iconName) {
         return ICON_CACHE.computeIfAbsent(iconName, name -> {
             try {

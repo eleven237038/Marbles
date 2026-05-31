@@ -1,9 +1,27 @@
+/**
+ * Marbles Game - A hex-grid marble shooting puzzle game
+ * Group: 21
+ *
+ * Team Members:
+ *   Chen Chen     - 24008980
+ *   Keyu Ding     - 24009027
+ *   Feng Dang     - 24008988
+ *   Chaoran Liu   - 24008977
+ *
+ * Course: Games Programming (3-2)
+ * Assignment 2
+ */
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.function.BiConsumer;
 
+/**
+ * Marbles - 六边形网格弹珠管理类
+ * Marbles - Hexagonal grid marble management class
+ */
 public class Marbles {
     private static final double SQRT3 = Math.sqrt(3);
     private static final int MIN_GROUP_SIZE = 3;
@@ -54,8 +72,8 @@ public class Marbles {
 
     private boolean newRowInvincible = false;
     private int newestRow = -1;
-    
-    // BossSans技能状态
+
+    // BossSans技能状态 / BossSans skill state
     private int alternateColorRows = 0;
 
     public Marbles() {
@@ -75,8 +93,11 @@ public class Marbles {
     public int getMaxRowCount() { return maxRowCount; }
     public void setMaxRowCount(int maxRowCount) { this.maxRowCount = maxRowCount; }
     public void setFallSpeedMultiplier(double mult) { this.fallSpeedMultiplier = mult; }
-    
-    // 强制设置下落速度 (被BossSans切阶段调用)
+
+    /**
+     * 强制设置下落速度（被BossSans切阶段调用）
+     * Force set fall speed (called by BossSans phase change)
+     */
     public void setCurrentFallSpeed(double speed) {
         this.currentFallSpeed = speed;
         this.speedManuallySet = true;
@@ -88,6 +109,10 @@ public class Marbles {
         this.lastRoundTotalScore = 0;
     }
 
+    /**
+     * 添加回合总得分显示
+     * Add round total score display
+     */
     public void addRoundTotalScore() {
         if (lastRoundTotalScore > 0) {
             scoreNumbers.add(new ScreenGame.ScoreNumber(lastLaunchX, lastLaunchY - 60, lastRoundTotalScore));
@@ -95,6 +120,10 @@ public class Marbles {
         }
     }
 
+    /**
+     * 更新分数数字动画
+     * Update score number animations
+     */
     public void updateScoreNumbers() {
         scoreNumbers.removeIf(score -> !score.update());
     }
@@ -104,6 +133,10 @@ public class Marbles {
         return Color.WHITE;
     }
 
+    /**
+     * 初始化弹珠网格
+     * Initialize marble grid
+     */
     public void StartMarbles(int screenWidth, int screenHeight, int initialRowCount) {
         this.screenWidth = screenWidth;
         this.ySpacing = side * 1.5;
@@ -111,7 +144,7 @@ public class Marbles {
         int totalRows = maxRowCount + initialRowCount;
         this.rowCount = initialRowCount;
         this.marbles = new Marble[totalRows][];
-        this.accumulatedY = 0; // 确保无残差干扰
+        this.accumulatedY = 0; // 确保无残差干扰 / Ensure no residual interference
 
         for (int generatedRows = 0; generatedRows < initialRowCount; generatedRows++) {
             int actualRow = maxRowCount + generatedRows;
@@ -129,6 +162,10 @@ public class Marbles {
         }
     }
 
+    /**
+     * 统计板上heart数量
+     * Count hearts on board
+     */
     private int countHeartsOnBoard() {
         int count = 0;
         if (marbles == null) return 0;
@@ -145,6 +182,7 @@ public class Marbles {
 
     /**
      * 检查是否还有存活的heart弹珠（包括正在下落的）
+     * Check if there are any surviving hearts (including falling ones)
      */
     public boolean hasAnyHeartsOnScreen() {
         if (marbles == null) return false;
@@ -159,8 +197,13 @@ public class Marbles {
         return false;
     }
 
+    /**
+     * 添加新弹珠行
+     * Add new marble row
+     */
     public void AddMarbleRow(int row, int screenWidth, int initialRowCount) {
-        // [修复BUG核心1]: 新生成的弹珠继承 AccumulatedY 造成的余位偏移，完美消除上下行产生的网格裂缝
+        // 新生成的弹珠继承AccumulatedY造成的余位偏移，完美消除上下行产生的网格裂缝
+        // New marbles inherit AccumulatedY offset, perfectly eliminating grid gaps between rows
         double baseY = -2 * side + accumulatedY;
         double xSpacing = side * SQRT3;
 
@@ -267,8 +310,9 @@ public class Marbles {
         }
 
         newestRow = row;
-        
-        // [修复BUG核心2]: 抛弃原有使用浮点取模造成的计算误差，转用更安全的距比判断，防止频繁生成新行导致阵列完全不对齐。
+
+        // 使用更安全的距比判断，防止频繁生成新行导致阵列完全不对齐
+        // Use safer distance ratio judgment to prevent misalignment from frequent new row generation
         double state1 = side * SQRT3;
         double state2 = side * SQRT3 / 2.0;
         if (Math.abs(this.baseX - state1) < 0.1) {
@@ -281,6 +325,10 @@ public class Marbles {
     public boolean isNewestRow(int row) { return row == newestRow; }
     public void initRow(int screenWidth, int screenHeight) { StartMarbles(screenWidth, screenHeight, 4); }
 
+    /**
+     * 更新弹珠网格状态
+     * Update marble grid state
+     */
     public void update(double dt, double deadline) {
         if (marbles == null) return;
 
@@ -307,13 +355,14 @@ public class Marbles {
         }
 
         accumulatedY += yMove;
-        
-        // [修复BUG核心3]: 先减去 ySpacing，让内部传递出来的残余偏移(residual)保留在 accumulatedY 中
+
+        // 先减去ySpacing，让内部传递出来的残余偏移保留在accumulatedY中
+        // Subtract ySpacing first, keeping residual offset in accumulatedY
         while (accumulatedY >= ySpacing) {
             newRowInvincible = true;
             int newRow = maxRowCount + rowCount;
             this.rowCount++;
-            accumulatedY -= ySpacing; 
+            accumulatedY -= ySpacing;
             AddMarbleRow(newRow, screenWidth, this.rowCount);
         }
 
@@ -339,6 +388,10 @@ public class Marbles {
         return null;
     }
 
+    /**
+     * 获取相邻弹珠
+     * Get neighboring marbles
+     */
     private List<Marble> getNeighbors(int r, int c) {
         List<Marble> neighbors = new ArrayList<>();
         if (marbles == null || r < 0 || r >= marbles.length || marbles[r] == null || c < 0 || c >= marbles[r].length) {
@@ -371,6 +424,10 @@ public class Marbles {
         return neighbors;
     }
 
+    /**
+     * 附加发射的弹珠到网格
+     * Attach launched marble to grid
+     */
     public void attachMarble(Marble launchMarble, int screenWidth) {
         double lx = launchMarble.getCenterX();
         double ly = launchMarble.getCenterY();
@@ -520,6 +577,10 @@ public class Marbles {
         }
     }
 
+    /**
+     * 检查从发射点出发的连通性
+     * Check connectivity from launch point
+     */
     private void checkConnectedFromLaunch(int launchRow, int launchCol, int launchColor) {
         if (marbles == null) return;
 
@@ -573,6 +634,10 @@ public class Marbles {
         }
     }
 
+    /**
+     * 触发碰撞动画
+     * Trigger collision animation
+     */
     private void triggerCollisionAnimation(int launchRow, int launchCol, double collisionX, double collisionY) {
         if (marbles == null) return;
         double threshold = side * SQRT3 * 1.05;
@@ -597,6 +662,10 @@ public class Marbles {
         }
     }
 
+    /**
+     * 检查悬浮弹珠（孤立弹珠检测）
+     * Check floating marbles (orphaned marble detection)
+     */
     private void checkFloatingMarbles() {
         if (marbles == null) return;
 
@@ -660,6 +729,10 @@ public class Marbles {
         }
     }
 
+    /**
+     * 深度优先搜索：检查悬浮弹珠
+     * DFS: Check floating marbles
+     */
     private void dfsFloating(int r, int c, boolean[][] visited) {
         if (r < 0 || r >= marbles.length || marbles[r] == null || c < 0 || c >= marbles[r].length) return;
         if (visited[r][c]) return;
@@ -690,6 +763,10 @@ public class Marbles {
         }
     }
 
+    /**
+     * 深度优先搜索：检查颜色连通性
+     * DFS: Check color connectivity
+     */
     private void dfs(int r, int c, int targetColor, boolean[][] visited, List<Marble> res) {
         if (r < 0 || r >= marbles.length) return;
         if (marbles[r] == null || c < 0 || c >= marbles[r].length) return;
@@ -726,6 +803,10 @@ public class Marbles {
 
     public double getVerticalSpacing() { return ySpacing; }
 
+    /**
+     * 更新警戒状态
+     * Update warning state
+     */
     public void updateWarnState(double deadline, double dt) {
         if (marbles == null) return;
         double warnDist = side * 5.2;
@@ -745,7 +826,11 @@ public class Marbles {
             }
         }
     }
-    
+
+    /**
+     * 检查是否存在警戒状态的弹珠
+     * Check if any marbles are in warning state
+     */
     public boolean hasWarning() {
         if (marbles == null) return false;
         for (Marble[] row : marbles) {
@@ -757,6 +842,10 @@ public class Marbles {
         return false;
     }
 
+    /**
+     * 绘制弹珠网格
+     * Draw marble grid
+     */
     public void draw(Graphics2D g) {
         if (marbles == null) return;
         for (int r = 0; r < marbles.length; r++) {
@@ -774,6 +863,10 @@ public class Marbles {
         }
     }
 
+    /**
+     * 重置行数据
+     * Reset row data
+     */
     public void resetRow() {
         if (marbles != null) {
             for (Marble[] row : marbles) {
@@ -790,6 +883,10 @@ public class Marbles {
         lastRoundTotalScore = 0;
     }
 
+    /**
+     * 重置关卡速度
+     * Reset level speed
+     */
     public void resetLevelSpeed() {
         resetSpeedState();
     }
@@ -800,6 +897,10 @@ public class Marbles {
         this.speedManuallySet = false;
     }
 
+    /**
+     * 设置关卡速度参数
+     * Set level speed parameters
+     */
     public void setLevelSpeedParams(double baseSpeed, double maxSpeed, double increaseRate) {
         this.baseFallSpeed = baseSpeed;
         this.maxFallSpeed = maxSpeed;
@@ -807,12 +908,20 @@ public class Marbles {
         resetSpeedState();
     }
 
+    /**
+     * 设置特殊弹珠配置
+     * Set special marble configuration
+     */
     public void setSpecialMarbleConfig(boolean creeper, boolean bedrock, boolean heart) {
         this.hasCreeper = creeper;
         this.hasBedrock = bedrock;
         this.hasHeart = heart;
     }
 
+    /**
+     * 更新游戏时间（用于速度增加）
+     * Update game time (for speed increase)
+     */
     public void updateGameTime(double dt) {
         if (this.speedManuallySet) return;
         this.gameTimeInLevel += dt;
@@ -829,6 +938,10 @@ public class Marbles {
         return hexUnit * CREEPER_BLAST_RADIUS * hexUnit * CREEPER_BLAST_RADIUS;
     }
 
+    /**
+     * Creeper爆炸效果
+     * Creeper blast effect
+     */
     private void creeperBlast(double centerX, double centerY) {
         if (marbles == null) return;
 
@@ -866,6 +979,10 @@ public class Marbles {
         }
     }
 
+    /**
+     * 清除所有弹珠（核弹效果）
+     * Nuke all marbles (nuke effect)
+     */
     private void nukeBoard() {
         if (marbles == null) return;
         for (int r = 0; r < marbles.length; r++) {
@@ -891,18 +1008,24 @@ public class Marbles {
         ResourceManager.getInstance().playMassiveClear();
     }
 
-    // ================= BossSans 技能实现 =================
+    // ================= BossSans技能实现 / BossSans Skill Implementation =================
 
-    // 技能 1: 新落下的两行变成隔色相邻
+    /**
+     * 技能1：使新落下的两行变成隔色相邻
+     * Skill 1: Make next two rows have alternating adjacent colors
+     */
     public void skillAlternateColors(int rows) {
         this.alternateColorRows = rows;
     }
 
-    // 技能 2: 生成3个bedrock构成的正三角形或倒三角形结构
+    /**
+     * 技能2：生成3个bedrock构成的正三角形或倒三角形结构
+     * Skill 2: Generate 3-bedrock triangle formation
+     */
     public void skillBedrockRadius() {
         if (marbles == null) return;
 
-        // 收集所有可作为三角形顶点的活跃正常弹珠
+        // 收集所有可作为三角形顶点的活跃正常弹珠 / Collect all active normal marbles that can be triangle apexes
         List<Marble> validApexes = new ArrayList<>();
         for (Marble[] row : marbles) {
             if (row == null) continue;
@@ -914,30 +1037,32 @@ public class Marbles {
         }
         if (validApexes.isEmpty()) return;
 
-        // 随机选择一个顶点
+        // 随机选择一个顶点 / Randomly select one apex
         Marble apex = validApexes.get(random.nextInt(validApexes.size()));
         int apexRow = apex.getRow();
         int apexCol = apex.getCol();
-        boolean isUpward = random.nextBoolean(); // true=正三角, false=倒三角
+        boolean isUpward = random.nextBoolean(); // true=正三角, false=倒三角 / true=upward, false=downward
 
         // 正三角形（顶点朝上）：顶点在(row,col)，下方两点在(row+1, col-1)和(row+1, col)
         // 倒三角形（顶点朝下）：顶点在(row,col)，上方两点在(row-1, col-1)和(row-1, col)
+        // Upward triangle: apex at (row,col), bottom two at (row+1, col-1) and (row+1, col)
+        // Downward triangle: apex at (row,col), top two at (row-1, col-1) and (row-1, col)
         int[][] triangleOffsets;
         if (isUpward) {
             triangleOffsets = new int[][] {
-                {0, 0},           // 顶点
-                {1, -1},          // 左下
-                {1, 0}            // 右下
+                {0, 0},           // 顶点 / Apex
+                {1, -1},          // 左下 / Bottom left
+                {1, 0}            // 右下 / Bottom right
             };
         } else {
             triangleOffsets = new int[][] {
-                {0, 0},           // 顶点
-                {-1, -1},         // 左上
-                {-1, 0}           // 右上
+                {0, 0},           // 顶点 / Apex
+                {-1, -1},         // 左上 / Top left
+                {-1, 0}           // 右上 / Top right
             };
         }
 
-        // 检查三个位置是否都有效，收集有效位置
+        // 检查三个位置是否都有效，收集有效位置 / Check if all three positions are valid, collect valid positions
         List<Marble> triangleMarbles = new ArrayList<>();
         for (int[] offset : triangleOffsets) {
             int checkRow = apexRow + offset[0];
@@ -951,7 +1076,7 @@ public class Marbles {
             }
         }
 
-        // 如果三个位置都有效，转换为bedrock
+        // 如果三个位置都有效，转换为bedrock / If all three positions are valid, convert to bedrock
         if (triangleMarbles.size() == 3) {
             for (Marble m : triangleMarbles) {
                 m.setColorType(Marble.BEDROCK);
@@ -959,11 +1084,14 @@ public class Marbles {
         }
     }
 
-    // 技能 3: 在随机选中行生成3个不相邻的Bedrock
+    /**
+     * 技能3：在随机选中行生成3个不相邻的Bedrock
+     * Skill 3: Generate 3 non-adjacent Bedrocks in a random row
+     */
     public void skillBedrockRow() {
         if (marbles == null) return;
 
-        // 找到所有有活跃弹珠的行
+        // 找到所有有活跃弹珠的行 / Find all rows with active marbles
         List<Integer> activeRows = new ArrayList<>();
         for (int r = 0; r < marbles.length; r++) {
             if (marbles[r] == null) continue;
@@ -978,18 +1106,18 @@ public class Marbles {
         }
         if (activeRows.isEmpty()) return;
 
-        // 随机选一行
+        // 随机选一行 / Randomly select one row
         int targetRow = activeRows.get(random.nextInt(activeRows.size()));
 
-        // 统计该行的列数
+        // 统计该行的列数 / Count columns in that row
         int cols = marbles[targetRow].length;
 
-        // 生成3个不相邻的随机位置
+        // 生成3个不相邻的随机位置 / Generate 3 non-adjacent random positions
         List<Integer> bedrockCols = new ArrayList<>();
         int attempts = 0;
         while (bedrockCols.size() < 3 && attempts < 100) {
             int col = random.nextInt(cols);
-            // 检查是否与已有的bedrock相邻（相邻定义：列索引差 >= 2）
+            // 检查是否与已有的bedrock相邻（相邻定义：列索引差 >= 2）/ Check if adjacent to existing bedrock (adjacent defined as: column index difference >= 2)
             boolean adjacent = false;
             for (int existingCol : bedrockCols) {
                 if (Math.abs(col - existingCol) < 2) {
@@ -1003,7 +1131,7 @@ public class Marbles {
             attempts++;
         }
 
-        // 将这些位置设置为Bedrock
+        // 将这些位置设置为Bedrock / Set these positions to Bedrock
         for (int col : bedrockCols) {
             if (marbles[targetRow][col] != null && isMarbleActive(marbles[targetRow][col])) {
                 marbles[targetRow][col].setColorType(Marble.BEDROCK);
@@ -1011,12 +1139,15 @@ public class Marbles {
         }
     }
 
-    // 技能 5: 瞬间向下传送 1 行（物理坐标与存储槽索引同时同步向下位移，并补充空槽确保无缝连接）
+    /**
+     * 技能5：瞬间向下传送N行（物理坐标与存储槽索引同时同步向下位移，并补充空槽确保无缝连接）
+     * Skill 5: Instantly teleport down N rows (physical coordinates and storage slot indices sync down, add new slots for seamless connection)
+     */
     public void skillTeleportDown(int rows) {
         if (marbles == null) return;
-        
+
         for (int i = 0; i < rows; i++) {
-            // 所有弹珠物理向下移动一层
+            // 所有弹珠物理向下移动一层 / All marbles physically move down one layer
             for (int r = 0; r < marbles.length; r++) {
                 if (marbles[r] != null) {
                     for (Marble m : marbles[r]) {
@@ -1026,11 +1157,9 @@ public class Marbles {
                     }
                 }
             }
-            // 在顶部立刻生成新的一行填补空隙
+            // 在顶部立刻生成新的一行填补空隙 / Immediately generate new row at top to fill gap
             int newRow = maxRowCount + rowCount;
             this.rowCount++;
-            // 经过上面底层的修复，AddMarbleRow 现在会自动将残留误差累加进生成的行中
-            // 不再发生瞬移裂缝。
             AddMarbleRow(newRow, screenWidth, this.rowCount);
         }
     }

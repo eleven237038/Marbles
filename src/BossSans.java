@@ -1,3 +1,17 @@
+/**
+ * Marbles Game - A hex-grid marble shooting puzzle game
+ * Group: 21
+ *
+ * Team Members:
+ *   Chen Chen     - 24008980
+ *   Keyu Ding     - 24009027
+ *   Feng Dang     - 24008988
+ *   Chaoran Liu   - 24008977
+ *
+ * Course: Games Programming (3-2)
+ * Assignment 2
+ */
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -10,14 +24,16 @@ import javax.imageio.ImageIO;
 
 /**
  * BossSans - 角色渲染与精灵图(Sprite Sheet)动画控制类
+ * BossSans - Character rendering and sprite animation control class
  * 支持读取单个聚合精灵图，并按名称调用对应动画
+ * Supports reading a single composite sprite sheet and calling corresponding animations by name
  */
 public class BossSans {
-    // 统一指向新的精灵图路径
+    // 统一指向新的精灵图路径 / Unified sprite sheet path
     private static final String SPRITE_PATH = ResourceManager.getImagePath("Sans.png");
 
-    // ========== 开头对话系统 (更新为UT风格) ==========
-    // 对话内容
+    // ========== 开场对话系统 (UT风格) / Opening Dialog System (UT Style) ==========
+    // 对话内容 / Dialog content
     private static final String[] DIALOG_TEXT = {
         "Hey, you're pretty busy, huh?",
         "Is this lousy game still going?",
@@ -29,31 +45,34 @@ public class BossSans {
         "Ready for a bad time?"
     };
 
-    private static final int DIALOG_DURATION = 3500;  // 每句时长提升以利于阅读
+    private static final int DIALOG_DURATION = 3500;  // Each dialog duration for reading / 每句时长提升以利于阅读
 
-    // 对话状态
+    // 对话状态 / Dialog state
     private int dialogIndex = -1;
     private long dialogShowTime = 0;
     private boolean dialogDone = false;
-    
-    // 战斗期间动态短对话系统（非阻塞）
+
+    // 战斗期间动态短对话系统（非阻塞）/ Combat phase non-blocking dialog system
     private String combatDialogText = null;
     private long combatDialogShowTime = 0;
 
-    // 回调接口
+    // 回调接口 / Callback interface
     private Runnable onDialogDone;
-    
-    // 使用数组存储精灵图（当前仅需一个）
+
+    // 使用数组存储精灵图 / Array for sprite sheets
     private static BufferedImage[] spriteSheets = new BufferedImage[1];
     private static final Object LOAD_LOCK = new Object();
 
-    // 内部类：用于存储单个动作的切片数据
+    /**
+     * 内部类：用于存储单个动作的切片数据
+     * Inner class: stores slice data for a single action
+     */
     private static class AnimData {
-        int sheetIndex;     // 所属精灵图的索引
-        int startX, startY; // 该动作在精灵图中的起始坐标
-        int frameW, frameH; // 单帧的宽度和高度
-        int frameCount;     // 该动作包含的总帧数
-        int[] frameXOffsets; // 每帧在水平方向的偏移量
+        int sheetIndex;     // 所属精灵图的索引 / Sprite sheet index
+        int startX, startY; // 该动作在精灵图中的起始坐标 / Starting coordinates in sprite sheet
+        int frameW, frameH; // 单帧的宽度和高度 / Single frame width and height
+        int frameCount;     // 该动作包含的总帧数 / Total frame count for this action
+        int[] frameXOffsets; // 每帧在水平方向的偏移量 / Horizontal offset for each frame
 
         public AnimData(int sheetIndex, int x, int y, int w, int h, int count) {
             this(sheetIndex, x, y, w, h, count, null);
@@ -70,32 +89,34 @@ public class BossSans {
         }
     }
 
-    // 动作字典：存储所有已录入的动作
+    // 动作字典：存储所有已录入的动作 / Action dictionary: stores all registered actions
     private Map<String, AnimData> actions = new HashMap<>();
-    
-    // 当前正在播放的动作状态
+
+    // 当前正在播放的动作状态 / Current playing action state
     private String currentAction = null;
     private int currentFrame = 0;
 
     private javax.swing.Timer animTimer;
     private boolean isAnimating = false;
 
-    // Hearts 数据
+    // Hearts数据 / Hearts data
     private static BufferedImage heartSprite = null;
     private Heart[] hearts = new Heart[6];
     private boolean heartsActive = false;
-    private int heartCount = 6;  // 当前剩余heart数量
-    private int visibleHeartCount = 0;  // 当前可见heart数量（生成动画用）
+    private int heartCount = 6;  // 当前剩余heart数量 / Current remaining heart count
+    private int visibleHeartCount = 0;  // 当前可见heart数量（生成动画用）/ Visible heart count (for generation animation)
     private boolean heartsGenerating = false;
     private javax.swing.Timer heartGenTimer;
     private Runnable onAllHeartsVisible;
     private static final double HEART_SIZE = 30;
     private static final double HEART_SPACING = 30;
 
-    // 回调接口：当所有heart消失时的处理
+    // 回调接口：当所有heart消失时的处理 / Callback: when all hearts are removed
     private Runnable onAllHeartsRemoved;
 
-    // 内部类：独立的心形对象
+    /**
+     * 内部类：独立的心形对象 / Inner class: independent heart object
+     */
     private static class Heart {
         private double cx, cy;
         private boolean initialized;
@@ -140,6 +161,9 @@ public class BossSans {
         heartsActive = false;
     }
 
+    /**
+     * 移除一颗heart / Remove one heart
+     */
     public void removeOneHeart() {
         if (heartCount <= 0) return;
 
@@ -160,15 +184,21 @@ public class BossSans {
         return heartCount;
     }
 
+    /**
+     * 加载heart精灵图 / Load heart sprite
+     */
     private void loadHeartSprite() {
         try {
             String imagePath = ResourceManager.getImagePath("heart.png");
             heartSprite = ImageIO.read(new File(imagePath));
         } catch (IOException e) {
-            System.err.println("加载 heart 精灵图失败: " + e.getMessage());
+            System.err.println("加载heart精灵图失败: " + e.getMessage());
         }
     }
 
+    /**
+     * 初始化hearts位置 / Initialize hearts positions
+     */
     public void initHearts(double sansX, double sansY) {
         double startX = sansX - 16.2;
         double hy = sansY + 148 + 10 + 15;
@@ -183,6 +213,9 @@ public class BossSans {
         heartsGenerating = false;
     }
 
+    /**
+     * 开始heart生成动画 / Start heart generation animation
+     */
     public void startHeartGeneration(Runnable onComplete) {
         this.onAllHeartsVisible = onComplete;
         this.heartsGenerating = true;
@@ -202,6 +235,9 @@ public class BossSans {
         heartGenTimer.start();
     }
 
+    /**
+     * 绘制hearts / Draw hearts
+     */
     public void drawHearts(Graphics2D g) {
         if (!heartsActive) return;
         int count = heartsGenerating ? visibleHeartCount : heartCount;
@@ -212,6 +248,9 @@ public class BossSans {
         }
     }
 
+    /**
+     * 加载精灵图 / Load sprite sheets
+     */
     private void loadSpriteSheets() {
         synchronized (LOAD_LOCK) {
             try {
@@ -219,30 +258,39 @@ public class BossSans {
                     spriteSheets[0] = ImageIO.read(new File(SPRITE_PATH));
                 }
             } catch (IOException e) {
-                System.err.println("无法加载 Sans 精灵图: " + SPRITE_PATH);
+                System.err.println("无法加载Sans精灵图: " + SPRITE_PATH);
             }
         }
     }
 
+    /**
+     * 初始化动作数据 / Initialize action data
+     */
     private void initActions() {
         addAction(0, "Basic - Down", 29, 39, 98, 123, 2, new int[]{0, 192});
         addAction(0, "Basic - Right", 29, 165, 71, 123, 4, new int[]{0, 73, 146, 219});
         addAction(0, "Basic - Left", 33, 294, 71, 123, 4, new int[]{0, 73, 146, 219});
     }
 
+    /**
+     * 添加动作动画 / Add action animation
+     */
     public void addAction(int sheetIndex, String name, int x, int y, int w, int h, int frames, int[] frameXOffsets) {
         actions.put(name, new AnimData(sheetIndex, x, y, w, h, frames, frameXOffsets));
     }
 
+    /**
+     * 播放指定动作 / Play specified action
+     */
     public void play(String actionName, int delayMs) {
         if (!actions.containsKey(actionName)) return;
 
         currentAction = actionName;
         currentFrame = 0;
-        
+
         stopAnimation();
         isAnimating = true;
-        
+
         animTimer = new javax.swing.Timer(delayMs, e -> {
             AnimData data = actions.get(currentAction);
             if (data != null && data.frameCount > 0) {
@@ -252,6 +300,9 @@ public class BossSans {
         animTimer.start();
     }
 
+    /**
+     * 停止动画 / Stop animation
+     */
     public void stopAnimation() {
         if (animTimer != null) {
             animTimer.stop();
@@ -260,6 +311,9 @@ public class BossSans {
         isAnimating = false;
     }
 
+    /**
+     * 绘制Sans角色 / Draw Sans character
+     */
     public void draw(Graphics2D g2d, int x, int y, double scale) {
         if (currentAction == null) return;
         AnimData data = actions.get(currentAction);
@@ -286,13 +340,28 @@ public class BossSans {
         return data.startX + (frameIndex * data.frameW);
     }
 
+    /**
+     * 释放资源 / Dispose resources
+     */
     public void dispose() {
         stopAnimation();
     }
 
-    // ========== UT风格 绘制对话框气泡 ==========
+    // ========== UT风格绘制对话框气泡 / UT Style Dialog Bubble Drawing ==========
+
+    /**
+     * 绘制UT风格对话框气泡
+     * Draw UT style dialog bubble
+     * @param g Graphics context / 图形上下文
+     * @param text Dialog text / 对话文本
+     * @param bx Bubble x position / 气泡x位置
+     * @param by Bubble y position / 气泡y位置
+     * @param maxWidth Maximum bubble width / 最大气泡宽度
+     * @param tailLeft Tail on left side / 尾巴在左侧
+     * @param tailDown Tail on bottom / 尾巴在底部
+     */
     public void drawUTBubble(Graphics2D g, String text, int bx, int by, int maxWidth, boolean tailLeft, boolean tailDown) {
-        // 自动换行处理
+        // 自动换行处理 / Auto word wrap
         Font font = new Font("Monospaced", Font.BOLD, 18);
         g.setFont(font);
         FontMetrics fm = g.getFontMetrics();
@@ -330,18 +399,18 @@ public class BossSans {
         int bw = maxW + 40;
         int bh = lines.length * 25 + 30;
 
-        // 气泡底色
+        // 气泡底色 / Bubble background
         g.setColor(Color.WHITE);
         g.fillRoundRect(bx, by, bw, bh, 15, 15);
 
-        // 气泡边框
+        // 气泡边框 / Bubble border
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(4));
         g.drawRoundRect(bx, by, bw, bh, 15, 15);
 
-        // 尾巴
+        // 尾巴绘制 / Tail drawing
         if (tailDown) {
-            // 尾巴朝下，位于气泡底部中间
+            // Tail pointing down, at bottom center of bubble / 尾巴朝下，位于气泡底部中间
             int tailX = bx + bw / 2;
             int tailY = by + bh;
             int[] px = {tailX - 10, tailX + 10, tailX};
@@ -362,7 +431,7 @@ public class BossSans {
             g.drawLine(bx - 25, by + bh / 2 + 10, bx, by + bh / 2 - 10);
             g.drawLine(bx - 25, by + bh / 2 + 10, bx, by + bh / 2 + 5);
             g.setColor(Color.WHITE);
-            g.drawLine(bx, by + bh/2 - 8, bx, by + bh/2 + 3); // 遮盖气泡本身的黑边
+            g.drawLine(bx, by + bh/2 - 8, bx, by + bh/2 + 3); // 遮盖气泡本身的黑边 / Cover bubble's own black border
         } else {
             int[] px = {bx + bw, bx + bw + 25, bx + bw};
             int[] py = {by + bh / 2 - 10, by + bh / 2 + 10, by + bh / 2 + 5};
@@ -381,14 +450,20 @@ public class BossSans {
         }
     }
 
-    // ========== 开头对话系统方法 ==========
+    // ========== 开场对话系统方法 / Opening Dialog System Methods ==========
 
+    /**
+     * 开始对话 / Start dialog
+     */
     public void startDialog() {
         dialogIndex = 0;
         dialogShowTime = System.currentTimeMillis();
         dialogDone = false;
     }
 
+    /**
+     * 前进到下一句对话 / Advance to next dialog
+     */
     public void advanceDialog() {
         if (dialogIndex >= 0 && dialogIndex < DIALOG_TEXT.length) {
             dialogIndex++;
@@ -403,6 +478,9 @@ public class BossSans {
         }
     }
 
+    /**
+     * 更新对话状态 / Update dialog state
+     */
     public boolean updateDialog() {
         if (dialogIndex >= 0 && dialogIndex < DIALOG_TEXT.length) {
             if (System.currentTimeMillis() - dialogShowTime >= DIALOG_DURATION) {
@@ -421,6 +499,9 @@ public class BossSans {
         return dialogIndex >= 0 && dialogIndex < DIALOG_TEXT.length;
     }
 
+    /**
+     * 重置对话 / Reset dialog
+     */
     public void resetDialog() {
         dialogIndex = -1;
         dialogDone = false;
@@ -428,11 +509,14 @@ public class BossSans {
         combatDialogText = null;
     }
 
+    /**
+     * 绘制开场对话 / Draw opening dialog
+     */
     public void drawDialog(Graphics2D g, int anchorX, int anchorY) {
         if (!isDialogActive()) return;
 
         String text = DIALOG_TEXT[dialogIndex];
-        
+
         FontMetrics fm = g.getFontMetrics(new Font("Monospaced", Font.BOLD, 18));
         StringBuilder wrapped = new StringBuilder();
         int currentLineW = 0;
@@ -446,20 +530,26 @@ public class BossSans {
             wrapped.append(c);
             currentLineW += cw;
         }
-        
-        // 渲染对话气泡，尾巴朝左指向Sans
+
+        // 渲染对话气泡，尾巴朝左指向Sans / Render dialog bubble with tail pointing to Sans on left
         int bx = anchorX + 100;
         int by = anchorY - 80;
         drawUTBubble(g, wrapped.toString(), bx, by, 220, true, false);
     }
 
-    // ========== 战斗阶段非阻塞对话方法 ==========
-    
+    // ========== 战斗阶段非阻塞对话方法 / Combat Phase Non-blocking Dialog Methods ==========
+
+    /**
+     * 设置战斗对话文本 / Set combat dialog text
+     */
     public void setCombatDialog(String text) {
         this.combatDialogText = text;
         this.combatDialogShowTime = System.currentTimeMillis();
     }
 
+    /**
+     * 绘制战斗对话 / Draw combat dialog
+     */
     public void drawCombatDialog(Graphics2D g, int anchorX, int anchorY) {
         if (combatDialogText == null) return;
         long elapsed = System.currentTimeMillis() - combatDialogShowTime;
@@ -468,14 +558,14 @@ public class BossSans {
             return;
         }
 
-        // 设定边界限制：最左不能超过窗口(10)，最右不能超过游戏界面左侧边缘(250之前)
+        // Boundary limits: leftmost cannot exceed window (10), rightmost cannot exceed game interface left edge (250) / 边界限制
         int minX = 10;
         int maxX = 240;
-        int maxContentWidth = maxX - minX - 40; // 减去内边距
+        int maxContentWidth = maxX - minX - 40; // 减去内边距 / Subtract padding
 
         FontMetrics fm = g.getFontMetrics(new Font("Monospaced", Font.BOLD, 18));
-        
-        // 预先排版，以获取包裹内容的实际尺寸宽度计算
+
+        // 预先排版 / Pre-layout
         List<String> wrappedLines = new ArrayList<>();
         for (String line : combatDialogText.split("\n")) {
             if (fm.stringWidth(line) <= maxContentWidth) {
@@ -506,15 +596,15 @@ public class BossSans {
         int bw = maxW + 40;
         int bh = wrappedLines.size() * 25 + 30;
 
-        // 渲染战斗期间气泡，位于Sans正上方（居中，尾巴朝下）
+        // 渲染战斗期间气泡，位于Sans正上方（居中，尾巴朝下）/ Render combat bubble above Sans (centered, tail down)
         int bx = anchorX - bw / 2;
         int by = anchorY - bh - 20;
 
-        // 应用硬性边界限制
+        // 应用硬性边界限制 / Apply hard boundary limits
         if (bx < minX) bx = minX;
         if (bx + bw > maxX) bx = maxX - bw;
 
-        // 调用基础UT气泡方法：因为传入文本后也会经历同样的排版算法，所以大小会完美拟合
+        // 调用基础UT气泡方法 / Call base UT bubble method
         drawUTBubble(g, combatDialogText, bx, by, maxContentWidth, false, true);
     }
 }

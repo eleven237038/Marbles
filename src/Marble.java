@@ -1,3 +1,17 @@
+/**
+ * Marbles Game - A hex-grid marble shooting puzzle game
+ * Group: 21
+ *
+ * Team Members:
+ *   Chen Chen     - 24008980
+ *   Keyu Ding     - 24009027
+ *   Feng Dang     - 24008988
+ *   Chaoran Liu   - 24008977
+ *
+ * Course: Games Programming (3-2)
+ * Assignment 2
+ */
+
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -6,11 +20,12 @@ import java.io.IOException;
 import java.util.Random;
 import javax.imageio.ImageIO;
 
+/**
+ * Marble - 弹珠类，管理弹珠状态、渲染和动画
+ * Marble - Marble entity class managing state, rendering and animation
+ */
 public class Marble {
-    private double cx, cy;
-    private double side;
-    private boolean initialized;
-    private boolean verticesDirty;
+    // 弹珠颜色类型常量 / Marble color type constants
     public static final int RED = 1;
     public static final int BLUE = 2;
     public static final int YELLOW = 3;
@@ -19,52 +34,53 @@ public class Marble {
     public static final int BEDROCK = 6;
     public static final int HEART = 7;
 
-    // 静态sprite图像（延迟加载）
+    // 静态sprite图像（延迟加载）/ Static sprite images (lazy loaded)
     private static BufferedImage creeperSprite = null;
     private static BufferedImage bedrockSprite = null;
     private static BufferedImage heartSprite = null;
 
-    // 普通弹珠sprite图像（UT风格）
+    // 普通弹珠sprite图像（UT风格）/ Normal marble sprite images (UT style)
     private static BufferedImage redSprite = null;
     private static BufferedImage blueSprite = null;
     private static BufferedImage yellowSprite = null;
     private static BufferedImage purpleSprite = null;
 
     // UT风格标记：启用时使用sprite图像渲染普通弹珠
+    // UT style flag: use sprite images for normal marbles when enabled
     public static boolean utStyle = false;
 
-    // 动画状态相关
+    // 动画状态相关 / Animation state related
     private boolean popping = false;
-    private boolean falling = false; // 掉落状态
+    private boolean falling = false; // 掉落状态 / Falling state
     private boolean dead = false;
     private double popDelay = 0;
     private double popProgress = 0;
 
-    // 掉落物理参数
+    // 掉落物理参数 / Falling physics parameters
     private double fallVy = 0;
-    private double fallAy = 1500; // 重力加速度
-    private static final double FALL_DEATH_Y = 1500;  // 掉落死亡阈值
+    private double fallAy = 1500; // 重力加速度 / Gravity acceleration
+    private static final double FALL_DEATH_Y = 1500;  // 掉落死亡阈值 / Fall death threshold
 
-    // 单独动画状态
+    // 单独动画状态 / Alone animation state
     private boolean alone = false;
-    private double aloneSlideVx = 0; 
-    private double aloneSlideVy = 0; 
+    private double aloneSlideVx = 0;
+    private double aloneSlideVy = 0;
     private double aloneDelay = 0;
 
-    // 碰撞动画状态
+    // 碰撞动画状态 / Collision animation state
     private boolean colliding = false;
     private double collisionDelay = 0;
     private double collisionDirX = 0;
     private double collisionDirY = 0;
-    private double collisionOffsetX = 0; 
+    private double collisionOffsetX = 0;
     private double collisionOffsetY = 0;
-    private double collisionVelX = 0; 
+    private double collisionVelX = 0;
     private double collisionVelY = 0;
-    private double collisionPhase = 0; 
+    private double collisionPhase = 0;
     private double collisionOriginalCx = 0;
     private double collisionOriginalCy = 0;
 
-    // 主体色系
+    // 主体色系 / Main color palette
     private static final Color[] BASE_COLOR = {
             null,
             new Color(220, 30, 30),
@@ -72,7 +88,7 @@ public class Marble {
             new Color(240, 200, 20),
             new Color(160, 30, 200)
     };
-    // 亮部高光底色
+    // 亮部高光底色 / Bright highlight base color
     private static final Color[] BRIGHT_COLOR = {
             null,
             new Color(255, 130, 130),
@@ -80,7 +96,7 @@ public class Marble {
             new Color(255, 250, 180),
             new Color(220, 130, 255)
     };
-    // 暗部加深色
+    // 暗部加深色 / Dark shade color
     private static final Color[] DARK_COLOR = {
             null,
             new Color(120, 10, 10),
@@ -91,7 +107,7 @@ public class Marble {
 
     private static final Random random = new Random();
 
-    // Cached rendering constants 
+    // 缓存的渲染常量 / Cached rendering constants
     private static final float[] GRADIENT_STOPS = {0f, 0.6f, 1f};
     private static final Color SHADOW_COLOR = new Color(0, 0, 0, 40);
     private static final Color BORDER_COLOR = new Color(0, 0, 0, 70);
@@ -100,22 +116,30 @@ public class Marble {
     private static final Color INNER_BORDER_COLOR = new Color(255, 255, 255, 50);
 
     public Point2D.Double cachedCenter = new Point2D.Double();
+    private double cx, cy;
+    private double side;
+    private boolean initialized;
+    private boolean verticesDirty;
     private int colorType;
     private int row;
     private int col;
     private boolean markedForRemove = false;
     private boolean scored = false;
 
-    // 警戒状态
+    // 警戒状态 / Warning state
     private boolean warn = false;
     private double warnProgress = 0;
-    private double warnIntensity = 0; 
+    private double warnIntensity = 0;
 
-    // 静态初始化：加载特殊弹珠sprite
+    // 静态初始化：加载特殊弹珠sprite / Static initialization: load special marble sprites
     static {
         loadSpecialSprites();
     }
 
+    /**
+     * 加载特殊弹珠sprite图像
+     * Load special marble sprite images
+     */
     private static void loadSpecialSprites() {
         try {
             String basePath = ResourceManager.getImagePath("Marbles/");
@@ -126,7 +150,7 @@ public class Marble {
             blueSprite = ImageIO.read(new File(basePath + "blue.png"));
             yellowSprite = ImageIO.read(new File(basePath + "yellow.png"));
             purpleSprite = ImageIO.read(new File(basePath + "purple.png"));
-            System.out.println("成功加载特殊弹珠sprite!");
+            System.out.println("成功加载特殊弹珠sprite!/Special marble sprites loaded successfully!");
         } catch (IOException e) {
             System.err.println("加载特殊弹珠sprite失败: " + e.getMessage());
         }
@@ -151,20 +175,36 @@ public class Marble {
         this.initialized = true;
     }
 
+    /**
+     * 检查弹珠是否对creeper爆炸免疫
+     * Check if marble is immune to creeper explosion
+     */
     public boolean isImmuneToCreeper() {
         return colorType == BEDROCK || colorType == HEART;
     }
 
+    /**
+     * 检查弹珠是否为普通弹珠
+     * Check if marble is a normal marble
+     */
     public boolean isNormalMarble() {
         return colorType >= RED && colorType <= PURPLE;
     }
 
+    /**
+     * 开始消除动画
+     * Start pop animation
+     */
     public void startPop(double delay) {
         this.popping = true;
         this.popDelay = delay;
         this.popProgress = 0;
     }
 
+    /**
+     * 开始掉落动画
+     * Start falling animation
+     */
     public void startFalling(double delay) {
         this.falling = true;
         this.popping = false;
@@ -173,6 +213,10 @@ public class Marble {
         this.fallVy = -150 - (random.nextDouble() * 80);
     }
 
+    /**
+     * 开始单独滑行动画
+     * Start alone sliding animation
+     */
     public void startAlone(int triggerEdge, double delay) {
         this.alone = true;
         this.falling = false;
@@ -181,9 +225,13 @@ public class Marble {
         double angle = triggerEdge * Math.PI / 3.0;
         double slideSpeed = 120 + random.nextDouble() * 60;
         this.aloneSlideVx = Math.cos(angle) * slideSpeed;
-        this.aloneSlideVy = -Math.abs(Math.sin(angle) * slideSpeed); 
+        this.aloneSlideVy = -Math.abs(Math.sin(angle) * slideSpeed);
     }
 
+    /**
+     * 开始碰撞动画
+     * Start collision animation
+     */
     public void startCollision(double targetX, double targetY, double delay) {
         this.colliding = true;
         this.collisionDelay = delay;
@@ -212,6 +260,10 @@ public class Marble {
     public boolean isFalling() { return falling; }
     public boolean isDead() { return dead; }
 
+    /**
+     * 更新弹珠动画状态
+     * Update marble animation state
+     */
     public void update(double dt) {
         if (colliding) {
             if (collisionPhase == 0) {
@@ -225,7 +277,7 @@ public class Marble {
             } else if (collisionPhase == 1) {
                 collisionOffsetX += collisionVelX * dt;
                 collisionOffsetY += collisionVelY * dt;
-                collisionVelX *= (1 - dt * 8); 
+                collisionVelX *= (1 - dt * 8);
                 collisionVelY *= (1 - dt * 8);
                 double speed = Math.sqrt(collisionVelX * collisionVelX + collisionVelY * collisionVelY);
                 if (speed < 20) {
@@ -243,12 +295,12 @@ public class Marble {
                 verticesDirty = true;
             }
         }
-        
+
         if (popping) {
             if (popDelay > 0) {
                 popDelay -= dt;
             } else {
-                popProgress += dt * 6.0; 
+                popProgress += dt * 6.0;
                 if (popProgress >= 1.0) dead = true;
             }
         } else if (alone) {
@@ -303,6 +355,10 @@ public class Marble {
     public boolean isWarn() { return warn; }
     public void setWarn(boolean warn) { this.warn = warn; }
 
+    /**
+     * 更新警戒状态
+     * Update warning state
+     */
     public void updateWarn(double dt, double intensity) {
         if (warn) {
             warnProgress += dt * (6.0 + intensity * 18.0);
@@ -310,6 +366,10 @@ public class Marble {
         }
     }
 
+    /**
+     * 绘制弹珠
+     * Draw marble
+     */
     public void draw(Graphics2D g) {
         if (!initialized || dead) return;
 
@@ -321,7 +381,7 @@ public class Marble {
         float alpha = 1.0f;
 
         if (popping && popDelay <= 0) {
-            scale = 1.0 + popProgress * 0.4; 
+            scale = 1.0 + popProgress * 0.4;
             alpha = 1.0f - (float)popProgress;
             if (alpha < 0f) alpha = 0f;
             if (alpha > 1f) alpha = 1f;
@@ -382,6 +442,10 @@ public class Marble {
         }
     }
 
+    /**
+     * 绘制普通弹珠（渐变效果）
+     * Draw normal marble with gradient effect
+     */
     private void drawNormalMarble(Graphics2D g, double drawCx, double drawCy, double radius, double scale) {
         double x = drawCx - radius;
         double y = drawCy - radius;
@@ -419,6 +483,10 @@ public class Marble {
         g.fillOval((int)Math.round(drawCx - radius * 0.2), (int)Math.round(drawCy + radius * 0.3), reflect2Size, reflect2Size);
     }
 
+    /**
+     * 重置弹珠状态
+     * Reset marble state
+     */
     public void reset() {
         this.cx = 0;
         this.cy = 0;

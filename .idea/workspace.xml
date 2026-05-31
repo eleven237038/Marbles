@@ -6,7 +6,15 @@
   <component name="ChangeListManager">
     <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="优化第四关结束界面">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/BossSans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BossSans.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Level.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Level.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marble.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marble.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarbleLaunch.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarbleLaunch.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ResourceManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ResourceManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ScreenGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenGame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScreenStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScreenStart.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,6 +161,7 @@
       <workItem from="1780121010930" duration="1284000" />
       <workItem from="1780147629376" duration="3970000" />
       <workItem from="1780155057677" duration="3708000" />
+      <workItem from="1780197920561" duration="2369000" />
     </task>
     <task id="LOCAL-00081" summary="尝试Sans出场">
       <option name="closed" value="true" />
