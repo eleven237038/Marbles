@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加注释,优化第四关结束界面">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加readme描述启动方式" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -153,14 +151,7 @@
       <workItem from="1780147629376" duration="3970000" />
       <workItem from="1780155057677" duration="3708000" />
       <workItem from="1780197920561" duration="6350000" />
-    </task>
-    <task id="LOCAL-00082" summary="完成Sans出场">
-      <option name="closed" value="true" />
-      <created>1779976351339</created>
-      <option name="number" value="00082" />
-      <option name="presentableId" value="LOCAL-00082" />
-      <option name="project" value="LOCAL" />
-      <updated>1779976351339</updated>
+      <workItem from="1780280897416" duration="801000" />
     </task>
     <task id="LOCAL-00083" summary="完成Sans出场">
       <option name="closed" value="true" />
@@ -546,7 +537,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780200720566</updated>
     </task>
-    <option name="localTasksCounter" value="131" />
+    <task id="LOCAL-00131" summary="添加readme描述启动方式">
+      <option name="closed" value="true" />
+      <created>1780280942598</created>
+      <option name="number" value="00131" />
+      <option name="presentableId" value="LOCAL-00131" />
+      <option name="project" value="LOCAL" />
+      <updated>1780280942598</updated>
+    </task>
+    <option name="localTasksCounter" value="132" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -564,7 +563,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="优化creeper效果" />
     <MESSAGE value="重新设置第三关" />
     <MESSAGE value="creeper和bedrock生成逻辑修正" />
     <MESSAGE value="为Sans添加血量" />
@@ -589,6 +587,7 @@
     <MESSAGE value="更改为英文话语" />
     <MESSAGE value="优化第四关结束界面" />
     <MESSAGE value="添加注释,优化第四关结束界面" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加注释,优化第四关结束界面" />
+    <MESSAGE value="添加readme描述启动方式" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加readme描述启动方式" />
   </component>
 </project>

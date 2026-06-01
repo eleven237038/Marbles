@@ -40,6 +40,7 @@ public class ResourceManager {
     // 音乐管理 / Music management
     private Clip musicClip = null;
     private String currentMusic = null;
+    private boolean musicLoop = false;
 
     // 音效文件路径常量 / Sound effect file path constants
     public static final String GAME_BEGIN = "GameBegin.wav";
@@ -292,6 +293,7 @@ public class ResourceManager {
                 musicClip = AudioSystem.getClip();
                 musicClip.open(audioStream);
                 musicClip.loop(Clip.LOOP_CONTINUOUSLY);
+                musicLoop = true;
                 currentMusic = fileName;
                 System.out.println("开始播放音乐: " + fileName);
             } else {
@@ -313,6 +315,7 @@ public class ResourceManager {
             musicClip = null;
         }
         currentMusic = null;
+        musicLoop = false;
     }
 
     /**
@@ -326,12 +329,16 @@ public class ResourceManager {
     }
 
     /**
-     * 恢复暂停的音乐
-     * Resume paused music
+     * 恢复暂停的音乐（保持循环播放）
+     * Resume paused music (keep looping)
      */
     public void resumeMusic() {
         if (musicClip != null && !musicClip.isRunning()) {
-            musicClip.start();
+            if (musicLoop) {
+                musicClip.loop(Clip.LOOP_CONTINUOUSLY);
+            } else {
+                musicClip.start();
+            }
         }
     }
 
