@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加readme描述启动方式" />
+    <list default="true" id="75bdd54e-8afd-4d43-b10f-16a25f42edd7" name="更改" comment="添加readme描述启动方式">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/music/正义之矛.wav" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/music/骨质疏松.wav" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Marbles.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Marbles.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -152,6 +157,8 @@
       <workItem from="1780155057677" duration="3708000" />
       <workItem from="1780197920561" duration="6350000" />
       <workItem from="1780280897416" duration="801000" />
+      <workItem from="1780379566594" duration="2633000" />
+      <workItem from="1780402612792" duration="884000" />
     </task>
     <task id="LOCAL-00083" summary="完成Sans出场">
       <option name="closed" value="true" />

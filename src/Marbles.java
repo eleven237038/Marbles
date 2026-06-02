@@ -273,6 +273,20 @@ public class Marbles {
             spawnHeart = true;
         }
 
+        // 预先为heart随机选择一个放置列 / Randomly choose a column for heart placement in advance
+        int heartCol = -1;
+        if (spawnHeart) {
+            List<Integer> availableCols = new ArrayList<>();
+            for (int col = 0; col < perRow; col++) {
+                if (!creeperPositions.contains(col) && !bedrockPositions.contains(col)) {
+                    availableCols.add(col);
+                }
+            }
+            if (!availableCols.isEmpty()) {
+                heartCol = availableCols.get(random.nextInt(availableCols.size()));
+            }
+        }
+
         int lastColor = -1;
         for (int col = 0; col < perRow; col++) {
             this.marbles[row][col] = new Marble();
@@ -284,9 +298,8 @@ public class Marbles {
             } else if (targetBedrocks > 0 && bedrockPositions.contains(col)) {
                 this.marbles[row][col].setColorType(Marble.BEDROCK);
                 bedrockInGroup++;
-            } else if (spawnHeart) {
+            } else if (heartCol == col) {
                 this.marbles[row][col].setColorType(Marble.HEART);
-                spawnHeart = false;
             } else {
                 if (alternateColorRows > 0) {
                     int cType;
