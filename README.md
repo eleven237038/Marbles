@@ -67,4 +67,4 @@ resources/              # 图片 / 精灵图
 
 ## License
 
-未指定开源许可证。本仓库为课程作业,保留所有权利。
+MIT License,详见 [LICENSE](LICENSE)。
