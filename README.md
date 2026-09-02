@@ -1,70 +1,72 @@
 # Marbles
 
-Java 六边形弹珠消除游戏(课程 Games Programming 作业 Ass-2),含 Sans Boss 关卡与特殊弹珠机制。
+**English | [简体中文](./README.zh-CN.md)**
 
-## 目录
+A Java hexagonal-grid marble shooter (Games Programming coursework Ass-2), featuring a Sans boss level and special marble mechanics.
 
-- [背景](#背景)
-- [运行](#运行)
-- [玩法](#玩法)
-- [计分](#计分)
-- [特殊弹珠](#特殊弹珠)
-- [项目结构](#项目结构)
+## Contents
+
+- [Background](#background)
+- [Run](#run)
+- [Gameplay](#gameplay)
+- [Scoring](#scoring)
+- [Special Marbles](#special-marbles)
+- [Project Structure](#project-structure)
 - [License](#license)
 
-## 背景
+## Background
 
-课程 Games Programming 作业(Ass-2),基于六边形网格的弹珠消除玩法,并在第 4 关设计了带 Sans Boss 的进阶机制。开发设计备忘见 `备注.txt`。
+Coursework for Games Programming (Ass-2): hexagonal-grid marble shooter gameplay, extended at level 4 with a Sans boss mechanic. The design notes live in `备注.txt`.
 
-## 运行
+## Run
 
-- 用 IntelliJ IDEA 打开项目目录(确保 `resources/` 被正常加载)。
-- JDK 版本:26(见原 `Readme.md`)。
-- 入口类:`src/Main.java`。
+- Open the project directory in IntelliJ IDEA (make sure `resources/` loads correctly).
+- JDK: 26 (see the original `Readme.md`).
+- Entry class: `src/Main.java`.
 
-## 玩法
+## Gameplay
 
-- 六边形网格:初始 8 行,最多 17 行,六边形边长 24.22(见 `备注.txt`)。
-- 发射弹珠,碰到同色弹珠或触顶时吸附;同色三连及以上消除。
-- 整盘每秒下移(每秒 y 轴 + 五分之二六边形边长)。
-- 第 4 关触发 Sans Boss,周期施放技能(颜色打乱、bedrock 封锁、整盘下移、creeper 等)并配战斗对话。
+- Hexagonal grid: starts with 8 rows, up to 17 rows; hexagon side length 24.22 (see `备注.txt`).
+- Launch marbles; they stick to same-colored marbles or the ceiling; 3+ connected same colors pop.
+- The whole board sinks every second (y += 2/5 hexagon side length per second).
+- Level 4 triggers the Sans boss with periodic skills (color shuffle, bedrock blockade, board drop, creeper marbles) plus battle dialogue.
 
-## 计分
+## Scoring
 
-- 消除 3 个及以内:每个 10 分。
-- 消除 4–6 个:每个 15 分。
-- 消除 6 个以上:每个 20 分。
-- 掉落弹珠:每个 20 分。
+- Clearing 3 or fewer: 10 points each.
+- Clearing 4-6: 15 points each.
+- Clearing more than 6: 20 points each.
+- Fallen marbles: 20 points each.
 
-(规则见 `备注.txt`。)
+(Rules in `备注.txt`.)
 
-## 特殊弹珠
+## Special Marbles
 
-| 弹珠 | 行为 | 出现关卡 |
-|------|------|----------|
-| 普通 | 同色三连消除 | 全部 |
-| creeper | 碰撞后消除周围 +3 范围内的普通弹珠 | 2 / 3 / 4 |
-| bedrock | 不可消除的障碍,仅可掉落 | 3 / 4 |
-| heart | 不可消除,仅可掉落 | 4 |
+| Marble | Behavior | Levels |
+|--------|----------|--------|
+| normal | pops with 3+ same color | all |
+| creeper | on hit, pops normal marbles within +3 range | 2 / 3 / 4 |
+| bedrock | indestructible obstacle, only falls | 3 / 4 |
+| heart | indestructible, only falls | 4 |
 
-## 项目结构
+## Project Structure
 
 ```
 src/
-├─ Main.java            # 入口
-├─ GameEngine.java      # 游戏引擎
-├─ ScreenGame.java      # 游戏画面
-├─ ScreenStart.java     # 开始画面
-├─ Level.java           # 关卡
-├─ Marbles.java         # 六边形网格与生成逻辑
-├─ Marble.java          # 弹珠实体
-├─ MarbleLaunch.java    # 发射弹珠
-├─ BossSans.java        # Sans Boss(第 4 关)
-└─ ResourceManager.java # 资源管理
-resources/              # 图片 / 精灵图
-备注.txt                # 开发设计备忘
+├─ Main.java            # entry
+├─ GameEngine.java      # engine
+├─ ScreenGame.java      # game screen
+├─ ScreenStart.java     # start screen
+├─ Level.java           # levels
+├─ Marbles.java         # hex grid & spawn logic
+├─ Marble.java          # marble entity
+├─ MarbleLaunch.java    # marble launching
+├─ BossSans.java        # Sans boss (level 4)
+└─ ResourceManager.java # resource management
+resources/              # images / sprites
+备注.txt                # design notes (Chinese)
 ```
 
 ## License
 
-MIT License,详见 [LICENSE](LICENSE)。
+MIT License, see [LICENSE](LICENSE).
